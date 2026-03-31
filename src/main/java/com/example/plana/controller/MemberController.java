@@ -2,6 +2,7 @@ package com.example.plana.controller;
 
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.read.MemberReadResponse;
+import com.example.plana.dto.member.update.MemberUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,4 +56,25 @@ public class MemberController {
 
         return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    /** DEV-54
+     * editMember(): 회원 정보 수정
+     *  -> updateMember(): 회원 정보 수정(닉네임, 프로필 이미지)
+     * @param memberId              // 회원 고유 ID
+     * @param memberUpdateRequest  // 요청 Body - 닉네임, 프로필 이미지
+     * @return ResponseBody.data : null
+     */
+    @PatchMapping("/{memberId}")
+    public ResponseEntity<ResponseBody> editMember(@PathVariable("memberId") String memberId, @RequestBody MemberUpdateRequest memberUpdateRequest) {
+        memberService.updateMember(memberId, memberUpdateRequest);
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(204)
+                .message("No Content")
+                .build();
+
+        return  ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
 }
