@@ -2,13 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.plana.mapper.Member">
+<mapper namespace="com.example.plana.mapper.MemberMapper">
+
     <select id="existNickname" resultType="boolean">
         SELECT CASE
         WHEN COUNT(*) > 0 THEN 1 ELSE 0
         END AS RESULT
         FROM MEMBER
         WHERE NICKNAME = #{nickname}
+    </select>
+
+    <select id="readMember" resultType="com.example.plana.dto.member.read.MemberReadResponse">
+        SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId}
     </select>
 
 </mapper>

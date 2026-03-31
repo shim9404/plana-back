@@ -1,13 +1,11 @@
 package com.example.plana.controller;
 
 import com.example.plana.dto.common.ResponseBody;
+import com.example.plana.dto.member.read.MemberReadResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 import com.example.plana.service.MemberService;
 
 import java.util.Map;
@@ -38,4 +36,23 @@ public class MemberController {
         return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    /** DEV-47
+     * getMember(): 회원 정보 호출 함수(마이페이지 진입)
+     *  -> readMember(): 회원 정보 호출(ID, 이메일, 이름, 닉네임, 프로필 이미지)
+     * @param memberId        // 회원 고유 ID
+     * @return ResponseBody.data : MemberReadResponse
+     */
+    @GetMapping("/{memberId}")
+    public ResponseEntity<ResponseBody> getMember(@PathVariable("memberId") String memberId) {
+        MemberReadResponse data = memberService.readMember(memberId);
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(200)
+                .message("OK")
+                .data(Map.of("member", data))
+                .build();
+
+        return  ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }
