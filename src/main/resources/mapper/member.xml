@@ -18,4 +18,13 @@
         WHERE MEMBER_ID = #{memberId}
     </select>
 
+    <update id="updateMember">
+        UPDATE member
+        <set>
+            <if test="data.nickname != null">NICKNAME = NVL(#{data.nickname}, NICKNAME),</if>
+            <if test="data.profileImage != null">PROFILE_IMAGE = NVL(#{data.profileImage}, PROFILE_IMAGE)</if>
+        </set>
+        WHERE MEMBER_ID = #{memberId}
+    </update>
+
 </mapper>
