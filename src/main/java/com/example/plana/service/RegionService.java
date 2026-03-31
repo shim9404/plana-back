@@ -1,0 +1,68 @@
+package com.example.plana.service;
+
+
+import com.example.plana.dto.RegionResponse;
+import com.example.plana.dto.SiguResponse;
+import com.example.plana.dto.ZdoResponse;
+import com.example.plana.mapper.RegionMapper;
+import com.example.plana.model.Region;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RequiredArgsConstructor
+@Service
+public class RegionService {
+    private final RegionMapper regionMapper;
+
+    /**
+     * 지역 정보 불러오기
+     * @return RegionResponse 시도리스트 -> 시군구 리스트 뎁스 구조로 반환
+     */
+    public RegionResponse readRegion(){
+
+        // DB에서 지역 정보 불러오기
+        List<Region> siguDatas = regionMapper.readRegion();
+
+        Map<Integer, ZdoResponse> regionMap = new HashMap<>();
+
+        for (Region siguData : siguDatas) {
+            ZdoResponse zdo;
+            List<SiguResponse> siguList;
+
+            // regionMap에 등록한 값이아니라면 새로 추가
+            if (!regionMap.containsKey(siguData.zdoCode)) {
+                zdo = new ZdoResponse();
+                zdo.setZdoCode(siguData.zdoCode);
+                zdo.setZdoName(siguData.zdoName);
+                siguList = new ArrayList<>();
+            } else {
+                zdo = regionMap.get(siguData.zdoCode);
+                siguList = zdo.getSigus();
+            }
+
+            // 매핑
+            SiguResponse sigu = new SiguResponse();
+
+            sigu.setRegionId(siguData.getRegionId());
+            sigu.setSiguCode(siguData.getSiguCode());
+            sigu.setSiguName(siguData.getSiguName());
+            sigu.setCreateDate(siguData.getCreateDate());
+            sigu.setLatestDate(siguData.getLatestDate());
+            sigu.setStatus(siguData.getStatus());
+
+            siguList.add(sigu);
+            zdo.setSigus(siguList);
+            regionMap.put(zdo.getZdoCode(), zdo);
+        }
+
+        RegionResponse regionResponse = new RegionResponse();
+        regionResponse.setRegions(new ArrayList<>(regionMap.values()));
+
+        return regionResponse;
+    }
+}
