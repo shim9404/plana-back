@@ -3,6 +3,17 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.plana.mapper.RegionMapper">
     <select id="readRegion" resultType="com.example.plana.model.Region">
-        SELECT * FROM region
+        SELECT REGION_ID as "regionId",
+                ZDO_CODE as "zdoCode",
+                ZDO_NAME as "zdoName",
+                SIGU_CODE as "siguCode",
+                SIGU_NAME as "siguName",
+                CREATE_DATE as "createDate",
+                LATEST_DATE as "latestDate",
+                MAP_X as "mapX",
+                MAP_Y as "maxY",
+                STATUS as "status"
+        FROM region
+        WHERE STATUS != 'DELETED'
     </select>
 </mapper>

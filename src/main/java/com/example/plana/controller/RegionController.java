@@ -1,11 +1,15 @@
 package com.example.plana.controller;
 
-import com.example.plana.dto.RegionResponse;
+import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.service.RegionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,10 +19,18 @@ public class RegionController {
 
     /**
      * 행정구역 정보 반환
-     * @return RegionResponse
+     * @return ResponseBody.data : RegionResponse
      */
     @GetMapping
-    public RegionResponse region(){
-        return regionService.readRegion();
+    public ResponseEntity<ResponseBody> region(){
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(200)
+                .message("OK")
+                .data(Map.of("regions",regionService.readRegion()))
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
