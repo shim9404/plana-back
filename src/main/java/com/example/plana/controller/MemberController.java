@@ -9,7 +9,7 @@ import com.example.plana.service.MemberService;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/members/")
+@RequestMapping("/api/members")
 public class MemberController {
     private final MemberService memberService;
 
@@ -19,7 +19,7 @@ public class MemberController {
      * @param nickname        // 새 닉네임
      * @return nicknameDupli  // 닉네임 중복 결과(TRUE: 중복 O/ FALSE: 중복 X)
      */
-    @GetMapping("nickname/check")
+    @GetMapping("/nickname/check")
     public boolean dupliNickname(@RequestParam("nickname") String nickname) {
         boolean nicknameDupli = memberService.existNickname(nickname);
         return nicknameDupli;
