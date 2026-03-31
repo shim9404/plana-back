@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.TripMapper">
+    <!-- TRIP INSERT -->
+    <insert id="createTrip" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO TRIP (
+                MEMBER_ID, NAME, START_DATE, END_DATE,
+                CREATE_DATE, LATEST_DATE, STATUS
+            ) VALUES (
+                #{memberId,  jdbcType=VARCHAR},
+                #{name,      jdbcType=VARCHAR},
+                #{startDate, jdbcType=VARCHAR},
+                #{endDate,   jdbcType=VARCHAR},
+                TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                NULL,
+                'ACTIVE'
+            )
+            RETURNING TRIP_ID INTO #{tripId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
+
+    <!-- TRIP_DAY INSERT -->
+    <insert id="createTripDay" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO TRIP_DAY (
+                TRIP_ID, INDEX_SORT
+            ) VALUES (
+                #{tripId,    jdbcType=VARCHAR},
+                #{indexSort, jdbcType=INTEGER}
+            )
+            RETURNING TRIP_DAY_ID INTO #{tripDayId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
+
+    <!-- TRIP_SCHEDULE INSERT -->
+    <insert id="createTripSchedule" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO TRIP_SCHEDULE (
+                TRIP_DAY_ID, INDEX_SORT
+            ) VALUES (
+                #{tripDayId, jdbcType=VARCHAR},
+                1
+            )
+            RETURNING TRIP_SCHEDULE_ID INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
+</mapper>
