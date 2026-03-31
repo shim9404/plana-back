@@ -1,8 +1,8 @@
 package com.example.plana.controller;
 
 import com.example.plana.dto.common.ResponseBody;
-import com.example.plana.dto.TripRequest;
-import com.example.plana.dto.TripResponse;
+import com.example.plana.dto.trip.create.TripCreateRequest;
+import com.example.plana.dto.trip.create.TripCreateResponse;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -29,9 +29,9 @@ public class TripController {
      * @return ResponseBody.data : TripResponse
      */
     @PostMapping
-    public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripRequest request) {
+    public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripCreateRequest request) {
 
-        TripResponse data = tripService.createTrip(request);
+        TripCreateResponse data = tripService.createTrip(request);
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
@@ -42,4 +42,6 @@ public class TripController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    public ResponseEntity<ResponseBody> saveTrip(@RequestBody )
 }

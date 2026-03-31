@@ -1,18 +1,22 @@
-package com.example.plana.dto;
+package com.example.plana.dto.trip.create;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripRequest {
-    private String memberId;
+public class TripCreateResponse {
+    private String tripId;
     private String name;
     private String startDate;
     private String endDate;
-    private String status;
+    private List<Object> bookmarks;
+    private List<TripDayCreateResponse> days;
 }

@@ -1,9 +1,9 @@
 package com.example.plana.service;
 
-import com.example.plana.dto.TripDayResponse;
-import com.example.plana.dto.TripRequest;
-import com.example.plana.dto.TripResponse;
-import com.example.plana.dto.TripScheduleResponse;
+import com.example.plana.dto.trip.create.TripDayCreateResponse;
+import com.example.plana.dto.trip.create.TripCreateRequest;
+import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -28,7 +28,7 @@ public class TripService {
      * @return TripResponse 여행 일자와 여행 스케줄이 포함된 신규 생성 여행 데이터 반환
      */
     @Transactional
-    public TripResponse createTrip(TripRequest request) {
+    public TripCreateResponse createTrip(TripCreateRequest request) {
 
         // 1. TRIP INSERT
         Map<String, Object> tripParams = new HashMap<>();
@@ -47,7 +47,7 @@ public class TripService {
         long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
 
         // 3. TRIP_DAY + TRIP_SCHEDULE INSERT
-        List<TripDayResponse> dayList = new ArrayList<>();
+        List<TripDayCreateResponse> dayList = new ArrayList<>();
 
         for (int i = 1; i <= days; i++) {
 
@@ -69,12 +69,12 @@ public class TripService {
             String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
             // 일자와 스케줄의 Response 데이터에 담아 조립
-            TripScheduleResponse schedule = TripScheduleResponse.builder()
+            TripScheduleCreateResponse schedule = TripScheduleCreateResponse.builder()
                     .tripScheduleId(tripScheduleId)
                     .indexSort(1)
                     .build();
 
-            TripDayResponse day = TripDayResponse.builder()
+            TripDayCreateResponse day = TripDayCreateResponse.builder()
                     .tripDayId(tripDayId)
                     .indexSort(i)
                     .schedules(List.of(schedule))
@@ -84,7 +84,7 @@ public class TripService {
         }
 
         // 4. 최종 응답 반환
-        return TripResponse.builder()
+        return TripCreateResponse.builder()
                 .tripId(tripId)
                 .name((String) tripParams.get("name"))
                 .startDate((String) tripParams.get("startDate"))
