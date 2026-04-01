@@ -27,4 +27,15 @@
         WHERE MEMBER_ID = #{memberId}
     </update>
 
+    <select id="checkPassword" resultType="string">
+        SELECT PASSWORD
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <update id="updatePassword">
+        UPDATE MEMBER
+        SET PASSWORD = #{newPassword}
+        WHERE MEMBER_ID = #{memberId}
+    </update>
 </mapper>
