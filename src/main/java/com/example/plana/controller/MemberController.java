@@ -2,6 +2,7 @@ package com.example.plana.controller;
 
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.read.MemberReadResponse;
+import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -77,4 +78,44 @@ public class MemberController {
         return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    /** DEV-54
+     * editPassword(): 회원 비밀번호 수정
+     *  -> existPassword()   : 비밀번호 일치 확인
+     *     (true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request(400 code))
+     *  -> updatePassword() : 새 비밀번호 변경
+     * @param memberId                 // 회원 고유 ID
+     * @param memberPwUpdateRequest // 요청 Body - 현재 비밀번호, 새 비밀번호
+     * @return ResponseBody.data : null
+     */
+    @PatchMapping("/{memberId}/password")
+    public ResponseEntity<ResponseBody> editPassword(@PathVariable("memberId") String memberId, @RequestBody MemberPwUpdateRequest memberPwUpdateRequest) {
+        // 비밀번호 갖고오기(current / new)
+        String currentPassword = memberPwUpdateRequest.getCurrentPassword();
+        String newPassword = memberPwUpdateRequest.getNewPassword();
+
+        // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request)
+        boolean check = memberService.existPassword(memberId, currentPassword);
+
+        if (check == true) { // 일치 경우
+            // 새 비밀번호 변경
+            memberService.updatePassword(memberId, newPassword);
+
+            ResponseBody response = ResponseBody.builder()
+                    .success(true)
+                    .code(204)
+                    .message("No Content")
+                    .build();
+
+            return  ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+        else { // 미일치 경우
+            ResponseBody response = ResponseBody.builder()
+                    .success(false)
+                    .code(400)
+                    .message("Bad Request")
+                    .build();
+
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
 }
