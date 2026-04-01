@@ -40,6 +40,7 @@ public class TripController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
     @PatchMapping("/{tripId}")
     public ResponseEntity<ResponseBody> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request) {
         tripService.saveTrip(tripId, request);

@@ -4,6 +4,7 @@ import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
 import com.example.plana.dto.trip.create.TripDayCreateResponse;
 import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
+import com.example.plana.dto.trip.update.TripScheduleUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Log4j2
 @Service
@@ -124,13 +126,15 @@ public class TripService {
         return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    @Transactional
     public void saveTrip(String tripId, TripUpdateRequest request) {
-        Map<String, Object> tripParams = new HashMap<>();
-        tripParams.put("name", checkName(request.getName()));
-        tripParams.put("startDate", checkDate(request.getStartDate()));
-        tripParams.put("endDate", checkDate(request.getEndDate()));
-        tripParams.put("tripId", tripId);
+        request.setTripId(tripId);
+        tripMapper.updateTrip(request);
 
-        tripMapper.updateTrip(tripParams);
+
+        // 2. TRIP_DAY MERGE (추가/수정/삭제 한 번에)
+        if (!request.getDays().isEmpty()) {
+            tripMapper.updateTripDays(request);
+        }
     }
 }

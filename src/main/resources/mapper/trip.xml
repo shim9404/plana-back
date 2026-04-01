@@ -58,4 +58,24 @@
         WHERE TRIP_ID = #{tripId,       jdbcType=VARCHAR}
     </update>
 
+
+    <!-- TRIP_DAY MERGE -->
+    <update id="updateTripDays">
+        MERGE INTO TRIP_DAY target
+        USING (
+        <foreach collection="days" item="day" separator=" UNION ALL ">
+            SELECT #{day.tripDayId, jdbcType=VARCHAR} AS TRIP_DAY_ID,
+                #{tripId,        jdbcType=VARCHAR} AS TRIP_ID,
+                #{day.indexSort, jdbcType=INTEGER} AS INDEX_SORT
+            FROM DUAL
+        </foreach>
+        ) source
+        ON (target.TRIP_DAY_ID = source.TRIP_DAY_ID)
+        WHEN MATCHED THEN
+            UPDATE SET target.INDEX_SORT = source.INDEX_SORT
+        WHEN NOT MATCHED THEN
+            INSERT (TRIP_ID, INDEX_SORT)
+            VALUES (source.TRIP_ID, source.INDEX_SORT)
+    </update>
+
 </mapper>
