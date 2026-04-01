@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.AreaMapper">
+    <select id="readArea" resultType="com.example.plana.model.Area">
+        SELECT
+            AREA_ID as "areaId",
+            REGION_ID as "regionId",
+            SEARCH_TYPE as "searchType",
+            NAME as "name",
+            MAP_X as "mapX",
+            MAP_Y as "mapY",
+            CATEGORY as "category",
+            ADDRESS as "address",
+            ROAD_ADDRESS as "roadAddress",
+            LINK as "link",
+            TELEPHONE as "telephone",
+            DESCRIPTION as "description",
+            BOOKMARK_COUNT as "bookmarkCount",
+            CREATE_DATE as "createDate",
+            LATEST_DATE as "latestDate",
+            STATUS as "status"
+        FROM AREA
+        <where>
+            <if test="regionId != null" >
+                REGION_ID = #{regionId}
+            </if>
+        </where>
+    </select>
+</mapper>
