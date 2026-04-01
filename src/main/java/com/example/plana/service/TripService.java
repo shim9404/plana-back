@@ -1,9 +1,10 @@
 package com.example.plana.service;
 
-import com.example.plana.dto.trip.create.TripDayCreateResponse;
 import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.create.TripDayCreateResponse;
 import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
+import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -121,5 +122,15 @@ public class TripService {
      */
     private LocalDate parseDate(String date) {
         return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    public void saveTrip(String tripId, TripUpdateRequest request) {
+        Map<String, Object> tripParams = new HashMap<>();
+        tripParams.put("name", checkName(request.getName()));
+        tripParams.put("startDate", checkDate(request.getStartDate()));
+        tripParams.put("endDate", checkDate(request.getEndDate()));
+        tripParams.put("tripId", tripId);
+
+        tripMapper.updateTrip(tripParams);
     }
 }

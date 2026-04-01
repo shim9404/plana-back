@@ -3,15 +3,13 @@ package com.example.plana.controller;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -30,7 +28,6 @@ public class TripController {
      */
     @PostMapping
     public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripCreateRequest request) {
-
         TripCreateResponse data = tripService.createTrip(request);
 
         ResponseBody response = ResponseBody.builder()
@@ -43,5 +40,16 @@ public class TripController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    public ResponseEntity<ResponseBody> saveTrip(@RequestBody )
+    @PatchMapping("/{tripId}")
+    public ResponseEntity<ResponseBody> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request) {
+        tripService.saveTrip(tripId, request);
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(200)
+                .message("OK")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

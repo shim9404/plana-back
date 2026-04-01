@@ -9,4 +9,7 @@ public interface TripMapper {
     void createTrip(Map<String, Object> params);
     void createTripDay(Map<String, Object> params);
     void createTripSchedule(Map<String, Object> params);
+    void updateTrip(Map<String, Object> params);
+    void updateTripDay(Map<String, Object> params);
+    void updateTripSchedule(Map<String, Object> params);
 }
