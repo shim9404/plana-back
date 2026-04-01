@@ -29,9 +29,9 @@ public class MemberService {
     }
 
     // 현재 비밀번호 일치 여부 확인
-    public boolean existPassword(String memberId, String currentPassword) {
+    public boolean checkPassword(String memberId, String currentPassword) {
         // DB에서 암호화된 비밀번호 가져오기
-        String encodedPassword = memberMapper.existPassword(memberId);
+        String encodedPassword = memberMapper.checkPassword(memberId);
 
         // 비밀번호 일치 여부 확인(true: 일치 / false: 비일치)
         //  - 같은 비밀번호여도 암호화할 때마다 다른 암호화 결과를 생성됨

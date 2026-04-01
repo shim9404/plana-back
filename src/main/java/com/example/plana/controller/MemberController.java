@@ -80,7 +80,7 @@ public class MemberController {
 
     /** DEV-54
      * editPassword(): 회원 비밀번호 수정
-     *  -> existPassword()   : 비밀번호 일치 확인
+     *  -> checkPassword()   : 비밀번호 일치 확인
      *     (true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request(400 code))
      *  -> updatePassword() : 새 비밀번호 변경
      * @param memberId                 // 회원 고유 ID
@@ -94,7 +94,7 @@ public class MemberController {
         String newPassword = memberPwUpdateRequest.getNewPassword();
 
         // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request)
-        boolean check = memberService.existPassword(memberId, currentPassword);
+        boolean check = memberService.checkPassword(memberId, currentPassword);
 
         if (check == true) { // 일치 경우
             // 새 비밀번호 변경

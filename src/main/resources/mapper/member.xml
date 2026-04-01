@@ -27,7 +27,7 @@
         WHERE MEMBER_ID = #{memberId}
     </update>
 
-    <select id="existPassword" resultType="string">
+    <select id="checkPassword" resultType="string">
         SELECT PASSWORD
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}

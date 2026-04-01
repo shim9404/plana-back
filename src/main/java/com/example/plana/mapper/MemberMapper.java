@@ -17,7 +17,7 @@ public interface MemberMapper {
     void updateMember(@Param("memberId") String memberId, @Param("data") MemberUpdateRequest memberUpdateRequest);
 
     // 비밀번호 호출
-    String existPassword(@Param("memberId") String memberId);
+    String checkPassword(@Param("memberId") String memberId);
 
     // 새 비밀번호 수정
     void updatePassword(@Param("memberId") String memberId, @Param("newPassword") String newPassword);
