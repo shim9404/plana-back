@@ -2,6 +2,7 @@ package com.example.plana.mapper;
 
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
+import com.example.plana.model.MemberVerify;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -21,4 +22,13 @@ public interface MemberMapper {
 
     // 새 비밀번호 수정
     void updatePassword(@Param("memberId") String memberId, @Param("newPassword") String newPassword);
+
+    // 회원 정보 일치 여부 확인
+    MemberVerify checkMember(@Param("memberId") String memberId);
+
+    //  회원 정보 상태 변경(삭제)
+    void updateMemberStatus(@Param("memberId") String memberId);
+
+    // 회원 정보 삭제(자동 실행 - 30일 지난 경우)
+    void deleteOldMembers();
 }
