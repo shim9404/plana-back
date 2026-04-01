@@ -38,4 +38,25 @@
         SET PASSWORD = #{newPassword}
         WHERE MEMBER_ID = #{memberId}
     </update>
+
+    <select id="checkMember" resultType="com.example.plana.model.MemberVerify">
+        SELECT EMAIL as email, NAME as name, PASSWORD as password
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <update id="updateMemberStatus">
+        UPDATE MEMBER
+        SET STATUS = 'DELETED'
+        WHERE MEMBER_ID = #{memberId}
+    </update>
+
+    <delete id="deleteOldMembers">
+        DELETE FROM MEMBER
+        WHERE STATUS = 'DELETED'
+        <![CDATA[
+      AND TO_DATE(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') < SYSDATE - 30
+        ]]>
+    </delete>
+
 </mapper>

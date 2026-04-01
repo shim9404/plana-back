@@ -2,8 +2,10 @@ package com.example.plana.service;
 
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
+import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.mapper.MemberMapper;
+import com.example.plana.model.MemberVerify;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +51,30 @@ public class MemberService {
 
         // 새 비밀번호로 변경
         memberMapper.updatePassword(memberId, newPassword);
+    }
+
+    // 회원 정보 일치 여부 확인
+    public boolean checkMember(String memberId, MemberStatusRequest memberStatusRequest) {
+        MemberVerify memberVerify = memberMapper.checkMember(memberId);
+        boolean check = false;
+        // 이메일 일치 확인
+        check = memberVerify.getEmail().equals(memberStatusRequest.getEmail());
+        // 이름 일치 확인
+        check = memberVerify.getName().equals(memberStatusRequest.getName());
+        // 비밀번호 일치 확인
+        //TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
+        check = memberVerify.getPassword().equals(memberStatusRequest.getPassword());
+
+        return check;
+    }
+
+    //  회원 정보 상태 변경(삭제)
+    public void updateMemberStatus(String memberId) {
+        memberMapper.updateMemberStatus(memberId);
+    }
+
+    // 회원 정보 삭제(자동 실행)
+    public void deleteOldMembers() {
+        memberMapper.deleteOldMembers();
     }
 }

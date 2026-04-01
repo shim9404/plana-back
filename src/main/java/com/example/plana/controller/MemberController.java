@@ -3,6 +3,7 @@ package com.example.plana.controller;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
+import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -78,7 +79,7 @@ public class MemberController {
         return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /** DEV-54
+    /** DEV-55
      * editPassword(): 회원 비밀번호 수정
      *  -> checkPassword()   : 비밀번호 일치 확인
      *     (true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request(400 code))
@@ -99,6 +100,43 @@ public class MemberController {
         if (check == true) { // 일치 경우
             // 새 비밀번호 변경
             memberService.updatePassword(memberId, newPassword);
+
+            ResponseBody response = ResponseBody.builder()
+                    .success(true)
+                    .code(204)
+                    .message("No Content")
+                    .build();
+
+            return  ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+        else { // 미일치 경우
+            ResponseBody response = ResponseBody.builder()
+                    .success(false)
+                    .code(400)
+                    .message("Bad Request")
+                    .build();
+
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
+    /** DEV-56
+     * withdrawMember(): 회원 탈퇴
+     *  -> checkMember()         : 회원 정보 일치 확인
+     *     (true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => Bad Request(400 code))
+     *  -> updateMemberStatus() : 회원 정보 상태 변경(ACTIVE -> DELETED)
+     * @param memberId              // 회원 고유 ID
+     * @param memberStatusRequest // 요청 Body - 이메일, 이름, 비밀번호
+     * @return ResponseBody.data : null
+     */
+    @PatchMapping("/{memberId}/withdraw")
+    public ResponseEntity<ResponseBody> withdrawMember(@PathVariable("memberId") String memberId, @RequestBody MemberStatusRequest memberStatusRequest) {
+        // 회원 정보 일치 여부 확인(true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => Bad Request)
+        boolean check = memberService.checkMember(memberId, memberStatusRequest);
+
+        if (check == true) { // 일치 경우
+            // 회원 정보 상태 변경(삭제)
+            memberService.updateMemberStatus(memberId);
 
             ResponseBody response = ResponseBody.builder()
                     .success(true)
