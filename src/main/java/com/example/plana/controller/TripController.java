@@ -3,6 +3,7 @@ package com.example.plana.controller;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.update.TripDateUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateResponse;
 import com.example.plana.service.TripService;
@@ -57,6 +58,19 @@ public class TripController {
                 .code(200)
                 .message("OK")
                 .data(data)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PatchMapping("/{tripId}/dates")
+    public ResponseEntity<ResponseBody> editTripDate(@PathVariable String tripId, @RequestBody TripDateUpdateRequest request) {
+        tripService.updateTripDate(tripId, request);
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(204)
+                .message("No Content")
                 .build();
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

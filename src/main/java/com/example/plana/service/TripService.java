@@ -1,5 +1,6 @@
 package com.example.plana.service;
 
+import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.TripMapper;
@@ -32,16 +33,16 @@ public class TripService {
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("memberId", request.getMemberId());
         tripParams.put("name", checkName(request.getName(), "나의 새로운 여행"));
-        tripParams.put("startDate", checkDate(request.getStartDate()));
-        tripParams.put("endDate", checkDate(request.getEndDate()));
+        tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
+        tripParams.put("endDate", DateUtils.checkDate(request.getEndDate()));
         tripParams.put("tripId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripId의 반환값을 담아야 함
 
         tripMapper.createTrip(tripParams);
         String tripId = (String) tripParams.get("tripId");
 
         // 2. 날짜 범위 계산
-        LocalDate startDate = parseDate(tripParams.get("startDate").toString());
-        LocalDate endDate   = parseDate(tripParams.get("endDate").toString());
+        LocalDate startDate = DateUtils.parseDate(tripParams.get("startDate").toString());
+        LocalDate endDate   = DateUtils.parseDate(tripParams.get("endDate").toString());
         long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
 
         // 3. TRIP_DAY + TRIP_SCHEDULE INSERT
@@ -93,36 +94,6 @@ public class TripService {
     }
 
     /**
-     * 이름 유효성 체크
-     * @param name String 입력한 이름
-     * @param defaultName String 입력한 이름이 비었을 경우, 기본으로 설정할 이름
-     * @return String 입력한 여행명 (없을 경우 "나의 새로운 여행"으로 반환)
-     */
-    private String checkName(String name, String defaultName) {
-        return (name != null && !name.isBlank()) ? name : defaultName;
-    }
-
-    /**
-     * 날짜 유효성 체크
-     * @param date String 입력한 날짜
-     * @return String 입력한 날짜 (없을 경우 현재 시간 반환)
-     */
-    private String checkDate(String date) {
-        return (date != null && !date.isBlank())
-                ? date
-                : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    }
-
-    /**
-     * 날짜 텍스트 DateTime Format으로 파싱하여 반환
-     * @param date 날짜 문자열
-     * @return LocalDate 날짜
-     */
-    private LocalDate parseDate(String date) {
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    }
-
-    /**
      * 여행 전체 저장
      * 작동 시나리오 : 네트워크 에러 등의 사유로 편집 시 자동 저장이 이루어지지 않았을 경우, 저장 시점에 기존 데이터를 전부 삭제한 뒤 재생성한다.
      * // @Transactional : 여행 정보 갱신 - 여행 일자 및 스케줄 삭제(delete) - 여행 일자 및 스케줄 재생성(insert)을 하나의 트랜잭션으로
@@ -136,8 +107,8 @@ public class TripService {
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("tripId",    tripId);
         tripParams.put("name",      checkName(request.getName(), "[네트워크 에러] 복구된 여행 계획"));
-        tripParams.put("startDate", checkDate(request.getStartDate()));
-        tripParams.put("endDate",   checkDate(request.getEndDate()));
+        tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
+        tripParams.put("endDate",   DateUtils.checkDate(request.getEndDate()));
 
         log.info(request);
         tripMapper.updateTrip(tripParams);
@@ -210,5 +181,25 @@ public class TripService {
                 .bookmarks(Collections.emptyList())
                 .days(dayList)
                 .build();
+    }
+
+    public void updateTripDate(String tripId, TripDateUpdateRequest request) {
+        Map<String, Object> tripParams = new HashMap<>();
+        tripParams.put("tripId",    tripId);
+        tripParams.put("startDate", request.getStartDate());
+        tripParams.put("endDate",   request.getEndDate());
+
+        log.info(request);
+        tripMapper.updateTrip(tripParams);
+    }
+
+    /**
+     * 이름 유효성 체크
+     * @param name String 입력한 이름
+     * @param defaultName String 입력한 이름이 비었을 경우, 기본으로 설정할 이름
+     * @return String 입력한 여행명 (없을 경우 "나의 새로운 여행"으로 반환)
+     */
+    private String checkName(String name, String defaultName) {
+        return (name != null && !name.isBlank()) ? name : defaultName;
     }
 }
