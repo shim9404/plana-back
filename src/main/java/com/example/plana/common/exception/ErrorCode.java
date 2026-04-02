@@ -19,7 +19,19 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(404, "U001", "존재하지 않는 사용자입니다."),
-    EMAIL_DUPLICATION(409, "U002", "이미 등록된 이메일입니다.");
+    EMAIL_DUPLICATION(409, "U002", "이미 등록된 이메일입니다."),
+
+    // Trip
+    TRIP_CREATE_FAILED(500, "T001", "여행 생성 중 오류가 발생했습니다."),
+    TRIP_DAY_CREATE_FAILED(500, "T002", "여행 일자 생성 중 오류가 발생했습니다."),
+    TRIP_SCHEDULE_CREATE_FAILED(500, "T003", "여행 스케줄 생성 중 오류가 발생했습니다."),
+    TRIP_NOT_FOUND(404, "T004", "존재하지 않는 여행입니다."),
+    TRIP_UPDATE_FAILED(500, "T005", "여행 저장 중 오류가 발생했습니다."),
+    TRIP_DAY_DELETE_FAILED(500, "T006", "여행 일자 삭제 중 오류가 발생했습니다."),
+    TRIP_SCHEDULE_DELETE_FAILED(500, "T007", "여행 스케줄 삭제 중 오류가 발생했습니다."),
+    TRIP_DAY_SAVE_FAILED(500, "T008", "여행 일자 저장 중 오류가 발생했습니다."),
+    TRIP_SCHEDULE_SAVE_FAILED(500, "T009", "여행 스케줄 저장 중 오류가 발생했습니다.");
+
 
     @Getter
     private final int status;
