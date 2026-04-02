@@ -67,14 +67,12 @@ public class MemberService {
     public void checkMember(String memberId, MemberStatusRequest memberStatusRequest) {
         MemberVerify memberVerify = memberMapper.checkMember(memberId);
         boolean check = false;
-        // 이메일 일치 확인
-        check = memberVerify.getEmail().equals(memberStatusRequest.getEmail());
-        // 이름 일치 확인
-        check = memberVerify.getName().equals(memberStatusRequest.getName());
-        // 비밀번호 일치 확인
-        //TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
-        check = memberVerify.getPassword().equals(memberStatusRequest.getPassword());
-        if (!check) { throw new BusinessException(ErrorCode.MEMBER_MISMATCH); } // 미일치
+        // 이메일, 이름, 비밀번호 일치 확인
+        if (!memberVerify.getEmail().equals(memberStatusRequest.getEmail()) ||
+                !memberVerify.getName().equals(memberStatusRequest.getName()) ||
+                !memberVerify.getPassword().equals(memberStatusRequest.getPassword())) {
+            throw new BusinessException(ErrorCode.MEMBER_MISMATCH);
+        }
     }
 
     //  회원 정보 상태 변경(삭제)
