@@ -47,9 +47,11 @@ public class MemberService {
         //  EX) passwordEncoder.matches(dto.getCurrentPassword(), encodedPassword))
         // 비교(equal) -> 암호화 전 상태로 임의 비교
         boolean check = encodedPassword.equals(currentPassword);
+
         if (!check) {
             throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
+
         return check;
     }
 

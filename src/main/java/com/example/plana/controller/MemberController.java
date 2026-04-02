@@ -1,5 +1,6 @@
 package com.example.plana.controller;
 
+import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
@@ -97,29 +98,13 @@ public class MemberController {
         String newPassword = memberPwUpdateRequest.getNewPassword();
 
         // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request)
-        boolean check = memberService.checkPassword(memberId, currentPassword);
+        memberService.checkPassword(memberId, currentPassword);
 
-        if (check == true) { // 일치 경우
-            // 새 비밀번호 변경
-            memberService.updatePassword(memberId, newPassword);
+        // 새 비밀번호 변경
+        memberService.updatePassword(memberId, newPassword);
 
-            ResponseBody response = ResponseBody.builder()
-                    .success(true)
-                    .code("204")
-                    .message("No Content")
-                    .build();
-
-            return  ResponseEntity.status(HttpStatus.OK).body(response);
-        }
-        else { // 미일치 경우
-            ResponseBody response = ResponseBody.builder()
-                    .success(false)
-                    .code("400")
-                    .message("Bad Request")
-                    .build();
-
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, null));
     }
 
     /** DEV-56
