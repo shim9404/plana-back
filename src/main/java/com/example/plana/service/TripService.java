@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -183,11 +182,12 @@ public class TripService {
                 .build();
     }
 
-    public void updateTripDate(String tripId, TripDateUpdateRequest request) {
+    public void updateTripInfo(String tripId, TripInfoUpdateRequest request) {
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("tripId",    tripId);
         tripParams.put("startDate", request.getStartDate());
         tripParams.put("endDate",   request.getEndDate());
+        tripParams.put("name",   request.getName());
 
         log.info(request);
         tripMapper.updateTrip(tripParams);
