@@ -2,7 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.plana.mapper.TripMapper">
-    <!-- TRIP INSERT -->
+
+    <!-- === [ TRIP ]  ====================================================================================== -->
+    <!-- 여행 신규 생성 -->
     <insert id="createTrip" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP (
@@ -21,7 +23,20 @@
         END;
     </insert>
 
-    <!-- TRIP_DAY INSERT -->
+    <!--  여행 정보 갱신 : 일부 변경 사항 반영  -->
+    <update id="updateTrip">
+        UPDATE TRIP
+        <set>
+            <if test="name != null">       NAME        = #{name,       jdbcType=VARCHAR},</if>
+            <if test="startDate != null">  START_DATE  = #{startDate,  jdbcType=VARCHAR},</if>
+            <if test="endDate != null">    END_DATE    = #{endDate,    jdbcType=VARCHAR}</if>
+        </set>
+        WHERE TRIP_ID = #{tripId,       jdbcType=VARCHAR}
+    </update>
+
+
+    <!-- === [ TRIP DAY ]  ================================================================================= -->
+    <!-- 신규 생성용 : 여행 일자 단건 INSERT -->
     <insert id="createTripDay" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_DAY (
@@ -34,7 +49,34 @@
         END;
     </insert>
 
-    <!-- TRIP_SCHEDULE INSERT -->
+    <!-- 여행 일자 전체 갱신용 : 정렬 순서 갱신 및 신규 추가 MERGE -->
+    <insert id="updateTripDays">
+        MERGE INTO TRIP_DAY target
+        USING (
+        <foreach collection="days" item="day" separator=" UNION ALL ">
+            SELECT #{day.tripDayId, jdbcType=VARCHAR} AS TRIP_DAY_ID,
+            #{tripId,        jdbcType=VARCHAR} AS TRIP_ID,
+            #{day.indexSort, jdbcType=INTEGER} AS INDEX_SORT
+            FROM DUAL
+        </foreach>
+        ) source
+        ON (target.TRIP_DAY_ID = source.TRIP_DAY_ID)
+        WHEN MATCHED THEN
+        UPDATE SET target.INDEX_SORT = source.INDEX_SORT
+        WHEN NOT MATCHED THEN
+        INSERT (TRIP_ID, INDEX_SORT)
+        VALUES (source.TRIP_ID, source.INDEX_SORT)
+    </insert>
+
+    <!--  여행의 일자 전체 삭제  -->
+    <delete id="deleteTripDaysByTripId">
+        DELETE FROM TRIP_DAY
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </delete>
+
+
+    <!-- === [ TRIP SCHEDULE ]  =========================================================================== -->
+    <!-- 신규 생성용 : 여행 스케줄 단건 INSERT (빈 슬롯) -->
     <insert id="createTripSchedule" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_SCHEDULE (
@@ -46,4 +88,36 @@
             RETURNING TRIP_SCHEDULE_ID INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR};
         END;
     </insert>
+
+    <!-- 오프라인 복구용 : 전체 필드 INSERT -->
+    <insert id="createTripSchedules" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO TRIP_SCHEDULE (
+                TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME,
+                CONTEXT, CATEGORY, PRICE, MEMO, LINK
+            ) VALUES (
+                #{tripDayId,  jdbcType=VARCHAR},
+                #{indexSort,  jdbcType=INTEGER},
+                #{startTime,  jdbcType=VARCHAR},
+                #{endTime,    jdbcType=VARCHAR},
+                #{context,    jdbcType=VARCHAR},
+                #{category,   jdbcType=VARCHAR},
+                #{price,      jdbcType=NUMERIC},
+                #{memo,       jdbcType=VARCHAR},
+                #{link,       jdbcType=VARCHAR}
+            )
+            RETURNING TRIP_SCHEDULE_ID INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
+
+    <!--  여행의 스케줄 전체 삭제  -->
+    <delete id="deleteTripSchedulesByTripId">
+        DELETE FROM TRIP_SCHEDULE
+        WHERE TRIP_DAY_ID IN (
+            SELECT TRIP_DAY_ID
+            FROM TRIP_DAY
+            WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+        )
+    </delete>
+
 </mapper>
