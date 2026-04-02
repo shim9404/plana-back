@@ -8,7 +8,7 @@ import java.util.Map;
 public interface TripMapper {
     // ── Trip ──────────────────────────────
     void createTrip(Map<String, Object> params);
-    void updateTrip(Map<String, Object> params);
+    Integer updateTrip(Map<String, Object> params);
 
     // ── TripDay ───────────────────────────
     void createTripDay(Map<String, Object> params);   // 여행 생성용 단건 INSERT

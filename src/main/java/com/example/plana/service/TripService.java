@@ -1,5 +1,7 @@
 package com.example.plana.service;
 
+import com.example.plana.common.exception.BusinessException;
+import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.update.*;
@@ -32,11 +34,15 @@ public class TripService {
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("memberId", request.getMemberId());
         tripParams.put("name", checkName(request.getName(), "나의 새로운 여행"));
-        tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
-        tripParams.put("endDate", DateUtils.checkDate(request.getEndDate()));
+        tripParams.put("startDate", request.getStartDate());
+        tripParams.put("endDate", request.getEndDate());
         tripParams.put("tripId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripId의 반환값을 담아야 함
 
-        tripMapper.createTrip(tripParams);
+        try {
+            tripMapper.createTrip(tripParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
+        }
         String tripId = (String) tripParams.get("tripId");
 
         // 2. 날짜 범위 계산
@@ -55,7 +61,11 @@ public class TripService {
             dayParams.put("indexSort", i);
             dayParams.put("tripDayId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripDayId의 반환값을 담아야 함
 
-            tripMapper.createTripDay(dayParams);
+            try {
+                tripMapper.createTripDay(dayParams);
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.TRIP_DAY_CREATE_FAILED);
+            }
             String tripDayId = (String) dayParams.get("tripDayId");
 
             // TRIP_SCHEDULE INSERT
@@ -63,7 +73,12 @@ public class TripService {
             scheduleParams.put("tripDayId", tripDayId);
             scheduleParams.put("tripScheduleId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripScheduleId의 반환값을 담아야 함
 
-            tripMapper.createTripSchedule(scheduleParams);
+            try {
+                tripMapper.createTripSchedule(scheduleParams);
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
+            }
+
             String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
             // 일자와 스케줄의 Response 데이터에 담아 조립
@@ -108,15 +123,30 @@ public class TripService {
         tripParams.put("name",      checkName(request.getName(), "[네트워크 에러] 복구된 여행 계획"));
         tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
         tripParams.put("endDate",   DateUtils.checkDate(request.getEndDate()));
-
         log.info(request);
-        tripMapper.updateTrip(tripParams);
 
+        int result = -1;
+        try {
+            result = tripMapper.updateTrip(tripParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
+        }
+
+        if (result == 0) {      // 업데이트 결과에 따른 예외 처리
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
 
         // 2. 기존 하위 데이터 전체 삭제 (자식 먼저) : DELETE 사용
-        tripMapper.deleteTripSchedulesByTripId(tripId);
-        tripMapper.deleteTripDaysByTripId(tripId);
-
+        try {
+            tripMapper.deleteTripSchedulesByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+        }
+        try {
+            tripMapper.deleteTripDaysByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
+        }
 
         // 3. TRIP_DAY + TRIP_SCHEDULE 재삽입 : CREATE 사용
         List<TripDayUpdateResponse> dayList = new ArrayList<>();
@@ -128,7 +158,11 @@ public class TripService {
             dayParams.put("indexSort", dayRequest.getIndexSort());
             dayParams.put("tripDayId", null);
 
-            tripMapper.createTripDay(dayParams);
+            try {
+                tripMapper.createTripDay(dayParams);
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.TRIP_DAY_CREATE_FAILED);
+            }
             String tripDayId = (String) dayParams.get("tripDayId");
 
             List<TripScheduleUpdateResponse> scheduleList = new ArrayList<>();
@@ -148,7 +182,11 @@ public class TripService {
                 scheduleParams.put("link",           scheduleRequest.getLink());
                 scheduleParams.put("tripScheduleId", null);
 
-                tripMapper.createTripSchedules(scheduleParams);
+                try {
+                    tripMapper.createTripSchedules(scheduleParams);
+                } catch (Exception e) {
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+                }
                 String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
                 scheduleList.add(TripScheduleUpdateResponse.builder()
@@ -193,9 +231,12 @@ public class TripService {
         tripParams.put("startDate", request.getStartDate());
         tripParams.put("endDate",   request.getEndDate());
         tripParams.put("name",   request.getName());
-
         log.info(request);
-        tripMapper.updateTrip(tripParams);
+
+        int result = tripMapper.updateTrip(tripParams);
+        if (result == 0) {      // 업데이트 결과에 따른 예외 처리
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
     }
 
     /**
@@ -211,7 +252,11 @@ public class TripService {
         dayParams.put("indexSort", request.getIndexSort());
         dayParams.put("tripDayId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripDayId의 반환값을 담아야 함
 
-        tripMapper.createTripDay(dayParams);
+        try {
+            tripMapper.createTripDay(dayParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_CREATE_FAILED);
+        }
         String tripDayId = (String) dayParams.get("tripDayId");
 
         // 2. TRIP_SCHEDULE INSERT (단건)
@@ -219,7 +264,11 @@ public class TripService {
         scheduleParams.put("tripDayId", tripDayId);
         scheduleParams.put("tripScheduleId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripScheduleId의 반환값을 담아야 함
 
-        tripMapper.createTripSchedule(scheduleParams);
+        try {
+            tripMapper.createTripSchedule(scheduleParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
+        }
         String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
         // 3. 일자와 스케줄의 Response 데이터에 담아 조립
