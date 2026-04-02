@@ -1,5 +1,6 @@
 package com.example.plana.controller;
 
+import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.service.RegionService;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,8 @@ public class RegionController {
     @GetMapping
     public ResponseEntity<ResponseBody> region(){
 
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(200)
-                .message("OK")
-                .data(Map.of("regions",regionService.readRegion()))
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("regions",regionService.readRegion()))
+        );
     }
 }

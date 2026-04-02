@@ -35,7 +35,7 @@ public class TripController {
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
-                .code(201)
+                .code("201")
                 .message("Created")
                 .data(Map.of("trip", data))
                 .build();

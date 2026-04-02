@@ -1,5 +1,7 @@
 package com.example.plana.service;
 
+import com.example.plana.common.exception.BusinessException;
+import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
@@ -45,6 +47,9 @@ public class MemberService {
         //  EX) passwordEncoder.matches(dto.getCurrentPassword(), encodedPassword))
         // 비교(equal) -> 암호화 전 상태로 임의 비교
         boolean check = encodedPassword.equals(currentPassword);
+        if (!check) {
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+        }
         return check;
     }
 
@@ -67,6 +72,10 @@ public class MemberService {
         // 비밀번호 일치 확인
         //TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
         check = memberVerify.getPassword().equals(memberStatusRequest.getPassword());
+
+        if (!check) {
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+        }
 
         return check;
     }

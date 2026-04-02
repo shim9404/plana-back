@@ -33,7 +33,7 @@ public class MemberController {
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
-                .code(200)
+                .code("200")
                 .message("OK")
                 .data(Map.of("nicknameDupli", nicknameDupli))
                 .build();
@@ -53,7 +53,7 @@ public class MemberController {
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
-                .code(200)
+                .code("200")
                 .message("OK")
                 .data(Map.of("member", data))
                 .build();
@@ -74,7 +74,7 @@ public class MemberController {
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
-                .code(204)
+                .code("204")
                 .message("No Content")
                 .build();
 
@@ -105,7 +105,7 @@ public class MemberController {
 
             ResponseBody response = ResponseBody.builder()
                     .success(true)
-                    .code(204)
+                    .code("204")
                     .message("No Content")
                     .build();
 
@@ -114,7 +114,7 @@ public class MemberController {
         else { // 미일치 경우
             ResponseBody response = ResponseBody.builder()
                     .success(false)
-                    .code(400)
+                    .code("400")
                     .message("Bad Request")
                     .build();
 
@@ -142,7 +142,7 @@ public class MemberController {
 
             ResponseBody response = ResponseBody.builder()
                     .success(true)
-                    .code(204)
+                    .code("204")
                     .message("No Content")
                     .build();
 
@@ -151,7 +151,7 @@ public class MemberController {
         else { // 미일치 경우
             ResponseBody response = ResponseBody.builder()
                     .success(false)
-                    .code(400)
+                    .code("400")
                     .message("Bad Request")
                     .build();
 
@@ -171,7 +171,7 @@ public class MemberController {
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
-                .code(200)
+                .code("200")
                 .message("OK")
                 .data(Map.of("member",
                         Map.of("memberId", memberId,
