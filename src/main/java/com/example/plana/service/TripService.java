@@ -183,7 +183,16 @@ public class TripService {
                 .build();
     }
 
-    
+    public void updateTripDate(String tripId, TripDateUpdateRequest request) {
+        Map<String, Object> tripParams = new HashMap<>();
+        tripParams.put("tripId",    tripId);
+        tripParams.put("startDate", request.getStartDate());
+        tripParams.put("endDate",   request.getEndDate());
+
+        log.info(request);
+        tripMapper.updateTrip(tripParams);
+    }
+
     /**
      * 이름 유효성 체크
      * @param name String 입력한 이름
