@@ -182,6 +182,11 @@ public class TripService {
                 .build();
     }
 
+    /**
+     * 여행 정보(시작 일자, 종료 일자, 여행명) 갱신
+     * @param tripId 여행 ID
+     * @param request TripInfoUpdateRequest
+     */
     public void updateTripInfo(String tripId, TripInfoUpdateRequest request) {
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("tripId",    tripId);
@@ -191,6 +196,44 @@ public class TripService {
 
         log.info(request);
         tripMapper.updateTrip(tripParams);
+    }
+
+    /**
+     * 여행 일자 신규 추가
+     * @param tripId 여행 ID
+     * @param request TripDayCreateRequest
+     * @return TripDayCreateResponse
+     */
+    public TripDayCreateResponse createTripDay(String tripId, TripDayCreateRequest request) {
+        // 1. TRIP_DAY INSERT (단건)
+        Map<String, Object> dayParams = new HashMap<>();
+        dayParams.put("tripId", tripId);
+        dayParams.put("indexSort", request.getIndexSort());
+        dayParams.put("tripDayId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripDayId의 반환값을 담아야 함
+
+        tripMapper.createTripDay(dayParams);
+        String tripDayId = (String) dayParams.get("tripDayId");
+
+        // 2. TRIP_SCHEDULE INSERT (단건)
+        Map<String, Object> scheduleParams = new HashMap<>();
+        scheduleParams.put("tripDayId", tripDayId);
+        scheduleParams.put("tripScheduleId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripScheduleId의 반환값을 담아야 함
+
+        tripMapper.createTripSchedule(scheduleParams);
+        String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
+
+        // 3. 일자와 스케줄의 Response 데이터에 담아 조립
+        TripScheduleCreateResponse schedule = TripScheduleCreateResponse.builder()
+                .tripScheduleId(tripScheduleId)
+                .indexSort(1)
+                .build();
+
+        // 4. 최종 응답 반환
+        return TripDayCreateResponse.builder()
+                .tripDayId(tripDayId)
+                .indexSort(request.getIndexSort())
+                .schedules(List.of(schedule))
+                .build();
     }
 
     /**
