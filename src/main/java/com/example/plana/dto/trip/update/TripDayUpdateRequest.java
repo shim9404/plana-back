@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TripDayUpdateRequest {
     private String tripDayId;
-    private String tripId;
+//    private String tripId;
     private int indexSort;
     private List<TripScheduleUpdateRequest> schedules;
 }

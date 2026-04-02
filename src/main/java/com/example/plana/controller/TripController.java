@@ -4,6 +4,7 @@ import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
+import com.example.plana.dto.trip.update.TripUpdateResponse;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -40,15 +41,22 @@ public class TripController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
-    @PatchMapping("/{tripId}")
+    /**
+     * saveTrip 여행 전체 저장
+     * 작동 시나리오 : 네트워크 에러 등의 사유로 편집 시 자동 저장이 이루어지지 않았을 경우, 저장 시점에 기존 데이터를 전부 삭제한 뒤 재생성한다.
+     * @param tripId 여행 ID
+     * @param request TripUpdateRequest
+     * @return ResponseBody.data : TripUpdateResponse
+     */
+    @PutMapping("/{tripId}")
     public ResponseEntity<ResponseBody> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request) {
-        tripService.saveTrip(tripId, request);
+        TripUpdateResponse data = tripService.saveTrip(tripId, request);
 
         ResponseBody response = ResponseBody.builder()
                 .success(true)
                 .code(200)
                 .message("OK")
+                .data(data)
                 .build();
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

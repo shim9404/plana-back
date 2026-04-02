@@ -11,10 +11,11 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripUpdateRequest {
-    private String memberId;
+public class TripUpdateResponse {
+    private String tripId;
     private String name;
     private String startDate;
     private String endDate;
-    private List<TripDayUpdateRequest> days;
+    private List<Object> bookmarks;
+    private List<TripDayUpdateResponse> days;
 }

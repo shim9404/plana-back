@@ -11,10 +11,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripUpdateRequest {
-    private String memberId;
-    private String name;
-    private String startDate;
-    private String endDate;
-    private List<TripDayUpdateRequest> days;
+public class TripDayUpdateResponse {
+    private String tripDayId;
+    private int indexSort;
+    private List<TripScheduleUpdateResponse> schedules;
 }
