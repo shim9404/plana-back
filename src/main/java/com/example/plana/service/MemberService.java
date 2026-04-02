@@ -1,5 +1,7 @@
 package com.example.plana.service;
 
+import com.example.plana.common.exception.BusinessException;
+import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
@@ -34,7 +36,7 @@ public class MemberService {
     }
 
     // 현재 비밀번호 일치 여부 확인
-    public boolean checkPassword(String memberId, String currentPassword) {
+    public void checkPassword(String memberId, String currentPassword) {
         // DB에서 암호화된 비밀번호 가져오기
         String encodedPassword = memberMapper.checkPassword(memberId);
 
@@ -45,30 +47,32 @@ public class MemberService {
         //  EX) passwordEncoder.matches(dto.getCurrentPassword(), encodedPassword))
         // 비교(equal) -> 암호화 전 상태로 임의 비교
         boolean check = encodedPassword.equals(currentPassword);
-        return check;
+        if (!check) { throw new BusinessException(ErrorCode.PASSWORD_MISMATCH); } // 미일치
     }
 
     // 새 비밀번호 변경
-    public void updatePassword(String memberId, String newPassword) {
+    public void updatePassword(String memberId, String currentPassword, String newPassword) {
         // TODO: 새 비밀번호 암호화 -> 추후 암호화 기능 제작할 경우, 수정 예정
+
+        // 현재 비밀번호와 새 비밀번호가 일치 여부 확인(true : 일치 => Bad Request(400 code))
+        boolean check = false;
+        check = currentPassword.equals(newPassword);
+        if (check) { throw new BusinessException(ErrorCode.PASSWORD_DUPLICATE); } // 일치
 
         // 새 비밀번호로 변경
         memberMapper.updatePassword(memberId, newPassword);
     }
 
     // 회원 정보 일치 여부 확인
-    public boolean checkMember(String memberId, MemberStatusRequest memberStatusRequest) {
+    public void checkMember(String memberId, MemberStatusRequest memberStatusRequest) {
         MemberVerify memberVerify = memberMapper.checkMember(memberId);
         boolean check = false;
-        // 이메일 일치 확인
-        check = memberVerify.getEmail().equals(memberStatusRequest.getEmail());
-        // 이름 일치 확인
-        check = memberVerify.getName().equals(memberStatusRequest.getName());
-        // 비밀번호 일치 확인
-        //TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
-        check = memberVerify.getPassword().equals(memberStatusRequest.getPassword());
-
-        return check;
+        // 이메일, 이름, 비밀번호 일치 확인
+        if (!memberVerify.getEmail().equals(memberStatusRequest.getEmail()) ||
+                !memberVerify.getName().equals(memberStatusRequest.getName()) ||
+                !memberVerify.getPassword().equals(memberStatusRequest.getPassword())) {
+            throw new BusinessException(ErrorCode.MEMBER_MISMATCH);
+        }
     }
 
     //  회원 정보 상태 변경(삭제)

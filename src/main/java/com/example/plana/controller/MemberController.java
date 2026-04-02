@@ -1,5 +1,6 @@
 package com.example.plana.controller;
 
+import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
@@ -31,14 +32,8 @@ public class MemberController {
     public ResponseEntity<ResponseBody> dupliNickname(@RequestParam("nickname") String nickname) {
         boolean nicknameDupli = memberService.existNickname(nickname);
 
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(200)
-                .message("OK")
-                .data(Map.of("nicknameDupli", nicknameDupli))
-                .build();
-
-        return  ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("nicknameDupli", nicknameDupli)));
     }
 
     /** DEV-47
@@ -51,14 +46,8 @@ public class MemberController {
     public ResponseEntity<ResponseBody> getMember(@PathVariable("memberId") String memberId) {
         MemberReadResponse data = memberService.readMember(memberId);
 
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(200)
-                .message("OK")
-                .data(Map.of("member", data))
-                .build();
-
-        return  ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", data)));
     }
 
     /** DEV-54
@@ -72,13 +61,8 @@ public class MemberController {
     public ResponseEntity<ResponseBody> editMember(@PathVariable("memberId") String memberId, @RequestBody MemberUpdateRequest memberUpdateRequest) {
         memberService.updateMember(memberId, memberUpdateRequest);
 
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(204)
-                .message("No Content")
-                .build();
-
-        return  ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
     /** DEV-55
@@ -97,29 +81,13 @@ public class MemberController {
         String newPassword = memberPwUpdateRequest.getNewPassword();
 
         // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request)
-        boolean check = memberService.checkPassword(memberId, currentPassword);
+        memberService.checkPassword(memberId, currentPassword);
 
-        if (check == true) { // 일치 경우
-            // 새 비밀번호 변경
-            memberService.updatePassword(memberId, newPassword);
+        // 새 비밀번호 변경
+        memberService.updatePassword(memberId, currentPassword, newPassword);
 
-            ResponseBody response = ResponseBody.builder()
-                    .success(true)
-                    .code(204)
-                    .message("No Content")
-                    .build();
-
-            return  ResponseEntity.status(HttpStatus.OK).body(response);
-        }
-        else { // 미일치 경우
-            ResponseBody response = ResponseBody.builder()
-                    .success(false)
-                    .code(400)
-                    .message("Bad Request")
-                    .build();
-
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.PASSWORD_UPDATE_SUCCESS, null));
     }
 
     /** DEV-56
@@ -134,29 +102,13 @@ public class MemberController {
     @PatchMapping("/{memberId}/withdraw")
     public ResponseEntity<ResponseBody> withdrawMember(@PathVariable("memberId") String memberId, @RequestBody MemberStatusRequest memberStatusRequest) {
         // 회원 정보 일치 여부 확인(true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => Bad Request)
-        boolean check = memberService.checkMember(memberId, memberStatusRequest);
+        memberService.checkMember(memberId, memberStatusRequest);
 
-        if (check == true) { // 일치 경우
-            // 회원 정보 상태 변경(삭제)
-            memberService.updateMemberStatus(memberId);
+        // 회원 정보 상태 변경(삭제)
+        memberService.updateMemberStatus(memberId);
 
-            ResponseBody response = ResponseBody.builder()
-                    .success(true)
-                    .code(204)
-                    .message("No Content")
-                    .build();
-
-            return  ResponseEntity.status(HttpStatus.OK).body(response);
-        }
-        else { // 미일치 경우
-            ResponseBody response = ResponseBody.builder()
-                    .success(false)
-                    .code(400)
-                    .message("Bad Request")
-                    .build();
-
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
     /** DEV-57
@@ -169,15 +121,7 @@ public class MemberController {
     public ResponseEntity<ResponseBody> getMyTripList(@PathVariable("memberId") String memberId) {
         List<MemberTripResponse> data = memberService.readTripByMemberId(memberId);
 
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(200)
-                .message("OK")
-                .data(Map.of("member",
-                        Map.of("memberId", memberId,
-                                "trips", data)))
-                .build();
-
-        return  ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", Map.of("memberId", memberId, "trips", data))));
     }
 }

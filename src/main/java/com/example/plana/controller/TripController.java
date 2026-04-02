@@ -1,5 +1,6 @@
 package com.example.plana.controller;
 
+import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
@@ -11,11 +12,8 @@ import com.example.plana.dto.trip.update.TripUpdateResponse;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Log4j2
 @RestController
@@ -33,15 +31,7 @@ public class TripController {
     @PostMapping
     public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripCreateRequest request) {
         TripCreateResponse data = tripService.createTrip(request);
-
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(201)
-                .message("Created")
-                .data(Map.of("trip", data))
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
     /**
@@ -54,15 +44,7 @@ public class TripController {
     @PutMapping("/{tripId}")
     public ResponseEntity<ResponseBody> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request) {
         TripUpdateResponse data = tripService.saveTrip(tripId, request);
-
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(200)
-                .message("OK")
-                .data(data)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
     }
 
     /**
@@ -74,14 +56,7 @@ public class TripController {
     @PatchMapping("/{tripId}/info")
     public ResponseEntity<ResponseBody> editTripInfo(@PathVariable String tripId, @RequestBody TripInfoUpdateRequest request) {
         tripService.updateTripInfo(tripId, request);
-
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(204)
-                .message("No Content")
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
     /**
@@ -93,14 +68,6 @@ public class TripController {
     @PostMapping("/{tripId}/days")
     public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request) {
         TripDayCreateResponse data = tripService.createTripDay(tripId, request);
-
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(201)
-                .message("Created")
-                .data(Map.of("trip", data))
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 }
