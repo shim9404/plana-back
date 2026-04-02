@@ -3,6 +3,8 @@ package com.example.plana.controller;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.TripCreateRequest;
 import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.create.TripDayCreateRequest;
+import com.example.plana.dto.trip.create.TripDayCreateResponse;
 import com.example.plana.dto.trip.update.TripInfoUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateResponse;
@@ -63,6 +65,12 @@ public class TripController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    /**
+     * editTripInfo 여행 정보(시작 일자, 종료 일자, 여행명) 갱신
+     * @param tripId 여행 ID
+     * @param request TripInfoUpdateRequest
+     * @return ResponseBody.data : null
+     */
     @PatchMapping("/{tripId}/info")
     public ResponseEntity<ResponseBody> editTripInfo(@PathVariable String tripId, @RequestBody TripInfoUpdateRequest request) {
         tripService.updateTripInfo(tripId, request);
@@ -74,5 +82,25 @@ public class TripController {
                 .build();
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    /**
+     * addTripDay 여행 일자 신규 추가
+     * @param tripId 여행 ID
+     * @param request TripDayCreateRequest
+     * @return ResponseBody.data : TripDayCreateResponse
+     */
+    @PostMapping("/{tripId}/days")
+    public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request) {
+        TripDayCreateResponse data = tripService.createTripDay(tripId, request);
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(201)
+                .message("Created")
+                .data(Map.of("trip", data))
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
