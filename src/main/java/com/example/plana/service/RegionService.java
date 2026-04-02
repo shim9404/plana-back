@@ -1,9 +1,8 @@
 package com.example.plana.service;
 
 
-import com.example.plana.dto.RegionResponse;
-import com.example.plana.dto.SiguResponse;
-import com.example.plana.dto.ZdoResponse;
+import com.example.plana.dto.region.read.SiguResponse;
+import com.example.plana.dto.region.read.ZdoResponse;
 import com.example.plana.mapper.RegionMapper;
 import com.example.plana.model.Region;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,7 @@ public class RegionService {
      * 지역 정보 불러오기
      * @return RegionResponse 시도리스트 -> 시군구 리스트 뎁스 구조로 반환
      */
-    public RegionResponse readRegion(){
+    public List<ZdoResponse> readRegion(){
 
         // DB에서 지역 정보 불러오기
         List<Region> siguDatas = regionMapper.readRegion();
@@ -35,13 +34,13 @@ public class RegionService {
             List<SiguResponse> siguList;
 
             // regionMap에 등록한 값이아니라면 새로 추가
-            if (!regionMap.containsKey(siguData.zdoCode)) {
+            if (!regionMap.containsKey(siguData.getZdoCode())) {
                 zdo = new ZdoResponse();
-                zdo.setZdoCode(siguData.zdoCode);
-                zdo.setZdoName(siguData.zdoName);
+                zdo.setZdoCode(siguData.getZdoCode());
+                zdo.setZdoName(siguData.getZdoName());
                 siguList = new ArrayList<>();
             } else {
-                zdo = regionMap.get(siguData.zdoCode);
+                zdo = regionMap.get(siguData.getZdoCode());
                 siguList = zdo.getSigus();
             }
 
@@ -60,9 +59,6 @@ public class RegionService {
             regionMap.put(zdo.getZdoCode(), zdo);
         }
 
-        RegionResponse regionResponse = new RegionResponse();
-        regionResponse.setRegions(new ArrayList<>(regionMap.values()));
-
-        return regionResponse;
+        return new ArrayList<>(regionMap.values());
     }
 }

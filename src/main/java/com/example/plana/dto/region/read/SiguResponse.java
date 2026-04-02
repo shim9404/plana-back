@@ -1,4 +1,4 @@
-package com.example.plana.dto;
+package com.example.plana.dto.region.read;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
