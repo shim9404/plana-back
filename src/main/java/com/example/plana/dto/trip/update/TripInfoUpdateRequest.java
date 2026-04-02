@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripDateUpdateRequest {
+public class TripInfoUpdateRequest {
     private String startDate;
     private String endDate;
+    private String name;
 }
