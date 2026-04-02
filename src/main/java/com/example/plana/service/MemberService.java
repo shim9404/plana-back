@@ -1,6 +1,7 @@
 package com.example.plana.service;
 
 import com.example.plana.dto.member.read.MemberReadResponse;
+import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
@@ -9,6 +10,8 @@ import com.example.plana.model.MemberVerify;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -76,5 +79,10 @@ public class MemberService {
     // 회원 정보 삭제(자동 실행)
     public void deleteOldMembers() {
         memberMapper.deleteOldMembers();
+    }
+
+    // 회원 여행 목록 호출
+    public List<MemberTripResponse> readTripByMemberId(String memberId) {
+        return memberMapper.readTripByMemberId(memberId);
     }
 }
