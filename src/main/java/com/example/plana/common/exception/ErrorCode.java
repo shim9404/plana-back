@@ -15,6 +15,7 @@ public enum ErrorCode {
     HANDLE_ACCESS_DENIED(403, "A003", "접근 권한이 없습니다."),
     PASSWORD_MISMATCH(400, "A004", "비밀번호가 일치하지 않습니다."),
     PASSWORD_DUPLICATE(400, "A005", "새 비밀번호가 현재 비밀번호와 동일합니다."),
+    MEMBER_MISMATCH(400, "A006", "회원 정보가 일치하지 않습니다."),
 
     // User
     USER_NOT_FOUND(404, "U001", "존재하지 않는 사용자입니다."),
