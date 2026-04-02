@@ -2,6 +2,7 @@ package com.example.plana.controller;
 
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.read.MemberReadResponse;
+import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.plana.service.MemberService;
 
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -155,5 +157,27 @@ public class MemberController {
 
             return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    }
+
+    /** DEV-57
+     * getMyTripList(): 회원 여행 목록 호출(내 여행페이지 진입)
+     *  -> readTripByMemberId(): 회원 여행 목록 호출(여행 고유 ID, 여행 이름)
+     * @param memberId // 회원 고유 ID
+     * @return ResponseBody.data : memberId, List<MemberTripResponse>
+     */
+    @GetMapping("/{memberId}/trips")
+    public ResponseEntity<ResponseBody> getMyTripList(@PathVariable("memberId") String memberId) {
+        List<MemberTripResponse> data = memberService.readTripByMemberId(memberId);
+
+        ResponseBody response = ResponseBody.builder()
+                .success(true)
+                .code(200)
+                .message("OK")
+                .data(Map.of("member",
+                        Map.of("memberId", memberId,
+                                "trips", data)))
+                .build();
+
+        return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

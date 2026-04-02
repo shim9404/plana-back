@@ -1,10 +1,13 @@
 package com.example.plana.mapper;
 
 import com.example.plana.dto.member.read.MemberReadResponse;
+import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.model.MemberVerify;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface MemberMapper {
@@ -31,4 +34,7 @@ public interface MemberMapper {
 
     // 회원 정보 삭제(자동 실행 - 30일 지난 경우)
     void deleteOldMembers();
+
+    // 회원 여행 목록 호출
+    List<MemberTripResponse> readTripByMemberId(@Param("memberId") String memberId);
 }
