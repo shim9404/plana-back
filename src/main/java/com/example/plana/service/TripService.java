@@ -4,6 +4,8 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.delete.TripScheduleDeleteResponse;
+import com.example.plana.dto.trip.read.TripScheduleOrderResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
@@ -332,6 +334,50 @@ public class TripService {
                 .price(request.getPrice())
                 .memo(request.getMemo())
                 .link(request.getLink())
+                .build();
+    }
+
+    /**
+     * 여행 스케줄 단건 삭제
+     * @param tripDayId 스케줄이 포함된 여행일자ID
+     * @param tripScheduleId 여행스케줄 ID
+     * @return TripScheduleDeleteResponse
+     */
+    @Transactional
+    public TripScheduleDeleteResponse deleteTripSchedule(String tripDayId, String tripScheduleId) {
+        // 1. SELECT TRIP SCHEDULE - getIndexSort
+        TripScheduleOrderResponse schedule = tripMapper.readTripScheduleIndexSort(tripScheduleId);
+        if (schedule == null) throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
+        int indexSort = schedule.getIndexSort();
+
+        // 2. DELETE TRIP SCHEDULE
+        int result = -1;
+        try {
+            result = tripMapper.deleteTripSchedule(tripScheduleId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+        }
+
+        if (result == 0) {      // 삭제 결과가 없을 경우 예외 처리
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
+        }
+
+        // 3. UPDATE INDEX SORT - tripDayId 기준 전체
+        Map<String, Object> reorderParams = new HashMap<>();
+        reorderParams.put("tripDayId", tripDayId);
+        reorderParams.put("indexSort", indexSort);
+
+        try {
+            tripMapper.updateTripSchedulesIndexSort(reorderParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_REORDER_FAILED);
+        }
+
+        // 4. 갱신된 스케줄 목록 조회 후 반환
+        List<TripScheduleOrderResponse> resultOrders = tripMapper.readTripSchedulesIndexSort(tripDayId);
+        return TripScheduleDeleteResponse.builder()
+                .tripDayId(tripDayId)
+                .scheduleOrders(resultOrders)
                 .build();
     }
 

@@ -3,6 +3,7 @@ package com.example.plana.controller;
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.delete.TripScheduleDeleteResponse;
 import com.example.plana.dto.trip.update.TripInfoUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateResponse;
@@ -80,5 +81,19 @@ public class TripController {
             @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request) {
         TripScheduleCreateResponse data = tripService.createTripSchedule(tripDayId, request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    /**
+     * deleteTripSchedule 여행 스케줄 단건 삭제
+     * @param tripId 여행 ID
+     * @param tripDayId 여행 일자 ID
+     * @param tripScheduleId 삭제할 여행 스케줄 ID
+     * @return ResponseBody.data : TripScheduleDeleteResponse
+     */
+    @DeleteMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
+    public ResponseEntity<ResponseBody> deleteTripSchedule(
+            @PathVariable String tripId, @PathVariable String tripDayId, @PathVariable String tripScheduleId) {
+        TripScheduleDeleteResponse data = tripService.deleteTripSchedule(tripDayId, tripScheduleId);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, data));
     }
 }

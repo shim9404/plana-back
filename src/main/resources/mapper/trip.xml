@@ -97,6 +97,33 @@
         END;
     </insert>
 
+    <!--  여행 스케줄 단건 삭제  -->
+    <delete id="deleteTripSchedule">
+        DELETE FROM TRIP_SCHEDULE
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
+    </delete>
+
+    <!--  여행 스케줄 단건 삭제 이후 SORT ORDER 재정렬  -->
+    <update id="updateTripSchedulesIndexSort">
+        UPDATE TRIP_SCHEDULE
+        SET INDEX_SORT = INDEX_SORT - 1
+        WHERE TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR}
+            AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
+    </update>
+
+    <select id="readTripScheduleIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
+        SELECT INDEX_SORT as "indexSort"
+        FROM TRIP_SCHEDULE
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId,  jdbcType=VARCHAR}
+    </select>
+
+    <select id="readTripSchedulesIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
+        SELECT TRIP_SCHEDULE_ID as "tripScheduleId", INDEX_SORT as "indexSort"
+        FROM TRIP_SCHEDULE
+        WHERE TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR}
+        ORDER BY INDEX_SORT
+    </select>
+
     <!--  여행의 스케줄 전체 삭제  -->
     <delete id="deleteTripSchedulesByTripId">
         DELETE FROM TRIP_SCHEDULE
