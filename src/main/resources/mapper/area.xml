@@ -4,26 +4,30 @@
 <mapper namespace="com.example.plana.mapper.AreaMapper">
     <select id="readArea" resultType="com.example.plana.model.Area">
         SELECT
-            AREA_ID as "areaId",
-            REGION_ID as "regionId",
-            SEARCH_TYPE as "searchType",
-            NAME as "name",
-            MAP_X as "mapX",
-            MAP_Y as "mapY",
-            CATEGORY as "category",
-            ADDRESS as "address",
-            ROAD_ADDRESS as "roadAddress",
-            LINK as "link",
-            TELEPHONE as "telephone",
-            DESCRIPTION as "description",
-            BOOKMARK_COUNT as "bookmarkCount",
-            CREATE_DATE as "createDate",
-            LATEST_DATE as "latestDate",
-            STATUS as "status"
-        FROM AREA
+            a.AREA_ID as "areaId",
+            a.REGION_ID as "regionId",
+            a.SEARCH_TYPE as "searchType",
+            a.NAME as "name",
+            a.MAP_X as "mapX",
+            a.MAP_Y as "mapY",
+            a.CATEGORY as "category",
+            a.ADDRESS as "address",
+            a.ROAD_ADDRESS as "roadAddress",
+            a.LINK as "link",
+            a.TELEPHONE as "telephone",
+            a.DESCRIPTION as "description",
+            a.BOOKMARK_COUNT as "bookmarkCount",
+            a.CREATE_DATE as "createDate",
+            a.LATEST_DATE as "latestDate",
+            a.STATUS as "status"
+        FROM AREA a
+        INNER JOIN REGION r ON a.region_id = r.region_id
         <where>
-            <if test="regionId != null" >
-                REGION_ID = #{regionId}
+            <if test="regionId != null and regionId != ''">
+                AND a.region_id = #{regionId}
+            </if>
+            <if test="zdoCode != null and zdoCode != 0">
+                AND r.zdo_code = #{zdoCode}
             </if>
         </where>
     </select>
