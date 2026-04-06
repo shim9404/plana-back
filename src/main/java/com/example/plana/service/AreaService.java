@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,83 +16,70 @@ import java.util.List;
 public class AreaService {
     private final AreaMapper areaMapper;
 
-    public AreaReadResponse getArea(String regionId, String zdo){
-        List<Area> areas = areaMapper.readArea(regionId, zdo);
-        log.info(areas);
+    public AreaReadResponse getArea(String regionId, String zdoCode){
 
-        List<AreaDetailResponse> places = new ArrayList<>();
-        List<AreaDetailResponse> spots = new ArrayList<>();
-        List<AreaDetailResponse> foods = new ArrayList<>();
+        List<Area> areas = areaMapper.readArea(regionId, zdoCode);
 
-        // 필요한 데이터 변환
-        for (Area area : areas) {
-            // 파라미터로 넘어온 regionId와 일치하지 않으면 추가 안 함 (한 번 더 확인용)
-//            if (!regionId.isEmpty()){
-//                if (!area.getRegionId().equals(regionId)) continue;;
-//            }
+        // getSearchType에 따라 그룹화
+        Map<String, List<Area>> groupedMap = areas.stream()
+                .collect(Collectors.groupingBy(Area::getSearchType));
 
-            AreaDetailResponse areaDetail = new AreaDetailResponse();
+        AreaReadResponse response = new AreaReadResponse();
+        response.setRegionId(regionId);
 
-            areaDetail.setAreaId(area.getAreaId());
-            areaDetail.setName(area.getName());
+        // 각 타입별로 변환해서 세팅
+        AreaTypeResponse place = createTypeResponse("PLACE", groupedMap.get("PLACE"));
+        AreaTypeResponse spot = createTypeResponse("SPOT",groupedMap.get("SPOT"));
+        AreaTypeResponse food = createTypeResponse("FOOD",groupedMap.get("FOOD"));
 
-            MapPos mapPos = new MapPos();
-            mapPos.setX(area.getMapX());
-            mapPos.setY(area.getMapY());
-//            log.info("X: ", area.getMapX());
-//            log.info("Y: ", area.getMapY());
+        return new AreaReadResponse(areas.size(), regionId, place, spot, food);
+    }
 
-            areaDetail.setMapPos(mapPos);
-
-            log.info(mapPos);
-            areaDetail.setCategory(area.getCategory());
-            areaDetail.setAddress(area.getAddress());
-            areaDetail.setRoadAddress(area.getRoadAddress());
-            areaDetail.setLink(area.getLink());
-            areaDetail.setTelePhone(area.getTelePhone());
-            areaDetail.setDescription(area.getDescription());
-            areaDetail.setBookmarkCount(area.getBookmarkCount());
-            areaDetail.setCreateDate(area.getCreateDate());
-            areaDetail.setLatestDate(area.getLatestDate());
-            areaDetail.setStatus(area.getStatus());
-
-            switch (area.getSearchType()){
-                case "PLACE":
-                    places.add(areaDetail);
-                    break;
-                case "SPOT":
-                    spots.add(areaDetail);
-                    break;
-                case "FOOD":
-                    foods.add(areaDetail);
-                    break;
-                default:
-                    break;
-            }
+    /**
+     * 특정 타입의 데이터를 받아 AreaTypeResponse 객체로 변환
+     */
+    private AreaTypeResponse createTypeResponse(String type, List<Area> areas) {
+        if (areas == null || areas.isEmpty()) {
+            return new AreaTypeResponse(type, 0, Collections.emptyList());
         }
-        AreaTypeResponse placeResponse = new AreaTypeResponse();
-        AreaTypeResponse spotResponse = new AreaTypeResponse();
-        AreaTypeResponse foodResponse = new AreaTypeResponse();
 
-        placeResponse.setAreaCount(places.size());
-        spotResponse.setAreaCount(spots.size());
-        foodResponse.setAreaCount(foods.size());
+        // Area(Model) -> AreaDetailResponse(DTO) 변환
+        List<AreaDetailResponse> detailList = areas.stream()
+                .map(this::toDetailResponse)
+                .collect(Collectors.toList());
 
-        placeResponse.setSearchType("PLACE");
-        spotResponse.setSearchType("SPOT");
-        foodResponse.setSearchType("FOOD");
+        return new AreaTypeResponse(type, detailList.size(), detailList);
+    }
 
-        placeResponse.setAreas(places);
-        spotResponse.setAreas(spots);
-        foodResponse.setAreas(foods);
+    /**
+     * Area Data를 AreaDetailRespose데이터로 가공하여 반환
+     * @param area
+     * @return AreaDetailResponse
+     */
+    public AreaDetailResponse toDetailResponse(Area area){
 
-        AreaReadResponse areaReadResponse = new AreaReadResponse();
-        areaReadResponse.setRegionId(regionId);
-        areaReadResponse.setTotalCount(places.size()+spots.size()+foods.size());
-        areaReadResponse.setPlace(placeResponse);
-        areaReadResponse.setSpot(spotResponse);
-        areaReadResponse.setFood(foodResponse);
+        AreaDetailResponse areaDetail = new AreaDetailResponse();
 
-        return areaReadResponse;
+        areaDetail.setAreaId(area.getAreaId());
+        areaDetail.setName(area.getName());
+
+        MapPos mapPos = new MapPos();
+        mapPos.setX(area.getMapX());
+        mapPos.setY(area.getMapY());
+
+        areaDetail.setMapPos(mapPos);
+
+        areaDetail.setCategory(area.getCategory());
+        areaDetail.setAddress(area.getAddress());
+        areaDetail.setRoadAddress(area.getRoadAddress());
+        areaDetail.setLink(area.getLink());
+        areaDetail.setTelePhone(area.getTelePhone());
+        areaDetail.setDescription(area.getDescription());
+        areaDetail.setBookmarkCount(area.getBookmarkCount());
+        areaDetail.setCreateDate(area.getCreateDate());
+        areaDetail.setLatestDate(area.getLatestDate());
+        areaDetail.setStatus(area.getStatus());
+
+        return areaDetail;
     }
 }
