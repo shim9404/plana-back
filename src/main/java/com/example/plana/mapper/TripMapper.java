@@ -14,8 +14,9 @@ public interface TripMapper {
 
     // ── TripDay ───────────────────────────
     void createTripDay(Map<String, Object> params);   // 여행 생성용 단건 INSERT
-    void createTripDays(Map<String, Object> params);  // 복구용 전체 필드 INSERT (MERGE)
-    void updateTripDays(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
+//    void createTripDays(Map<String, Object> params);  // 복구용 전체 필드 INSERT (MERGE)
+//    void updateTripDays(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
+    int updateTripDaysIndexSort(Map<String, Object> params);
     void deleteTripDaysByTripId(String tripId);
 
     // ── TripSchedule ──────────────────────

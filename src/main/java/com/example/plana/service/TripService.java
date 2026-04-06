@@ -297,6 +297,25 @@ public class TripService {
                 .build();
     }
 
+    @Transactional
+    public void updateTripDaysIndexSort(String tripId, TripDayOrderUpdateRequest request) {
+        for (TripDayOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {
+            Map<String, Object> dayParams = new HashMap<>();
+            dayParams.put("indexSort", dayOrder.getIndexSort());
+            dayParams.put("tripDayId", dayOrder.getTripDayId());
+            dayParams.put("tripId", tripId);
+            int result = -1;
+            try {
+                result = tripMapper.updateTripDaysIndexSort(dayParams);
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.TRIP_DAY_REORDER_FAILED);
+            }
+            if (result == 0) {      // 업데이트 결과에 따른 예외 처리
+                throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
+            }
+        }
+    }
+
     /* 여행 스케줄 [TRIP_SCHEDULE] ============================================================================================*/
     /**
      * 여행 스케줄 신규 추가

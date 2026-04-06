@@ -4,10 +4,7 @@ import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.delete.TripScheduleDeleteResponse;
-import com.example.plana.dto.trip.update.TripInfoUpdateRequest;
-import com.example.plana.dto.trip.update.TripScheduleUpdateRequest;
-import com.example.plana.dto.trip.update.TripUpdateRequest;
-import com.example.plana.dto.trip.update.TripUpdateResponse;
+import com.example.plana.dto.trip.update.*;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -68,6 +65,12 @@ public class TripController {
     public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request) {
         TripDayCreateResponse data = tripService.createTripDay(tripId, request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    @PatchMapping("/{tripId}/days/reorder")
+    public ResponseEntity<ResponseBody> reorderTripDays(@PathVariable String tripId, @RequestBody TripDayOrderUpdateRequest request) {
+        tripService.updateTripDaysIndexSort(tripId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
     /**
