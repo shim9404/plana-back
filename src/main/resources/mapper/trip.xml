@@ -68,6 +68,14 @@
         VALUES (source.TRIP_ID, source.INDEX_SORT)
     </insert>
 
+    <!--  여행 일자 정렬 순서 전체 갱신  -->
+    <update id="updateTripDaysIndexSort">
+        UPDATE TRIP_DAY
+        SET INDEX_SORT = #{indexSort, jdbcType=INTEGER}
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+            AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+
     <!--  여행의 일자 전체 삭제  -->
     <delete id="deleteTripDaysByTripId">
         DELETE FROM TRIP_DAY
