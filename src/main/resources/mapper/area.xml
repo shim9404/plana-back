@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.AreaMapper">
+    <select id="readArea" resultType="com.example.plana.model.Area">
+        SELECT
+            a.AREA_ID as "areaId",
+            a.REGION_ID as "regionId",
+            a.SEARCH_TYPE as "searchType",
+            a.NAME as "name",
+            a.MAP_X as "mapX",
+            a.MAP_Y as "mapY",
+            a.CATEGORY as "category",
+            a.ADDRESS as "address",
+            a.ROAD_ADDRESS as "roadAddress",
+            a.LINK as "link",
+            a.TELEPHONE as "telephone",
+            a.DESCRIPTION as "description",
+            a.BOOKMARK_COUNT as "bookmarkCount",
+            a.CREATE_DATE as "createDate",
+            a.LATEST_DATE as "latestDate",
+            a.STATUS as "status"
+        FROM AREA a
+        INNER JOIN REGION r ON a.region_id = r.region_id
+        <where>
+            <if test="regionId != null and regionId != ''">
+                AND a.region_id = #{regionId}
+            </if>
+            <if test="zdoCode != null and zdoCode != 0">
+                AND r.zdo_code = #{zdoCode}
+            </if>
+        </where>
+    </select>
+</mapper>
