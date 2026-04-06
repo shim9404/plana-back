@@ -10,7 +10,7 @@ import java.util.Map;
 public interface TripMapper {
     // ── Trip ──────────────────────────────
     void createTrip(Map<String, Object> params);
-    Integer updateTrip(Map<String, Object> params);
+    int updateTrip(Map<String, Object> params);
 
     // ── TripDay ───────────────────────────
     void createTripDay(Map<String, Object> params);   // 여행 생성용 단건 INSERT
@@ -20,7 +20,7 @@ public interface TripMapper {
 
     // ── TripSchedule ──────────────────────
     void createTripSchedule(Map<String, Object> params);   // 여행 생성용 단건 INSERT
-    void updateTripSchedule(Map<String, Object> params);   // 단건 정보 수정 UPDATE
+    int updateTripSchedule(Map<String, Object> params);   // 단건 정보 수정 UPDATE
     void updateTripSchedules(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
     void deleteTripSchedulesByTripId(String tripId);        // 특정 여행ID 하위 전체 삭제 DELETE
     // 단건 삭제

@@ -5,6 +5,7 @@ import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.delete.TripScheduleDeleteResponse;
 import com.example.plana.dto.trip.update.TripInfoUpdateRequest;
+import com.example.plana.dto.trip.update.TripScheduleUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateResponse;
 import com.example.plana.service.TripService;
@@ -81,6 +82,19 @@ public class TripController {
             @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request) {
         TripScheduleCreateResponse data = tripService.createTripSchedule(tripDayId, request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    /**
+     * editTripSchedule 여행 스케줄 수정(갱신)
+     * @param tripScheduleId 여행 스케줄 ID
+     * @param request TripScheduleUpdateRequest
+     * @return ResponseBody.data : null
+     */
+    @PatchMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
+    public ResponseEntity<ResponseBody> editTripSchedule(
+            @PathVariable String tripScheduleId, @RequestBody TripScheduleUpdateRequest request) {
+        tripService.updateTripSchedule(tripScheduleId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
     /**

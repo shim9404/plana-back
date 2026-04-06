@@ -248,6 +248,7 @@ public class TripService {
         }
     }
 
+    /* 여행 일자 [TRIP_DAY] ============================================================================================*/
     /**
      * 여행 일자 신규 추가
      * @param tripId 여행 ID
@@ -296,6 +297,7 @@ public class TripService {
                 .build();
     }
 
+    /* 여행 스케줄 [TRIP_SCHEDULE] ============================================================================================*/
     /**
      * 여행 스케줄 신규 추가
      * @param tripDayId 여행 일자 ID
@@ -335,6 +337,36 @@ public class TripService {
                 .memo(request.getMemo())
                 .link(request.getLink())
                 .build();
+    }
+
+    /**
+     * 여행 스케줄 단건 업데이트(수정/갱신)
+     * @param tripScheduleId 여행 스케줄 ID
+     * @param request TripScheduleUpdateRequest
+     */
+    public void updateTripSchedule(String tripScheduleId, TripScheduleUpdateRequest request) {
+        Map<String, Object> scheduleParams = new HashMap<>();
+        scheduleParams.put("tripScheduleId", tripScheduleId);
+        scheduleParams.put("indexSort",      request.getIndexSort());
+        scheduleParams.put("startTime",      request.getStartTime());
+        scheduleParams.put("endTime",        request.getEndTime());
+        scheduleParams.put("context",        request.getContext());
+        scheduleParams.put("category",       request.getCategory());
+        scheduleParams.put("price",          request.getPrice());
+        scheduleParams.put("memo",           request.getMemo());
+        scheduleParams.put("link",           request.getLink());
+
+        log.info(request);
+        int result = -1;
+        try {
+            result = tripMapper.updateTripSchedule(scheduleParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_SAVE_FAILED);
+        }
+
+        if (result == 0) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
+        }
     }
 
     /**

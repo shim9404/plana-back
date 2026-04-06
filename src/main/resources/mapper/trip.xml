@@ -97,6 +97,22 @@
         END;
     </insert>
 
+    <!--  여행 스케줄 수정(갱신)  -->
+    <update id="updateTripSchedule">
+        UPDATE TRIP_SCHEDULE
+        <set>
+            <if test="tripDayId != null">  TRIP_DAY_ID  = #{tripDayId,  jdbcType=VARCHAR},</if>
+            <if test="startTime != null">  START_TIME   = #{startTime,  jdbcType=VARCHAR},</if>
+            <if test="endTime != null">    END_TIME     = #{endTime,    jdbcType=VARCHAR},</if>
+            <if test="context != null">    CONTEXT      = #{context,    jdbcType=VARCHAR},</if>
+            <if test="category != null">   CATEGORY     = #{category,   jdbcType=VARCHAR},</if>
+            <if test="price != null">      PRICE        = #{price,      jdbcType=NUMERIC},</if>
+            <if test="memo != null">       MEMO         = #{memo,       jdbcType=VARCHAR},</if>
+            <if test="link != null">       LINK         = #{link,       jdbcType=VARCHAR}</if>
+        </set>
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId,       jdbcType=VARCHAR}
+    </update>
+
     <!--  여행 스케줄 단건 삭제  -->
     <delete id="deleteTripSchedule">
         DELETE FROM TRIP_SCHEDULE
@@ -111,12 +127,14 @@
             AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
     </update>
 
+    <!--  여행 스케줄(단건) IndexSort 값 조회  -->
     <select id="readTripScheduleIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_SCHEDULE
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId,  jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 스케줄 SORT ORDER 재정렬 후 ID 및 IndexSort 조회 -->
     <select id="readTripSchedulesIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
         SELECT TRIP_SCHEDULE_ID as "tripScheduleId", INDEX_SORT as "indexSort"
         FROM TRIP_SCHEDULE
