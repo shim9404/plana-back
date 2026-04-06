@@ -1,7 +1,9 @@
 package com.example.plana.mapper;
 
+import com.example.plana.dto.trip.read.TripScheduleOrderResponse;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
 import java.util.Map;
 
 @Mapper
@@ -20,5 +22,10 @@ public interface TripMapper {
     void createTripSchedule(Map<String, Object> params);   // 여행 생성용 단건 INSERT
     void updateTripSchedule(Map<String, Object> params);   // 단건 정보 수정 UPDATE
     void updateTripSchedules(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
-    void deleteTripSchedulesByTripId(String tripId);
+    void deleteTripSchedulesByTripId(String tripId);        // 특정 여행ID 하위 전체 삭제 DELETE
+    // 단건 삭제
+    int deleteTripSchedule(String tripScheduleId);         // 단건 삭제 DELETE
+    void updateTripSchedulesIndexSort(Map<String, Object> params);
+    TripScheduleOrderResponse readTripScheduleIndexSort(String tripScheduleId);
+    List<TripScheduleOrderResponse> readTripSchedulesIndexSort(String tripDayId);
 }
