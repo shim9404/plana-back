@@ -24,16 +24,16 @@ public class MemberController {
 
     /** DEV-43
      * dupliNickname(): 닉네임 중복 체크 호출 함수
-     *  -> existNickname(): 닉네임 중복 체크(결과 - TRUE: 중복 O/ FALSE: 중복 X)
+     *  -> existNickname(): 닉네임 중복 체크(true : 일치(중복) => ErrorCode 호출 / false: 비일치(중복 X) => 새닉네임 반환)
      * @param nickname        // 새 닉네임
      * @return ResponseBody.data : nicknameDupli
      */
     @GetMapping("/nickname/check")
     public ResponseEntity<ResponseBody> dupliNickname(@RequestParam("nickname") String nickname) {
-        boolean nicknameDupli = memberService.existNickname(nickname);
+        memberService.existNickname(nickname);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("nicknameDupli", nicknameDupli)));
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("newNickname", nickname)));
     }
 
     /** DEV-47
@@ -68,7 +68,7 @@ public class MemberController {
     /** DEV-55
      * editPassword(): 회원 비밀번호 수정
      *  -> checkPassword()   : 비밀번호 일치 확인
-     *     (true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request(400 code))
+     *     (true : 일치 => 새 비밀번호 수정 / false: 비일치 => ErrorCode 호출)
      *  -> updatePassword() : 새 비밀번호 변경
      * @param memberId                 // 회원 고유 ID
      * @param memberPwUpdateRequest // 요청 Body - 현재 비밀번호, 새 비밀번호
@@ -80,7 +80,7 @@ public class MemberController {
         String currentPassword = memberPwUpdateRequest.getCurrentPassword();
         String newPassword = memberPwUpdateRequest.getNewPassword();
 
-        // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => Bad Request)
+        // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => ErrorCode 호출)
         memberService.checkPassword(memberId, currentPassword);
 
         // 새 비밀번호 변경
@@ -93,7 +93,7 @@ public class MemberController {
     /** DEV-56
      * withdrawMember(): 회원 탈퇴
      *  -> checkMember()         : 회원 정보 일치 확인
-     *     (true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => Bad Request(400 code))
+     *     (true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => ErrorCode 호출)
      *  -> updateMemberStatus() : 회원 정보 상태 변경(ACTIVE -> DELETED)
      * @param memberId              // 회원 고유 ID
      * @param memberStatusRequest // 요청 Body - 이메일, 이름, 비밀번호
@@ -101,7 +101,7 @@ public class MemberController {
      */
     @PatchMapping("/{memberId}/withdraw")
     public ResponseEntity<ResponseBody> withdrawMember(@PathVariable("memberId") String memberId, @RequestBody MemberStatusRequest memberStatusRequest) {
-        // 회원 정보 일치 여부 확인(true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => Bad Request)
+        // 회원 정보 일치 여부 확인(true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => ErrorCode 호출)
         memberService.checkMember(memberId, memberStatusRequest);
 
         // 회원 정보 상태 변경(삭제)
