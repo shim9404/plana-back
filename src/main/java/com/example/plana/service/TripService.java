@@ -71,8 +71,15 @@ public class TripService {
             // TRIP_SCHEDULE INSERT
             Map<String, Object> scheduleParams = new HashMap<>();
             scheduleParams.put("tripDayId", tripDayId);
+            scheduleParams.put("indexSort", 1);
+            scheduleParams.put("startTime", null);
+            scheduleParams.put("endTime", null);
+            scheduleParams.put("context", null);
+            scheduleParams.put("category", null);
+            scheduleParams.put("price", null);
+            scheduleParams.put("memo", null);
+            scheduleParams.put("link", null);
             scheduleParams.put("tripScheduleId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripScheduleId의 반환값을 담아야 함
-
             try {
                 tripMapper.createTripSchedule(scheduleParams);
             } catch (Exception e) {
@@ -183,7 +190,7 @@ public class TripService {
                 scheduleParams.put("tripScheduleId", null);
 
                 try {
-                    tripMapper.createTripSchedules(scheduleParams);
+                    tripMapper.createTripSchedule(scheduleParams);
                 } catch (Exception e) {
                     throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
                 }
@@ -245,6 +252,7 @@ public class TripService {
      * @param request TripDayCreateRequest
      * @return TripDayCreateResponse
      */
+    @Transactional
     public TripDayCreateResponse createTripDay(String tripId, TripDayCreateRequest request) {
         // 1. TRIP_DAY INSERT (단건)
         Map<String, Object> dayParams = new HashMap<>();
@@ -262,6 +270,7 @@ public class TripService {
         // 2. TRIP_SCHEDULE INSERT (단건)
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripDayId", tripDayId);
+        scheduleParams.put("indexSort", 1);
         scheduleParams.put("tripScheduleId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripScheduleId의 반환값을 담아야 함
 
         try {
@@ -282,6 +291,47 @@ public class TripService {
                 .tripDayId(tripDayId)
                 .indexSort(request.getIndexSort())
                 .schedules(List.of(schedule))
+                .build();
+    }
+
+    /**
+     * 여행 스케줄 신규 추가
+     * @param tripDayId 여행 일자 ID
+     * @param request TripScheduleCreateRequest
+     * @return TripScheduleCreateResponse
+     */
+    public TripScheduleCreateResponse createTripSchedule(String tripDayId, TripScheduleCreateRequest request) {
+        Map<String, Object> scheduleParams = new HashMap<>();
+        scheduleParams.put("tripDayId",      tripDayId);
+        scheduleParams.put("indexSort",      request.getIndexSort());
+        scheduleParams.put("startTime",      request.getStartTime());
+        scheduleParams.put("endTime",        request.getEndTime());
+        scheduleParams.put("context",        request.getContext());
+        scheduleParams.put("category",       request.getCategory());
+        scheduleParams.put("price",          request.getPrice());
+        scheduleParams.put("memo",           request.getMemo());
+        scheduleParams.put("link",           request.getLink());
+        scheduleParams.put("tripScheduleId", null);
+
+        log.info(request);
+        try {
+            tripMapper.createTripSchedule(scheduleParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
+        }
+
+        String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
+        return TripScheduleCreateResponse.builder()
+                .tripScheduleId(tripScheduleId)
+                .tripDayId(tripDayId)
+                .indexSort(request.getIndexSort())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .context(request.getContext())
+                .category(request.getCategory())
+                .price(request.getPrice())
+                .memo(request.getMemo())
+                .link(request.getLink())
                 .build();
     }
 
