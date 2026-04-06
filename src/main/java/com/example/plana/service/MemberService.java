@@ -21,22 +21,40 @@ public class MemberService {
     private final MemberMapper memberMapper;
 
     // 닉네임 중복 체크
-    public boolean existNickname(String nickname) {
-        return memberMapper.existNickname(nickname);
+    public void existNickname(String nickname) {
+        if (memberMapper.existNickname(nickname)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }
     }
 
     // 회원 정보 호출
     public MemberReadResponse readMember(String memberId) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 회원 정보 호출
         return memberMapper.readMember(memberId);
     }
 
     // 회원 정보 수정
     public void updateMember(String memberId, MemberUpdateRequest memberUpdateRequest) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
         memberMapper.updateMember(memberId, memberUpdateRequest);
     }
 
     // 현재 비밀번호 일치 여부 확인
     public void checkPassword(String memberId, String currentPassword) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
         // DB에서 암호화된 비밀번호 가져오기
         String encodedPassword = memberMapper.checkPassword(memberId);
 
@@ -47,17 +65,16 @@ public class MemberService {
         //  EX) passwordEncoder.matches(dto.getCurrentPassword(), encodedPassword))
         // 비교(equal) -> 암호화 전 상태로 임의 비교
         boolean check = encodedPassword.equals(currentPassword);
-        if (!check) { throw new BusinessException(ErrorCode.PASSWORD_MISMATCH); } // 미일치
+        if (!check) { throw new BusinessException(ErrorCode.PASSWORD_MISMATCH); }
     }
 
     // 새 비밀번호 변경
     public void updatePassword(String memberId, String currentPassword, String newPassword) {
         // TODO: 새 비밀번호 암호화 -> 추후 암호화 기능 제작할 경우, 수정 예정
 
-        // 현재 비밀번호와 새 비밀번호가 일치 여부 확인(true : 일치 => Bad Request(400 code))
-        boolean check = false;
-        check = currentPassword.equals(newPassword);
-        if (check) { throw new BusinessException(ErrorCode.PASSWORD_DUPLICATE); } // 일치
+        // 현재 비밀번호와 새 비밀번호가 일치 여부 확인(true : 일치 => ErrorCode 호출)
+        boolean check = currentPassword.equals(newPassword);
+        if (check) { throw new BusinessException(ErrorCode.PASSWORD_DUPLICATE); }
 
         // 새 비밀번호로 변경
         memberMapper.updatePassword(memberId, newPassword);
@@ -65,9 +82,14 @@ public class MemberService {
 
     // 회원 정보 일치 여부 확인
     public void checkMember(String memberId, MemberStatusRequest memberStatusRequest) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
         MemberVerify memberVerify = memberMapper.checkMember(memberId);
-        boolean check = false;
         // 이메일, 이름, 비밀번호 일치 확인
+        // TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
         if (!memberVerify.getEmail().equals(memberStatusRequest.getEmail()) ||
                 !memberVerify.getName().equals(memberStatusRequest.getName()) ||
                 !memberVerify.getPassword().equals(memberStatusRequest.getPassword())) {
@@ -87,6 +109,11 @@ public class MemberService {
 
     // 회원 여행 목록 호출
     public List<MemberTripResponse> readTripByMemberId(String memberId) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
         return memberMapper.readTripByMemberId(memberId);
     }
 }

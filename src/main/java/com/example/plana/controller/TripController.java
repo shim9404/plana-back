@@ -2,10 +2,7 @@ package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
-import com.example.plana.dto.trip.create.TripCreateRequest;
-import com.example.plana.dto.trip.create.TripCreateResponse;
-import com.example.plana.dto.trip.create.TripDayCreateRequest;
-import com.example.plana.dto.trip.create.TripDayCreateResponse;
+import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.update.TripInfoUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateRequest;
 import com.example.plana.dto.trip.update.TripUpdateResponse;
@@ -68,6 +65,20 @@ public class TripController {
     @PostMapping("/{tripId}/days")
     public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request) {
         TripDayCreateResponse data = tripService.createTripDay(tripId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    /**
+     * addTripSchedule 여행 스케줄 신규 추가
+     * @param tripId 여행 ID
+     * @param tripDayId 여행 일자 ID
+     * @param request TripScheduleCreateRequest
+     * @return ResponseBody.data : TripScheduleCreateResponse
+     */
+    @PostMapping("/{tripId}/days/{tripDayId}/schedules")
+    public ResponseEntity<ResponseBody> addTripSchedule(
+            @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request) {
+        TripScheduleCreateResponse data = tripService.createTripSchedule(tripDayId, request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 }
