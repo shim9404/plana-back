@@ -76,21 +76,8 @@
 
 
     <!-- === [ TRIP SCHEDULE ]  =========================================================================== -->
-    <!-- 신규 생성용 : 여행 스케줄 단건 INSERT (빈 슬롯) -->
+    <!-- 신규 생성용 : 여행 스케줄 단건 INSERT -->
     <insert id="createTripSchedule" statementType="CALLABLE">
-        BEGIN
-            INSERT INTO TRIP_SCHEDULE (
-                TRIP_DAY_ID, INDEX_SORT
-            ) VALUES (
-                #{tripDayId, jdbcType=VARCHAR},
-                1
-            )
-            RETURNING TRIP_SCHEDULE_ID INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR};
-        END;
-    </insert>
-
-    <!-- 오프라인 복구용 : 전체 필드 INSERT -->
-    <insert id="createTripSchedules" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_SCHEDULE (
                 TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME,

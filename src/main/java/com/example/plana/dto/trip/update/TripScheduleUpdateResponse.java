@@ -16,7 +16,7 @@ public class TripScheduleUpdateResponse {
     private String startTime;
     private String endTime;
     private String bookmarkId;
-    private String context;
+    private String context;     // bookmarkId가 있을 경우, 장소명 담아서 반환
     private String category;
     private Integer price;
     private String memo;
