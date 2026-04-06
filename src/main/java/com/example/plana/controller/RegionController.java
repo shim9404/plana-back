@@ -1,6 +1,9 @@
 package com.example.plana.controller;
 
+import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
+import com.example.plana.dto.region.read.ZdoResponse;
+import com.example.plana.model.Region;
 import com.example.plana.service.RegionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -24,13 +28,10 @@ public class RegionController {
     @GetMapping
     public ResponseEntity<ResponseBody> region(){
 
-        ResponseBody response = ResponseBody.builder()
-                .success(true)
-                .code(200)
-                .message("OK")
-                .data(Map.of("regions",regionService.readRegion()))
-                .build();
+        List<ZdoResponse> data = regionService.readRegion();
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("regions",data))
+        );
     }
 }

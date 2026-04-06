@@ -27,4 +27,42 @@
         WHERE MEMBER_ID = #{memberId}
     </update>
 
+    <select id="checkPassword" resultType="string">
+        SELECT PASSWORD
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <update id="updatePassword">
+        UPDATE MEMBER
+        SET PASSWORD = #{newPassword}
+        WHERE MEMBER_ID = #{memberId}
+    </update>
+
+    <select id="checkMember" resultType="com.example.plana.model.MemberVerify">
+        SELECT EMAIL as email, NAME as name, PASSWORD as password
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <update id="updateMemberStatus">
+        UPDATE MEMBER
+        SET STATUS = 'DELETED'
+        WHERE MEMBER_ID = #{memberId}
+    </update>
+
+    <delete id="deleteOldMembers">
+        DELETE FROM MEMBER
+        WHERE STATUS = 'DELETED'
+        <![CDATA[
+      AND TO_DATE(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') < SYSDATE - 30
+        ]]>
+    </delete>
+
+    <select id="readTripByMemberId" resultType="com.example.plana.dto.member.read.MemberTripResponse">
+        SELECT TRIP_ID as tripId, NAME as name
+        FROM TRIP
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
 </mapper>
