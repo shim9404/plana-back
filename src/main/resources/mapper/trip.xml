@@ -109,13 +109,14 @@
     <insert id="createTripSchedule" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_SCHEDULE (
-                TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME,
+                TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME, BOOKMARK_ID,
                 CONTEXT, CATEGORY, PRICE, MEMO, LINK
             ) VALUES (
                 #{tripDayId,  jdbcType=VARCHAR},
                 #{indexSort,  jdbcType=INTEGER},
                 #{startTime,  jdbcType=VARCHAR},
                 #{endTime,    jdbcType=VARCHAR},
+                #{bookmarkId, jdbcType=VARCHAR},
                 #{context,    jdbcType=VARCHAR},
                 #{category,   jdbcType=VARCHAR},
                 #{price,      jdbcType=NUMERIC},
@@ -133,6 +134,7 @@
             <if test="tripDayId != null">  TRIP_DAY_ID  = #{tripDayId,  jdbcType=VARCHAR},</if>
             <if test="startTime != null">  START_TIME   = #{startTime,  jdbcType=VARCHAR},</if>
             <if test="endTime != null">    END_TIME     = #{endTime,    jdbcType=VARCHAR},</if>
+            <if test="bookmarkId != null"> BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
             <if test="context != null">    CONTEXT      = #{context,    jdbcType=VARCHAR},</if>
             <if test="category != null">   CATEGORY     = #{category,   jdbcType=VARCHAR},</if>
             <if test="price != null">      PRICE        = #{price,      jdbcType=NUMERIC},</if>
@@ -149,7 +151,7 @@
     </delete>
 
     <!--  여행 스케줄 단건 삭제 이후 SORT ORDER 재정렬  -->
-    <update id="updateTripSchedulesIndexSort">
+    <update id="updateTripSchedulesIndexSortAfterDelete">
         UPDATE TRIP_SCHEDULE
         SET INDEX_SORT = INDEX_SORT - 1
         WHERE TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR}
@@ -157,7 +159,7 @@
     </update>
 
     <!--  여행 스케줄(단건) IndexSort 값 조회  -->
-    <select id="readTripScheduleIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
+    <select id="readTripScheduleIndexSort" resultType="Integer">
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_SCHEDULE
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId,  jdbcType=VARCHAR}

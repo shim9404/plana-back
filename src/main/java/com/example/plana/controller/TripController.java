@@ -124,12 +124,12 @@ public class TripController {
      * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
      * @param tripScheduleId 삭제할 여행 스케줄 ID
-     * @return ResponseBody.data : TripScheduleDeleteResponse
+     * @return ResponseBody.data : null
      */
     @DeleteMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
     public ResponseEntity<ResponseBody> deleteTripSchedule(
             @PathVariable String tripId, @PathVariable String tripDayId, @PathVariable String tripScheduleId) {
-        TripScheduleDeleteResponse data = tripService.deleteTripSchedule(tripDayId, tripScheduleId);
-        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, data));
+        tripService.deleteTripSchedule(tripDayId, tripScheduleId);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 }
