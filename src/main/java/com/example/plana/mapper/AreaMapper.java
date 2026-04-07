@@ -9,5 +9,5 @@ import java.util.List;
 
 @Mapper
 public interface AreaMapper {
-    List<Area> readArea(@Param("regionId") String regionId, @Param("zdoCode") String zdoCode);
+    List<Area> readArea(@Param("regionId") String regionId, @Param("zdoCode") Integer zdoCode);
 }
