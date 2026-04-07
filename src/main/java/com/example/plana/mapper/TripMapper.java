@@ -17,8 +17,11 @@ public interface TripMapper {
 //    void createTripDays(Map<String, Object> params);  // 복구용 전체 필드 INSERT (MERGE)
 //    void updateTripDays(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
     int updateTripDaysIndexSort(Map<String, Object> params);
-    int deleteTripDay(Map<String, Object> params);
     void deleteTripDaysByTripId(String tripId);
+    // 단건 삭제
+    int readTripDayIndexSort(String tripDayId);             // 1. 삭제할 여행 일자 index sort 조회 SELECT
+    int deleteTripDay(Map<String, Object> params);          // 2. 여행 일자 삭제 DELETE
+    int updateTripDaysIndexSortAfterDelete(Map<String, Object> params);  // 3. 삭제 후 여행 일자 재정렬 UPDATE
 
     // ── TripSchedule ──────────────────────
     void createTripSchedule(Map<String, Object> params);   // 여행 생성용 단건 INSERT
