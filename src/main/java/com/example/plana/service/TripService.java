@@ -5,6 +5,7 @@ import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.delete.TripScheduleDeleteResponse;
+import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.read.TripScheduleOrderResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.TripMapper;
@@ -116,7 +117,7 @@ public class TripService {
                 .days(dayList)
                 .build();
     }
-
+    
     /**
      * 여행 전체 저장
      * 작동 시나리오 : 네트워크 에러 등의 사유로 편집 시 자동 저장이 이루어지지 않았을 경우, 저장 시점에 기존 데이터를 전부 삭제한 뒤 재생성한다.
@@ -392,7 +393,7 @@ public class TripService {
         scheduleParams.put("indexSort",      request.getIndexSort());
         scheduleParams.put("startTime",      request.getStartTime());
         scheduleParams.put("endTime",        request.getEndTime());
-        scheduleParams.put("bookmarkId",     request.getContext());
+        scheduleParams.put("bookmarkId",     request.getBookmarkId());
         scheduleParams.put("context",        request.getContext());
         scheduleParams.put("category",       request.getCategory());
         scheduleParams.put("price",          request.getPrice());
