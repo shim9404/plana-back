@@ -76,6 +76,7 @@ public class TripService {
             scheduleParams.put("indexSort", 1);
             scheduleParams.put("startTime", null);
             scheduleParams.put("endTime", null);
+            scheduleParams.put("bookmarkId", null);
             scheduleParams.put("context", null);
             scheduleParams.put("category", null);
             scheduleParams.put("price", null);
@@ -180,15 +181,16 @@ public class TripService {
                     : dayRequest.getSchedules()) {
 
                 Map<String, Object> scheduleParams = new HashMap<>();
-                scheduleParams.put("tripDayId",      tripDayId);
-                scheduleParams.put("indexSort",      scheduleRequest.getIndexSort());
-                scheduleParams.put("startTime",      scheduleRequest.getStartTime());
-                scheduleParams.put("endTime",        scheduleRequest.getEndTime());
-                scheduleParams.put("context",        scheduleRequest.getContext());
-                scheduleParams.put("category",       scheduleRequest.getCategory());
-                scheduleParams.put("price",          scheduleRequest.getPrice());
-                scheduleParams.put("memo",           scheduleRequest.getMemo());
-                scheduleParams.put("link",           scheduleRequest.getLink());
+                scheduleParams.put("tripDayId",     tripDayId);
+                scheduleParams.put("indexSort",     scheduleRequest.getIndexSort());
+                scheduleParams.put("startTime",     scheduleRequest.getStartTime());
+                scheduleParams.put("endTime",       scheduleRequest.getEndTime());
+                scheduleParams.put("bookmarkId",    scheduleRequest.getBookmarkId());
+                scheduleParams.put("context",       scheduleRequest.getContext());
+                scheduleParams.put("category",      scheduleRequest.getCategory());
+                scheduleParams.put("price",         scheduleRequest.getPrice());
+                scheduleParams.put("memo",          scheduleRequest.getMemo());
+                scheduleParams.put("link",          scheduleRequest.getLink());
                 scheduleParams.put("tripScheduleId", null);
 
                 try {
@@ -308,9 +310,9 @@ public class TripService {
         deleteParams.put("tripId", tripId);
         deleteParams.put("tripDayId", tripDayId);
         // 1. SELECT TRIP DAY - getIndexSort
-        int dayIndexSort = 0;
-        dayIndexSort = tripMapper.readTripDayIndexSort(tripDayId);
-        if (dayIndexSort <= 0) throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
+        int indexSort = -1;
+        indexSort = tripMapper.readTripDayIndexSort(tripDayId);
+        if (indexSort <= 0) throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
 
         // 2. 여행 스케줄 전체 삭제
         int result = -1;
@@ -335,17 +337,13 @@ public class TripService {
         }
 
         // 4. 삭제된 일자 이후의 index sort 재정렬
-        result = -1;
         Map<String, Object> reorderParams = new HashMap<>();
         reorderParams.put("tripId", tripId);
-        reorderParams.put("indexSort", dayIndexSort);
+        reorderParams.put("indexSort", indexSort);
         try {
-            result = tripMapper.updateTripDaysIndexSortAfterDelete(reorderParams);
+            tripMapper.updateTripDaysIndexSortAfterDelete(reorderParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_REORDER_FAILED);
-        }
-        if (result == 0) {
-            throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
         }
     }
 
@@ -386,6 +384,7 @@ public class TripService {
         scheduleParams.put("indexSort",      request.getIndexSort());
         scheduleParams.put("startTime",      request.getStartTime());
         scheduleParams.put("endTime",        request.getEndTime());
+        scheduleParams.put("bookmarkId",     request.getContext());
         scheduleParams.put("context",        request.getContext());
         scheduleParams.put("category",       request.getCategory());
         scheduleParams.put("price",          request.getPrice());
@@ -426,6 +425,7 @@ public class TripService {
         scheduleParams.put("indexSort",      request.getIndexSort());
         scheduleParams.put("startTime",      request.getStartTime());
         scheduleParams.put("endTime",        request.getEndTime());
+        scheduleParams.put("bookmarkId",     request.getBookmarkId());
         scheduleParams.put("context",        request.getContext());
         scheduleParams.put("category",       request.getCategory());
         scheduleParams.put("price",          request.getPrice());
@@ -449,14 +449,13 @@ public class TripService {
      * 여행 스케줄 단건 삭제
      * @param tripDayId 스케줄이 포함된 여행일자ID
      * @param tripScheduleId 여행스케줄 ID
-     * @return TripScheduleDeleteResponse
      */
     @Transactional
-    public TripScheduleDeleteResponse deleteTripSchedule(String tripDayId, String tripScheduleId) {
+    public void deleteTripSchedule(String tripDayId, String tripScheduleId) {
         // 1. SELECT TRIP SCHEDULE - getIndexSort
-        TripScheduleOrderResponse schedule = tripMapper.readTripScheduleIndexSort(tripScheduleId);
-        if (schedule == null) throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
-        int indexSort = schedule.getIndexSort();
+        int indexSort = -1;
+        indexSort = tripMapper.readTripScheduleIndexSort(tripScheduleId);
+        if (indexSort <= 0) throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
 
         // 2. DELETE TRIP SCHEDULE
         int result = -1;
@@ -476,17 +475,10 @@ public class TripService {
         reorderParams.put("indexSort", indexSort);
 
         try {
-            tripMapper.updateTripSchedulesIndexSort(reorderParams);
+            tripMapper.updateTripSchedulesIndexSortAfterDelete(reorderParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_REORDER_FAILED);
         }
-
-        // 4. 갱신된 스케줄 목록 조회 후 반환
-        List<TripScheduleOrderResponse> resultOrders = tripMapper.readTripSchedulesIndexSort(tripDayId);
-        return TripScheduleDeleteResponse.builder()
-                .tripDayId(tripDayId)
-                .scheduleOrders(resultOrders)
-                .build();
     }
 
     /**
