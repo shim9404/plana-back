@@ -68,6 +68,13 @@
         VALUES (source.TRIP_ID, source.INDEX_SORT)
     </insert>
 
+    <!--  여행 일자 index sort 조회  -->
+    <select id="readTripDayIndexSort" resultType="Integer">
+        SELECT INDEX_SORT as "indexSort"
+        FROM TRIP_DAY
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+    </select>
+
     <!--  여행 일자 정렬 순서 전체 갱신  -->
     <update id="updateTripDaysIndexSort">
         UPDATE TRIP_DAY
@@ -82,6 +89,20 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
+    <!--  여행 일자 단건 삭제  -->
+    <delete id="deleteTripDay">
+        DELETE FROM TRIP_DAY
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+        AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </delete>
+
+    <!--  여행 일자 단건 삭제 이후 SORT ORDER 재정렬  -->
+    <update id="updateTripDaysIndexSortAfterDelete">
+        UPDATE TRIP_DAY
+        SET INDEX_SORT = INDEX_SORT - 1
+        WHERE TRIP_ID = #{tripId,  jdbcType=VARCHAR}
+            AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
+    </update>
 
     <!-- === [ TRIP SCHEDULE ]  =========================================================================== -->
     <!-- 신규 생성용 : 여행 스케줄 단건 INSERT -->
@@ -158,6 +179,12 @@
             FROM TRIP_DAY
             WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
         )
+    </delete>
+
+    <!--  여행 일자의 스케줄 전체 삭제  -->
+    <delete id="deleteTripSchedulesByTripDayId">
+        DELETE FROM TRIP_SCHEDULE
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
 
 </mapper>
