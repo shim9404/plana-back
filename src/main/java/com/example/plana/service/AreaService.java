@@ -1,12 +1,24 @@
 package com.example.plana.service;
 
+import com.example.plana.common.exception.BusinessException;
+import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.config.KakaoConfig;
 import com.example.plana.dto.area.read.*;
 import com.example.plana.mapper.AreaMapper;
 import com.example.plana.model.Area;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -15,6 +27,7 @@ import java.util.stream.Collectors;
 @Log4j2
 public class AreaService {
     private final AreaMapper areaMapper;
+    private final KakaoConfig kakaoConfig; // kakao apiKey
 
     public AreaReadResponse getArea(String regionId, String zdoCode){
 
@@ -81,5 +94,75 @@ public class AreaService {
         areaDetail.setStatus(area.getStatus());
 
         return areaDetail;
+    }
+
+    // 근처 장소 검색(API)
+    public List<PlaceReadResponse> readPlace(String keyword, double mapX, double mapY) {
+        // RestTemplate: RESTful API 웹 서비스와의 상호작용을 쉽게 외부 도메인에서 데이터를 가져오거나 전송할 때 사용
+        RestTemplate restTemplate = new RestTemplate();
+
+        // GET URL
+        String url = "https://dapi.kakao.com/v2/local/search/keyword.json?query="
+                + keyword
+                + "&x=" + mapX
+                + "&y=" + mapY
+                + "&radius=20000" + "&sort=distance";
+
+        // Header 부분(인증 키)
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", kakaoConfig.getKey());
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // 근처 장소 검색
+        ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.GET, entity, String.class );
+
+        // JSON -> MAP 변환
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> result;
+        // 검색 실패 시, error code 호출
+        try {
+            result = objectMapper.readValue(response.getBody(), Map.class);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        // documents 꺼내기
+        List<Map<String, Object>> documents = (List<Map<String, Object>>) result.get("documents");
+
+        // 데이터 존재하지 않을 시, error code 호출
+        if (documents == null || documents.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        // 필요한 값만 저장
+        List<PlaceReadResponse> list = new ArrayList<>();
+
+        for (Map<String, Object> doc: documents) {
+            PlaceReadResponse placeReadResponse = new PlaceReadResponse();
+            placeReadResponse.setSearchType("PLACE");
+            // TODO: Bookmark 되어 있는지 확인하고 저장하는 코드 필요
+            placeReadResponse.setBookmarkType("None");
+            placeReadResponse.setName((String) doc.get("place_name"));
+            MapPos mapPos = new MapPos();
+            mapPos.setX(Double.parseDouble((String) doc.get("x")));
+            mapPos.setY(Double.parseDouble((String) doc.get("y")));
+            placeReadResponse.setMapPos(mapPos);
+            if (doc.get("category_group_name") == null || doc.get("category_group_name") == "") {
+                placeReadResponse.setCategory("기타");
+            }
+            else {
+                placeReadResponse.setCategory((String) doc.get("category_group_name"));
+            }
+            placeReadResponse.setAddress((String) doc.get("address_name"));
+            placeReadResponse.setRoadAddress((String) doc.get("road_address_name"));
+            placeReadResponse.setLink((String) doc.get("place_url"));
+            placeReadResponse.setTelePhone((String) doc.get("phone"));
+            placeReadResponse.setDescription("카카오개발자센터_키워드로 장소 검색");
+
+            list.add(placeReadResponse);
+        }
+
+        return list;
     }
 }
