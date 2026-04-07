@@ -9,6 +9,7 @@ import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @Log4j2
@@ -67,6 +68,24 @@ public class TripController {
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
+    /**
+     * deleteTripDay 여행 일자 삭제(여행 일자 하위 스케줄 포함)
+     * @param tripId 여행 ID
+     * @param tripDayId 여행 일자 ID
+     * @return ResponseBody.data : null
+     */
+    @DeleteMapping("/{tripId}/days/{tripDayId}")
+    public ResponseEntity<ResponseBody> deleteTripDay(@PathVariable String tripId, @PathVariable String tripDayId) {
+        tripService.deleteTripDay(tripId, tripDayId);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
+    }
+
+    /**
+     * reorderTripDays 여행 일자 재정렬(전체 일괄)
+     * @param tripId 여행 ID
+     * @param request TripDayOrderUpdateRequest
+     * @return ResponseBody.data : null
+     */
     @PatchMapping("/{tripId}/days/reorder")
     public ResponseEntity<ResponseBody> reorderTripDays(@PathVariable String tripId, @RequestBody TripDayOrderUpdateRequest request) {
         tripService.updateTripDaysIndexSort(tripId, request);

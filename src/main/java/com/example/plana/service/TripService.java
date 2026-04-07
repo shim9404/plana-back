@@ -297,6 +297,47 @@ public class TripService {
                 .build();
     }
 
+    /**
+     * 여행 일자 삭제(여행 일자 하위 스케줄 포함)
+     * @param tripId 여행 ID
+     * @param tripDayId 여행 일자 ID
+     */
+    @Transactional
+    public void deleteTripDay(String tripId, String tripDayId) {
+        Map<String, Object> deleteParams = new HashMap<>();
+        deleteParams.put("tripId", tripId);
+        deleteParams.put("tripDayId", tripDayId);
+
+        int result = -1;
+
+        // 1. 여행 스케줄 전체 삭제
+        try {
+            result = tripMapper.deleteTripSchedulesByTripDayId(deleteParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+        }
+        if (result == 0) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
+        }
+
+        result = -1;
+
+        // 2. 여행 일자 삭제
+        try {
+            result = tripMapper.deleteTripDay(deleteParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
+        }
+        if (result == 0) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 여행 일자 전체 재정렬
+     * @param tripId 여행 ID
+     * @param request TripDayOrderUpdateRequest
+     */
     @Transactional
     public void updateTripDaysIndexSort(String tripId, TripDayOrderUpdateRequest request) {
         for (TripDayOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {

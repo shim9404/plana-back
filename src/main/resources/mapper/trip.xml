@@ -82,6 +82,13 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
+    <!--  여행 일자 단건 삭제  -->
+    <delete id="deleteTripDay">
+        DELETE FROM TRIP_DAY
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+        AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </delete>
+
 
     <!-- === [ TRIP SCHEDULE ]  =========================================================================== -->
     <!-- 신규 생성용 : 여행 스케줄 단건 INSERT -->
@@ -158,6 +165,12 @@
             FROM TRIP_DAY
             WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
         )
+    </delete>
+
+    <!--  여행 일자의 스케줄 전체 삭제  -->
+    <delete id="deleteTripSchedulesByTripDayId">
+        DELETE FROM TRIP_SCHEDULE
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
 
 </mapper>
