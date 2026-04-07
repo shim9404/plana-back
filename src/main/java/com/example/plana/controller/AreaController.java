@@ -30,7 +30,7 @@ public class AreaController {
      */
     @GetMapping
     public ResponseEntity<ResponseBody> getArea(@RequestParam(required = false) String regionId,
-                                    @RequestParam(required = false) String zdoCode){
+                                    @RequestParam(required = false) Integer zdoCode){
 
         AreaReadResponse data = areaService.getArea(regionId, zdoCode);
 
