@@ -276,6 +276,14 @@ public class TripService {
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripDayId", tripDayId);
         scheduleParams.put("indexSort", 1);
+        scheduleParams.put("startTime", null);
+        scheduleParams.put("endTime", null);
+        scheduleParams.put("bookmarkId", null);
+        scheduleParams.put("context", null);
+        scheduleParams.put("category", null);
+        scheduleParams.put("price", null);
+        scheduleParams.put("memo", null);
+        scheduleParams.put("link", null);
         scheduleParams.put("tripScheduleId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripScheduleId의 반환값을 담아야 함
 
         try {

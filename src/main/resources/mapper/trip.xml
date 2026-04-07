@@ -109,7 +109,7 @@
     <insert id="createTripSchedule" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_SCHEDULE (
-                TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME,
+                TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME, BOOKMARK_ID,
                 CONTEXT, CATEGORY, PRICE, MEMO, LINK
             ) VALUES (
                 #{tripDayId,  jdbcType=VARCHAR},
