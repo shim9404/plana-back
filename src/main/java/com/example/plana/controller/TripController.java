@@ -3,13 +3,12 @@ package com.example.plana.controller;
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.*;
-import com.example.plana.dto.trip.delete.TripScheduleDeleteResponse;
+import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @Log4j2
@@ -29,6 +28,17 @@ public class TripController {
     public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripCreateRequest request) {
         TripCreateResponse data = tripService.createTrip(request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    /**
+     * getTrip 여행 정보 조회(단건/상세)
+     * @param tripId 여행 ID
+     * @return ResponseBody.data : TripResponse
+     */
+    @GetMapping("/{tripId}")
+    public ResponseEntity<ResponseBody> getTrip(@PathVariable String tripId) {
+        TripResponse data = tripService.readTrip(tripId);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 
     /**

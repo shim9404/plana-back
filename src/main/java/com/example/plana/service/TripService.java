@@ -4,6 +4,7 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.read.*;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
@@ -113,6 +114,46 @@ public class TripService {
                 .bookmarks(Collections.emptyList())
                 .days(dayList)
                 .build();
+    }
+
+    /**
+     * 여행 단건 상세 조회
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    @Transactional
+    public TripResponse readTrip(String tripId) {
+        // 1. SELECT TRIP
+        TripResponse trip = null;
+        try {
+            trip = tripMapper.readTrip(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
+        }
+        log.info(trip);
+        if (trip == null) throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+
+        // 2. SELECT TRIP DAYS
+        try {
+            // TRIP_ID에 해당하는 모든 TRIP_DAY 리스트에 담기
+            List<TripDayResponse> days = tripMapper.readTripDaysByTripId(tripId);
+            for (TripDayResponse day : days) {
+                log.info(day.getTripDayId());
+                // 3. SELECT TRIP SCHEDULES
+                try {
+                    // 각 TRIP_DAY_ID에 해당하는 모든 TRIP_SCHEDULE 리스트에 담기
+                    List<TripScheduleResponse> schedules = tripMapper.readTripSchedulesByTripDayId(day.getTripDayId());
+                    day.setSchedules(schedules);
+                } catch (Exception e) {
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_READ_FAILED);
+                }
+            }
+            trip.setDays(days);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_READ_FAILED);
+        }
+
+        return trip;
     }
 
     /**

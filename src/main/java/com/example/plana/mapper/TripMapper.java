@@ -1,6 +1,6 @@
 package com.example.plana.mapper;
 
-import com.example.plana.dto.trip.read.TripScheduleOrderResponse;
+import com.example.plana.dto.trip.read.*;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -8,6 +8,11 @@ import java.util.Map;
 
 @Mapper
 public interface TripMapper {
+    // ── 전체 조회 : Trip - TripDay - TripSchedule ────
+    TripResponse readTrip(String tripId);
+    List<TripDayResponse> readTripDaysByTripId(String tripId);
+    List<TripScheduleResponse> readTripSchedulesByTripDayId(String tripDayId);
+
     // ── Trip ──────────────────────────────
     void createTrip(Map<String, Object> params);
     int updateTrip(Map<String, Object> params);
