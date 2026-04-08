@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.BookmarkMapper">
+    <!--  북마크 신규 등록  -->
+    <insert id="createBookmark" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO BOOKMARK (
+                TRIP_ID, AREA_ID, BOOKMARK_TYPE
+            ) VALUES (
+                #{tripId,       jdbcType=VARCHAR},
+                #{areaId,       jdbcType=VARCHAR},
+                #{bookmarkType, jdbcType=VARCHAR}
+            )
+            RETURNING BOOKMARK_ID INTO #{bookmarkId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
+</mapper>

@@ -1,10 +1,12 @@
 package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
+import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
+import com.example.plana.service.BookmarkService;
 import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class TripController {
 
     private final TripService tripService;
+    private final BookmarkService bookmarkService;
 
     /**
      * generateTrip 여행 신규 생성 호출 함수
@@ -177,5 +180,11 @@ public class TripController {
             @PathVariable String tripId, @PathVariable String tripDayId, @PathVariable String tripScheduleId) {
         tripService.deleteTripSchedule(tripDayId, tripScheduleId);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
+    }
+
+    @PostMapping("/{tripId}/bookmarks")
+    public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request) {
+        bookmarkService.createBookmark(tripId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, null));
     }
 }

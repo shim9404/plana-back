@@ -31,4 +31,29 @@
             </if>
         </where>
     </select>
+
+    <!--  신규 근처 장소 등록 : 북마크 신규 등록 용도  -->
+    <insert id="createArea" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO AREA (
+                SEARCH_TYPE, REGION_ID, NAME, CATEGORY,
+                MAP_X, MAP_Y, ADDRESS, ROAD_ADDRESS, LINK, TELEPHONE, DESCRIPTION,
+                BOOKMARK_COUNT
+            ) VALUES (
+                'PLACE',
+                #{regionId,     jdbcType=VARCHAR},
+                #{name,         jdbcType=VARCHAR},
+                #{category,     jdbcType=VARCHAR},
+                #{mapX,         jdbcType=VARCHAR},
+                #{mapY,         jdbcType=VARCHAR},
+                #{address,      jdbcType=VARCHAR},
+                #{roadAddress,  jdbcType=VARCHAR},
+                #{link,         jdbcType=VARCHAR},
+                #{telephone,    jdbcType=VARCHAR},
+                #{description,  jdbcType=VARCHAR},
+                1
+            )
+            RETURNING AREA_ID INTO #{areaId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
 </mapper>
