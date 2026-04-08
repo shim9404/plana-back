@@ -67,6 +67,18 @@ public class TripController {
     }
 
     /**
+     * editTripStatus 여행 상태(ACTIVE/INACTIVE/DELETED) 갱신
+     * @param tripId 여행 ID
+     * @param request TripStatusUpdateResponse
+     * @return ResponseBody.data : null
+     */
+    @PatchMapping("/{tripId}/status")
+    public ResponseEntity<ResponseBody> editTripStatus(@PathVariable String tripId, @RequestBody TripStatusUpdateRequest request) {
+        tripService.updateTripStatus(tripId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
+    }
+
+    /**
      * addTripDay 여행 일자 신규 추가
      * @param tripId 여행 ID
      * @param request TripDayCreateRequest

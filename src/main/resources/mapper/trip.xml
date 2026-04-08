@@ -44,6 +44,13 @@
         WHERE TRIP_ID = #{tripId,       jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 상태 갱신  -->
+    <update id="updateTripStatus">
+        UPDATE TRIP
+        SET STATUS = #{status, jdbcType=VARCHAR}
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+
 
     <!-- === [ TRIP DAY ]  ================================================================================= -->
     <!-- 신규 생성용 : 여행 일자 단건 INSERT -->

@@ -283,8 +283,33 @@ public class TripService {
         tripParams.put("name",   request.getName());
         log.info(request);
 
-        int result = tripMapper.updateTrip(tripParams);
+        int result = -1;
+        try {
+            result = tripMapper.updateTrip(tripParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
+        }
         if (result == 0) {      // 업데이트 결과에 따른 예외 처리
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 여행 상태(Status) 갱신
+     * @param tripId 여행 ID
+     * @param request TripStatusUpdateResponse : STATUS - ACTIVE(활성) / INACTIVE(비활성) / DELETED(삭제)
+     */
+    public void updateTripStatus(String tripId, TripStatusUpdateRequest request) {
+        Map<String, Object> tripParams = new HashMap<>();
+        tripParams.put("tripId",    tripId);
+        tripParams.put("status", request.getStatus());
+        int result = -1;
+        try {
+            result = tripMapper.updateTripStatus(tripParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
+        }
+        if (result == 0) {
             throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
         }
     }
