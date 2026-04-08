@@ -7,4 +7,5 @@ import java.util.Map;
 @Mapper
 public interface BookmarkMapper {
     void createBookmark(Map<String, Object> params);
+    int deleteBookmark(String bookmarkId);
 }

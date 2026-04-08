@@ -15,4 +15,10 @@
             RETURNING BOOKMARK_ID INTO #{bookmarkId, mode=OUT, jdbcType=VARCHAR};
         END;
     </insert>
+
+    <!--  북마크 삭제  -->
+    <delete id="deleteBookmark">
+        DELETE BOOKMARK
+        WHERE BOOKMARK_ID = #{bookmarkId, jdbcType=VARCHAR}
+    </delete>
 </mapper>
