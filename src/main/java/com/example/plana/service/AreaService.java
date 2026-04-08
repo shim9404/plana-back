@@ -147,11 +147,6 @@ public class AreaService {
         // documents 꺼내기
         List<Map<String, Object>> documents = (List<Map<String, Object>>) result.get("documents");
 
-        // 데이터 존재하지 않을 시, error code 호출
-        if (documents == null || documents.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
-
         // 필요한 값만 저장
         List<PlaceReadResponse> list = new ArrayList<>();
 
