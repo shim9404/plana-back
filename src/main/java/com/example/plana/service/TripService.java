@@ -314,6 +314,36 @@ public class TripService {
         }
     }
 
+    /**
+     * 여행 단건 삭제 - 하위 일자 및 스케줄 전체 삭제
+     * @param tripId 여행 ID
+     */
+    @Transactional
+    public void deleteTrip(String tripId) {
+        // 1. 여행 하위 데이터 전체 삭제 DELETE
+        try {   // 스케줄 우선 삭제
+            tripMapper.deleteTripSchedulesByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+        }
+        try {   // 일자 삭제
+            tripMapper.deleteTripDaysByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
+        }
+
+        // 2. 여행 삭제
+        int result = -1;
+        try {
+            result = tripMapper.deleteTrip(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DELETE_FAILED);
+        }
+        if (result == 0) {
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
+    }
+
     /* 여행 일자 [TRIP_DAY] ============================================================================================*/
     /**
      * 여행 일자 신규 추가

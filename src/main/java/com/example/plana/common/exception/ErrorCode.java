@@ -46,7 +46,7 @@ public enum ErrorCode {
     TRIP_UPDATE_FAILED(500, "T005", "여행 저장 중 오류가 발생했습니다."),
     TRIP_DAY_DELETE_FAILED(500, "T006", "여행 일자 삭제 중 오류가 발생했습니다."),
     TRIP_SCHEDULE_DELETE_FAILED(500, "T007", "여행 스케줄 삭제 중 오류가 발생했습니다."),
-    TRIP_DAY_SAVE_FAILED(500, "T008", "여행 일자 저장 중 오류가 발생했습니다."),
+    TRIP_DELETE_FAILED(500, "T008", "여행 삭제 중 오류가 발생했습니다."),
     TRIP_SCHEDULE_SAVE_FAILED(500, "T009", "여행 스케줄 저장 중 오류가 발생했습니다."),
     TRIP_SCHEDULE_NOT_FOUND(404, "T010", "존재하지 않는 여행 스케줄입니다."),
     TRIP_SCHEDULE_REORDER_FAILED(500, "T011", "여행 스케줄 재정렬 중 오류가 발생했습니다."),
