@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TripScheduleResponse {
     private String tripScheduleId;
-    private String tripDayId;
     private int indexSort;
     private String startTime;
     private String endTime;

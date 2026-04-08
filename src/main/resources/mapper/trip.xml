@@ -25,7 +25,8 @@
 
     <!--  여행 정보 조회  -->
     <select id="readTrip" resultType="com.example.plana.dto.trip.read.TripResponse">
-        SELECT NAME as "name",
+        SELECT  TRIP_ID as "tripId",
+                NAME as "name",
                 START_DATE as "startDate",
                 END_DATE as "endDate"
         FROM TRIP
@@ -79,8 +80,8 @@
 
     <!--  여행 일자 전체(여행ID 기준) 조회  -->
     <select id="readTripDaysByTripId" resultType="com.example.plana.dto.trip.read.TripDayResponse">
-        SELECT TRIP_DAY_ID as "tripDayId",
-                INDEX_SORT as "indexSort"
+        SELECT  TRIP_DAY_ID as "tripDayId",
+                INDEX_SORT  as "indexSort"
         FROM TRIP_DAY
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
         ORDER BY INDEX_SORT
@@ -147,15 +148,16 @@
 
     <!--  여행 스케줄 전체(여행 일자 ID 기준) 조회  -->
     <select id="readTripSchedulesByTripDayId">
-        SELECT  INDEX_SORT  as "indexSort",
-                START_TIME  as "startTime",
-                END_TIME    as "endTime",
-                BOOKMARK_ID as "bookmarkId",
-                CONTEXT     as "context",
-                CATEGORY    as "category",
-                PRICE       as "price",
-                MEMO        as "memo",
-                LINK        as "link"
+        SELECT  TRIP_SCHEDULE_ID    as "tripScheduleId",
+                INDEX_SORT          as "indexSort",
+                START_TIME          as "startTime",
+                END_TIME            as "endTime",
+                BOOKMARK_ID         as "bookmarkId",
+                CONTEXT             as "context",
+                CATEGORY            as "category",
+                PRICE               as "price",
+                MEMO                as "memo",
+                LINK                as "link"
         FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
         ORDER BY INDEX_SORT
