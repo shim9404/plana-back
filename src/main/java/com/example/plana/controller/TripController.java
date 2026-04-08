@@ -79,6 +79,17 @@ public class TripController {
     }
 
     /**
+     * deleteTrip 여행 단건 삭제 - 하위 일자 및 스케줄 전체 삭제
+     * @param tripId 여행 ID
+     * @return ResponseBody.data : null
+     */
+    @DeleteMapping("/{tripId}")
+    public ResponseEntity<ResponseBody> deleteTrip(@PathVariable String tripId) {
+        tripService.deleteTrip(tripId);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
+    }
+
+    /**
      * addTripDay 여행 일자 신규 추가
      * @param tripId 여행 ID
      * @param request TripDayCreateRequest
