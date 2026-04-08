@@ -48,28 +48,7 @@ public class SecurityConfig {
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //특정 url패턴에 대해서는 인증처리(Authentication객체 생성) 제외
                 .authorizeHttpRequests(a-> a
-                        // 공개 엔드포인트
-                        .requestMatchers(
-                                "api/members"
-                                , "/api/auth/naverLogin"
-                                , "/api/auth/googleLogin"
-                                , "/api/auth/kakaoLogin"
-                                ,"/api/auth/signin"
-                                , "/api/auth/refresh"
-                                , "/api/auth/logout"
-                                , "/api/redis/**"
-                                , "/pds/**"
-                        ).permitAll()
-                        // TODO : 개발 후 수정 필요
-                        // .requestMatchers("/api/admin/**").hasAnyAuthority(Role.ROLE_ADMIN.name())
-                        .requestMatchers("/api/admin/**").permitAll()
-                        .requestMatchers("/api/members/**").permitAll()
-                        .requestMatchers("/api/trips/**").permitAll()
-                        .requestMatchers("/api/areas/**").permitAll()
-                        .requestMatchers("/api/regions/**").permitAll()
-                        //.requestMatchers("/api/member/**").hasAnyAuthority(Role.ROLE_ADMIN.name(),Role.ROLE_MEMBER.name(),Role.ROLE_MANAGER.name())
-                        //그 외는 인증 필요
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

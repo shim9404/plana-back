@@ -38,6 +38,7 @@ public class JwtTokenFilter extends GenericFilter {
     /** SecurityConfig permitAll 과 동일 — JWT 없이 통과해야 하는 경로(로그인 시 옛 accessToken 헤더 무시) */
     private static final String[] JWT_EXEMPT_PATHS = {
             "/api/members",
+            "/api/trips",
             "/api/auth/**",
             "/auth/signin",
             "/auth/refresh",
