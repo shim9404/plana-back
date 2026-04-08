@@ -548,6 +548,32 @@ public class TripService {
     }
 
     /**
+     * 여행 스케줄 순서 업데이트
+     * case1. 같은 일자 내 스케줄 순서 변경
+     * case2. 다른 일자로 스케줄 이동 및 순서 변경
+     * @param request TripScheduleOrderUpdateRequest
+     */
+    @Transactional
+    public void updateTripScheduleOrder(TripScheduleOrderUpdateRequest request) {
+        // Day 리스트 순회 (같은 일자의 경우 1, 다른 일자의 경우 2의 크기를 갖음)
+        for (TripScheduleOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {
+            // Day 하위의 Schedule 리스트 업데이트 순회
+            for (TripScheduleOrderUpdateRequest.ScheduleOrder schedule : dayOrder.getScheduleOrders()) {
+                Map<String, Object> params = new HashMap<>();
+                params.put("tripDayId",      dayOrder.getTripDayId());
+                params.put("tripScheduleId", schedule.getTripScheduleId());
+                params.put("indexSort",      schedule.getIndexSort());
+
+                try {
+                    tripMapper.updateTripScheduleIndexSort(params);
+                } catch (Exception e) {
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_REORDER_FAILED);
+                }
+            }
+        }
+    }
+
+    /**
      * 여행 스케줄 단건 삭제
      * @param tripDayId 스케줄이 포함된 여행일자ID
      * @param tripScheduleId 여행스케줄 ID

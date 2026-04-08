@@ -237,4 +237,12 @@
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
 
+    <!-- 스케줄 indexSort 직접 업데이트 -->
+    <update id="updateTripScheduleIndexSort">
+        UPDATE TRIP_SCHEDULE
+        SET TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR},
+            INDEX_SORT  = #{indexSort,  jdbcType=INTEGER}
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
+    </update>
+
 </mapper>

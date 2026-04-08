@@ -153,6 +153,19 @@ public class TripController {
     }
 
     /**
+     * reorderTripSchedule 여행 스케줄 순서 업데이트
+     * case1. 같은 일자 내 스케줄 순서 변경
+     * case2. 다른 일자로 스케줄 이동 및 순서 변경
+     * @param request TripScheduleOrderUpdateRequest
+     * @return ResponseBody.data : null
+     */
+    @PatchMapping("/{tripId}/days/{tripDayId}/schedules/reorder")
+    public ResponseEntity<ResponseBody> reorderTripSchedule(@RequestBody TripScheduleOrderUpdateRequest request) {
+        tripService.updateTripScheduleOrder(request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
+    }
+
+    /**
      * deleteTripSchedule 여행 스케줄 단건 삭제
      * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
