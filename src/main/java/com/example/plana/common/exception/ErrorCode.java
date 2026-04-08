@@ -51,7 +51,10 @@ public enum ErrorCode {
     TRIP_SCHEDULE_NOT_FOUND(404, "T010", "존재하지 않는 여행 스케줄입니다."),
     TRIP_SCHEDULE_REORDER_FAILED(500, "T011", "여행 스케줄 재정렬 중 오류가 발생했습니다."),
     TRIP_DAY_REORDER_FAILED(500, "T012", "여행 일자 재정렬 중 오류가 발생했습니다."),
-    TRIP_DAY_NOT_FOUND(500, "T013", "존재하지 않는 여행 일자입니다.")
+    TRIP_DAY_NOT_FOUND(500, "T013", "존재하지 않는 여행 일자입니다."),
+    TRIP_READ_FAILED(500, "T014", "여행 조회 중 오류가 발생했습니다."),
+    TRIP_DAY_READ_FAILED(500, "T015", "여행 일자 조회 중 오류가 발생했습니다."),
+    TRIP_SCHEDULE_READ_FAILED(500, "T016", "여행 스케줄 조회 중 오류가 발생했습니다."),
     ;
 
     @Getter
