@@ -33,7 +33,7 @@ public interface TripMapper {
     // ── TripSchedule ──────────────────────
     void createTripSchedule(Map<String, Object> params);   // 여행 생성용 단건 INSERT
     int updateTripSchedule(Map<String, Object> params);   // 단건 정보 수정 UPDATE
-    void updateTripSchedules(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
+    void updateTripScheduleIndexSort(Map<String, Object> params);   // 순서 변경 UPDATE
     void deleteTripSchedulesByTripId(String tripId);        // 특정 여행ID 하위 전체 삭제 DELETE
     int deleteTripSchedulesByTripDayId(Map<String, Object> params); // 특정 여행ID 하위 전체 삭제 DELETE
     // 단건 삭제 호출 ──────────────────────
