@@ -76,7 +76,9 @@ public class JwtTokenFilter extends GenericFilter {
                 return true;
             }
         }
-        return false;
+        //TODO : 개발 후 변경 필요
+//        return false;
+        return true;
     }
 
     @Override

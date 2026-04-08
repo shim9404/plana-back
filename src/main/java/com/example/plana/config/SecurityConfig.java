@@ -60,9 +60,13 @@ public class SecurityConfig {
                                 , "/api/redis/**"
                                 , "/pds/**"
                         ).permitAll()
+                        // TODO : 개발 후 수정 필요
                         // .requestMatchers("/api/admin/**").hasAnyAuthority(Role.ROLE_ADMIN.name())
                         .requestMatchers("/api/admin/**").permitAll()
-                        .requestMatchers("/api/member/**").permitAll()
+                        .requestMatchers("/api/members/**").permitAll()
+                        .requestMatchers("/api/trips/**").permitAll()
+                        .requestMatchers("/api/areas/**").permitAll()
+                        .requestMatchers("/api/regions/**").permitAll()
                         //.requestMatchers("/api/member/**").hasAnyAuthority(Role.ROLE_ADMIN.name(),Role.ROLE_MEMBER.name(),Role.ROLE_MANAGER.name())
                         //그 외는 인증 필요
                         .anyRequest().authenticated())
