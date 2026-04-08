@@ -110,7 +110,7 @@ public class AreaService {
 
         // Header 부분(인증 키)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", kakaoConfig.getKey());
+        headers.set("Authorization", kakaoConfig.getClientId());
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         // 근처 장소 검색
