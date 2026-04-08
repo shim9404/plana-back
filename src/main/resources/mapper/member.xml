@@ -60,7 +60,7 @@
     </delete>
 
     <select id="readTripByMemberId" resultType="com.example.plana.dto.member.read.MemberTripResponse">
-        SELECT TRIP_ID as tripId, NAME as name
+        SELECT TRIP_ID as tripId, NAME as name, STATUS as status
         FROM TRIP
         WHERE MEMBER_ID = #{memberId}
     </select>
