@@ -5,6 +5,7 @@ import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.config.KakaoConfig;
 import com.example.plana.dto.area.read.*;
 import com.example.plana.mapper.AreaMapper;
+import com.example.plana.mapper.RegionMapper;
 import com.example.plana.model.Area;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,24 @@ import java.util.stream.Collectors;
 public class AreaService {
     private final AreaMapper areaMapper;
     private final KakaoConfig kakaoConfig; // kakao apiKey
+    private final RegionMapper regionMapper;
 
-    public AreaReadResponse getArea(String regionId, String zdoCode){
+    /**
+     * 행정구역id 또는 시도code로 area table에 저장된 데이터 불러오기
+     * @param regionId 행정구역 id - regionTable pk
+     * @param zdoCode 시도 code - regionTable
+     * @return
+     */
+    public AreaReadResponse getArea(String regionId, Integer zdoCode){
+
+        // 존재하지 않는 지역입니다.
+        if (regionId != null && regionMapper.checkRegionExists(regionId) == 0){
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+        // 존재하지 않는 지역입니다.
+        if (zdoCode != null && regionMapper.checkZdoExists(zdoCode) == 0) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
 
         List<Area> areas = areaMapper.readArea(regionId, zdoCode);
 
@@ -69,7 +86,7 @@ public class AreaService {
      * @param area
      * @return AreaDetailResponse
      */
-    public AreaDetailResponse toDetailResponse(Area area){
+    private AreaDetailResponse toDetailResponse(Area area){
 
         AreaDetailResponse areaDetail = new AreaDetailResponse();
 

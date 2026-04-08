@@ -16,4 +16,14 @@
         FROM region
         WHERE STATUS != 'DELETED'
     </select>
+    <select id="checkRegionExists" resultType="int">
+        SELECT COUNT(*)
+        FROM REGION
+        WHERE region_id = #{regionId}
+    </select>
+    <select id="checkZdoExists" resultType="int">
+        SELECT COUNT(*)
+        FROM REGION
+        WHERE zdo_code = #{zdoCode}
+    </select>
 </mapper>
