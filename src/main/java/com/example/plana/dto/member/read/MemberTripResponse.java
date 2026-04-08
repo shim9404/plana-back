@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class MemberTripResponse {
     private String tripId;
     private String name;
+    private String status;
 }
