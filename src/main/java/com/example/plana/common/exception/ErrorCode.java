@@ -55,6 +55,10 @@ public enum ErrorCode {
     TRIP_READ_FAILED(500, "T014", "여행 조회 중 오류가 발생했습니다."),
     TRIP_DAY_READ_FAILED(500, "T015", "여행 일자 조회 중 오류가 발생했습니다."),
     TRIP_SCHEDULE_READ_FAILED(500, "T016", "여행 스케줄 조회 중 오류가 발생했습니다."),
+
+    // Region & Area
+    AREA_CREATE_FAILED(500, "R001", "신규 장소 등록 중 오류가 발생했습니다."),
+
     ;
 
     @Getter
