@@ -16,6 +16,7 @@ public interface TripMapper {
     // ── Trip ──────────────────────────────
     void createTrip(Map<String, Object> params);
     int updateTrip(Map<String, Object> params);
+    int updateTripStatus(Map<String, Object> params);
 
     // ── TripDay ───────────────────────────
     void createTripDay(Map<String, Object> params);   // 여행 생성용 단건 INSERT
