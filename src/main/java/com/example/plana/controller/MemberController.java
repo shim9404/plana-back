@@ -2,17 +2,24 @@ package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
+import com.example.plana.dto.member.create.MemberCreateRequest;
+import com.example.plana.dto.member.create.MemberCreateResponse;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
+import com.example.plana.model.Member;
 import lombok.RequiredArgsConstructor;
+import oracle.jdbc.proxy.annotation.Post;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.plana.service.MemberService;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +28,30 @@ import java.util.Map;
 @RequestMapping("/api/members")
 public class MemberController {
     private final MemberService memberService;
+
+    /**
+     * 이메일을 이용해 회원 가입
+     * @param file 프로필 이미지
+     * @param member 회원 가입에 필요한 데이터
+     * @return ResponseBody.data : null
+     */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseBody> signupByEmail(
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart("data") MemberCreateRequest member
+    ) {
+
+        // 이메일 중복 체크
+        memberService.existsEmail(member.getEmail());
+        // 닉네임 중복 체크
+        memberService.existNickname(member.getNickname());
+        // 회원 가입 진행
+        memberService.createMemberByEmail(member, file);
+
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.INSERT_SUCCESS, null));
+    }
+
 
     /** DEV-43
      * dupliNickname(): 닉네임 중복 체크 호출 함수
@@ -124,4 +155,7 @@ public class MemberController {
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", Map.of("memberId", memberId, "trips", data))));
     }
+
+
+
 }
