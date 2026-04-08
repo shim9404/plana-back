@@ -53,6 +53,6 @@ public class AreaController {
         List<PlaceReadResponse> data = areaService.readPlace(keyword, mapX, mapY);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("place", data)));
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("totalCount", data.size(),"places", data)));
     }
 }
