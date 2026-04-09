@@ -4,6 +4,7 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.area.create.AreaPlaceCreateRequest;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
+import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.mapper.AreaMapper;
 import com.example.plana.mapper.BookmarkMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +27,10 @@ public class BookmarkService {
      * @param tripId 북마크 귀속 여행 ID
      * @param request BookmarkCreateRequest
      *                / AreaPlaceCreateRequest: AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크 시도하는 경우 필수 (그 외 null로 요청)
+     * @return BookmarkCreateResponse
      */
     @Transactional
-    public void createBookmark(String tripId, BookmarkCreateRequest request) {
+    public BookmarkCreateResponse createBookmark(String tripId, BookmarkCreateRequest request) {
         String areaId = "";
         if (request.getArea() != null) {    // AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우
             areaId = createNewPlaceAreaBeforeBookmark(request.getArea());
@@ -41,12 +43,18 @@ public class BookmarkService {
         bookmarkParams.put("tripId", tripId);
         bookmarkParams.put("areaId", areaId);
         bookmarkParams.put("bookmarkType", request.getBookmarkType());
-
+        bookmarkParams.put("bookmarkId", null);     // OUT
         try {
             bookmarkMapper.createBookmark(bookmarkParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_BOOKMARK_CREATE_FAILED);
         }
+        String bookmarkId = (String) bookmarkParams.get("bookmarkId");
+
+        return BookmarkCreateResponse.builder()
+                .bookmarkId(bookmarkId)
+                .areaId(areaId)
+                .build();
     }
 
     /**

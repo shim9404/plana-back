@@ -2,6 +2,7 @@ package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
+import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.read.TripResponse;
@@ -192,8 +193,8 @@ public class TripController {
      */
     @PostMapping("/{tripId}/bookmarks")
     public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request) {
-        bookmarkService.createBookmark(tripId, request);
-        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, null));
+        BookmarkCreateResponse data = bookmarkService.createBookmark(tripId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
     /**
