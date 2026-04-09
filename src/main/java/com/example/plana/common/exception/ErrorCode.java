@@ -61,9 +61,11 @@ public enum ErrorCode {
     TRIP_BOOKMARK_CREATE_FAILED(500, "T017", "여행 북마크 등록 중 오류가 발생했습니다."),
     TRIP_BOOKMARK_DELETE_FAILED(500, "T018", "여행 북마크를 삭제할 수 없습니다."),
     TRIP_BOOKMARK_NOT_FOUND(404, "T019", "존재하지 않는 북마크입니다."),
+    TRIP_BOOKMARK_READ_FAILED(404, "T020", "여행 북마크 조회 중 오류가 발생했습니다."),
 
     // Region & Area
     AREA_CREATE_FAILED(500, "R001", "신규 장소 등록 중 오류가 발생했습니다."),
+    AREA_READ_FAILED(500, "R002", "장소 정보 조회 중 오류가 발생했습니다."),
 
     ;
 
