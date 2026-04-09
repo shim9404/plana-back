@@ -16,6 +16,9 @@ public enum ErrorCode {
     INVALID_TYPE_VALUE(400, "C009", "요청 값의 타입이 잘못되었습니다."),
     UNSUPPORTED_MEDIA_TYPE(415, "C010", "지원하지 않는 미디어 타입입니다."),
     DATABASE_ERROR(500, "C011", "데이터베이스 처리 중 오류가 발생했습니다."),
+    PAYLOAD_TOO_LARGE(413, "C012", "업로드 가능한 파일 크기를 초과하였습니다."),
+    FILE_WRITE_ERROR(500, "C013", "파일 쓰기 중 오류가 발생했습니다."),
+    INVALID_FILE_PATH(400, "C014", "유효하지 않은 파일 경로입니다."),
 
     // Auth
     LOGIN_INPUT_INVALID(401, "A001", "아이디 또는 비밀번호가 일치하지 않습니다."),

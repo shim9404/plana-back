@@ -3,6 +3,7 @@ package com.example.plana.mapper;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
+import com.example.plana.model.MemberSave;
 import com.example.plana.model.MemberVerify;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -37,4 +38,8 @@ public interface MemberMapper {
 
     // 회원 여행 목록 호출
     List<MemberTripResponse> readTripByMemberId(@Param("memberId") String memberId);
+
+    int createMember(@Param("member") MemberSave memberSave);
+
+    boolean existsEmail(String email);
 }

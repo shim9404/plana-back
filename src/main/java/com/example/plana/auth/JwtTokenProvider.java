@@ -1,0 +1,126 @@
+package com.example.plana.auth;
+
+
+import com.example.plana.model.Member;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import java.util.Base64;
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.function.Function;
+
+/*
+JWT 토큰을 발급하는 스프링 컴포넌트(싱글톤)
+이메일과 권한(ROLE_) 정보를 안전하게 암호화해서 토큰으로 반환
+이 토큰으로 사용자의 인증/인가 처리
+토큰은 만료시간이 있어, 보안성을 높이고, 세션리스서비스 구현에 적합
+ */
+@Component
+public class JwtTokenProvider {
+    //인코딩된 시크릿값
+    private final int expiration;
+    private SecretKey SECRET_KEY;
+    public JwtTokenProvider(@Value("${jwt.secret}") String  secretKey, @Value("${jwt.expiration}") int expiration) {
+        this.expiration = expiration;
+        this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKey));
+    }//end of JwtTokenProvider
+    /*
+    Claims생성
+    JWT의 payload 부분(=실제 데이터)에 들어갈 내용
+    setSubject(email): 이 토큰의 주인은 email(주체정보)
+    claims.put("role", role): 사용자 권한(로우 하이어라키)
+    토큰 생성
+    setIssuedAt(now): 토큰 발급 시간
+    setExpiration(): 토큰 만료 시간(현재시간+유효시간)
+    signWith(SECRET_KEY): Keys.hmacShaKeyFor로 만든 HMAC 비밀키로 서명(키 길이에 맞는 HMAC 알고리즘 선택)
+    토큰 반환
+    .compact(): JWT문자열 직렬화해서 반환
+    이 토큰을 프론트엔드(리액트)에게 응답하면, 프론트는 이 토큰(access token)을 저장하고
+    API요청할 때 마다 Authorization헤더에 넣어 인증
+    */
+    public String createToken(String memberId, String role) {
+        // JJWT 0.12+: Jwts.claims()...build() 결과는 불변이라 put 불가. 빌더에 subject/claim을 바로 설정.
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(memberId)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expiration * 60 * 1000L))
+                .signWith(SECRET_KEY)
+                .compact();
+    }//end of createToken
+    /*
+    AccessToken 재발급에 사용(유효기간이 더 길다 - 여기서는 7일)
+     */
+    public String createRefreshToken(String memberId) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(memberId)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + refreshTokenLifetimeMillis()))
+                .signWith(SECRET_KEY)
+                .compact();
+    }//end of createToken
+    /** Refresh JWT 만료까지의 시간(ms). Redis TTL은 반드시 이 값과 같아야 재발급 직전 만료가 맞는다. */
+    public long getRefreshTokenTtlMillis() {
+        return refreshTokenLifetimeMillis();
+    }
+
+    /** createRefreshToken 만료 계산과 동일한 밀리초(한 곳에서만 정의). */
+    private long refreshTokenLifetimeMillis() {
+        return expiration * 1000L * 60 * 60 * 24 * 7;
+    }
+    //subject를 email로 쓴다.
+    public String extractEmail(String refreshToken) {
+        //Claims::getSubject - 람다식
+        //파라미터 즉 화면에서 넘어온 refreshToken에서 subject를 꺼냄.
+        //여기 예제에서는 subject에 email이 있는데 실전에서는 회원아이디를 사용함.
+        //왜냐면 이메일은 변경될 수도 있어서 회원 아이디로 처리함.
+        return extractClaim(refreshToken, Claims::getSubject);
+    }//end of extractEmail
+    //토큰에서 특정 값을 꺼내는 공용 메서드
+    //<T> : 이 메서드는 T라는 타입을 사용한다.
+    //아직 타입을 정하지 않은 반환타입을 T로 놓음.
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers){
+        final Claims claims = extractAllClaims(token);//서명 검증 + payload
+        return claimsResolvers.apply(claims);
+    }//end of extractClaim
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(SECRET_KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+    public boolean isTokenExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    /**
+     * Access JWT 만료 시각까지 남은 시간(ms). 이미 만료면 0. 파싱 실패 시 0.
+     * Redis 블랙리스트 TTL을 남은 유효기간과 맞출 때 사용.
+     */
+    public long getAccessTokenRemainingTtlMillis(String accessToken) {
+        try {
+            Date exp = extractClaim(accessToken, Claims::getExpiration);
+            return Math.max(0L, exp.getTime() - System.currentTimeMillis());
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+    /**
+     * Access/Refresh JWT 모두 subject에 {@code memberId}를 넣는다({@link #createToken}, {@link #createRefreshToken}).
+     * Refresh 재발급 시 회원과의 일치는 이메일이 아니라 회원 ID로 검증해야 한다.
+     */
+    public boolean isTokenValid(String token, Member member) {
+        final String subject = extractEmail(token);
+        return subject != null
+                && member.getMemberId() != null
+                && subject.equals(member.getMemberId())
+                && !isTokenExpired(token);
+    }
+}

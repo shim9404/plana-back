@@ -1,0 +1,135 @@
+package com.example.plana.auth;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+
+import javax.crypto.SecretKey;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+
+/*
+JwtTokenFilter의 역할은 클라이언트가 요청을 할 때 토큰을 달고 다님
+이 토큰이 정상적인 것인지 서버측에서 검증하는 과정이 필요한데 이것을 여기서 처리함
+즉 토큰을 검증하는 코드를 작성해야 함.
+ */
+@Component
+public class JwtTokenFilter extends GenericFilter {
+
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    /** SecurityConfig permitAll 과 동일 — JWT 없이 통과해야 하는 경로(로그인 시 옛 accessToken 헤더 무시) */
+    private static final String[] JWT_EXEMPT_PATHS = {
+            "/api/members",
+            "/api/trips",
+            "/api/auth/**",
+            "/auth/signin",
+            "/auth/refresh",
+            "/auth/logout",
+            "/api/member/memberInsert",
+            "/api/member/existsNickname",
+            "/member/memberInsert",
+            "/member/doLogin",
+            "/member/google/doLogin",
+            "/member/kakao/doLogin",
+            "/api/redis/**",
+            "/pds/**",
+    };
+
+    @Value("${jwt.secret}")
+    private String secretKey;
+    private SecretKey verificationKey;
+
+    @PostConstruct
+    void initVerificationKey() {
+        verificationKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKey));
+    }
+
+    private static String pathWithoutContext(HttpServletRequest req) {
+        String uri = req.getRequestURI();
+        String ctx = req.getContextPath();
+        if (ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)) {
+            return uri.substring(ctx.length());
+        }
+        return uri;
+    }
+
+    private static boolean isJwtExemptPath(String path) {
+        for (String pattern : JWT_EXEMPT_PATHS) {
+            if (PATH_MATCHER.match(pattern, path)) {
+                return true;
+            }
+        }
+        //TODO : 개발 후 변경 필요
+//        return false;
+        return true;
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        if (isJwtExemptPath(pathWithoutContext(httpRequest))) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        String token = httpRequest.getHeader("Authorization");
+        try{
+            //token이 null이라는 건 토큰을 넣지 않았다는 것임
+            if (token != null) {
+                if (!token.startsWith("Bearer ") || token.length() < 8) {
+                    throw new AuthenticationServiceException("Bearer 형식이 아닙니다.");
+                }
+                //검증을 할 때는 Bearer를 떼어내고 검증함.
+                String jwtToken = token.substring(7).trim();
+                if (jwtToken.isEmpty()) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                //이 토큰을 가지고 검증하고 여기서 claims는 payload를 가리키는데
+                //이것을 꺼내서 Authentication이라는 인증 객체를 만들 때 사용.
+                Claims claims = Jwts.parser()
+                        .verifyWith(verificationKey)
+                        .build()
+                        .parseSignedClaims(jwtToken)
+                        .getPayload();//검증을 하고 Claims를 꺼내는 메서드임
+                List<GrantedAuthority> authorities = new ArrayList<>();//권한이 여러가지 일 수 있으므로 List에 담아줌.
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + claims.get("role")));
+                //claims.getSubject()에 Email정보가 들어있음
+                UserDetails userDetails = new User(claims.getSubject(), "", authorities);
+                //스프링에서는 Authentication객체가 있으면 로그인을 했다라고 판단함
+                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, jwtToken, userDetails.getAuthorities());
+                //인증정보는 SecurityContextHolder안에 SecurityContext안에 들어있다.
+                //log.info(SecurityContextHolder.getContext().getAuthentication().getName());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+            //아래 코드가 없으면 다음 필터로 연결이 안됨.
+            //필터를 갔다가 다시 FilterChain으로 돌아가게 하는 코드임
+            //토큰에 대한 확인이 되었으니 다시 원래 프로세스로 돌아간다.
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());//401응답줌
+            httpResponse.setContentType("application/json");
+            httpResponse.getWriter().write("invalid token");
+        }
+
+    }
+}
