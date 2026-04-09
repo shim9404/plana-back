@@ -14,6 +14,5 @@ public class MemberCreateRequest {
     private String email;
     private String password;
     private String name;
-    private String profileImage;
     private String nickname;
 }

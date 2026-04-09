@@ -65,9 +65,9 @@
         WHERE MEMBER_ID = #{memberId}
     </select>
     <insert id="createMember" parameterType="com.example.plana.model.MemberSave">
-        INSERT INTO MEMBER (email, password, name, nickname, profile_image, role ,social_type)
+        INSERT INTO MEMBER (email, password, name, nickname, role ,social_type)
         VALUES (#{member.email,jdbcType=VARCHAR}, #{member.password,jdbcType=VARCHAR}, #{member.name,jdbcType=VARCHAR}
-        , #{member.nickname, jdbcType=VARCHAR}, #{member.profileImage,jdbcType=VARCHAR}, #{member.role,jdbcType=VARCHAR}, #{member.socialType,jdbcType=VARCHAR} )
+        , #{member.nickname, jdbcType=VARCHAR}, #{member.role,jdbcType=VARCHAR}, #{member.socialType,jdbcType=VARCHAR} )
     </insert>
     <!-- 내 정보 · email 존재 여부) -->
     <select id="existsEmail" parameterType="string" resultType="boolean">

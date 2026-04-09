@@ -10,7 +10,6 @@ import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.mapper.MemberMapper;
-import com.example.plana.model.Member;
 import com.example.plana.model.MemberSave;
 import com.example.plana.model.MemberVerify;
 import lombok.extern.log4j.Log4j2;
@@ -139,7 +138,7 @@ public class MemberService {
 
     // 회원가입 : email로 가입했을 경우 호출
     @Transactional(rollbackFor = Exception.class)
-    public void createMemberByEmail(MemberCreateRequest member, MultipartFile profileImage) {
+    public void createMemberByEmail(MemberCreateRequest member) {
 
         MemberSave memberSave = new MemberSave();
 
@@ -148,15 +147,6 @@ public class MemberService {
         memberSave.setNickname(member.getNickname());
         memberSave.setRole(Role.MEMBER.name());
         memberSave.setSocialType(SocialType.EMAIL.name());
-
-        if (profileImage != null && !profileImage.isEmpty()) {
-            try {
-                memberSave.setProfileImage(storeProfileImage(profileImage));
-            } catch (IOException e) {
-                log.error("프로필 이미지 저장 실패", e);
-                throw new BusinessException(ErrorCode.FILE_WRITE_ERROR);
-            }
-        }
         memberSave.setPassword(bCryptPasswordEncoder.encode(member.getPassword()));
 
         int result = memberMapper.createMember(memberSave);
