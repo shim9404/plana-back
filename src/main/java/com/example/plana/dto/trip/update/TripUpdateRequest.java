@@ -1,5 +1,6 @@
 package com.example.plana.dto.trip.update;
 
+import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

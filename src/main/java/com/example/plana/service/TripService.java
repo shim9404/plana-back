@@ -5,9 +5,13 @@ import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.area.read.AreaForBookmarkResponse;
 import com.example.plana.dto.area.read.MapPos;
+import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
+import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.trip.create.*;
-import com.example.plana.dto.trip.read.*;
+import com.example.plana.dto.trip.read.TripDayResponse;
+import com.example.plana.dto.trip.read.TripResponse;
+import com.example.plana.dto.trip.read.TripScheduleResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.AreaMapper;
 import com.example.plana.mapper.BookmarkMapper;
@@ -27,8 +31,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TripService {
     private final TripMapper tripMapper;
-    private final BookmarkMapper bookmarkMapper;
-    private final AreaMapper areaMapper;
+    private final BookmarkService bookmarkService;
 
     /**
      * 신규 여행 생성 - 날짜 수만큼 신규 여행 일자 생성 - 각 여행 일자당 1개의 신규 스케줄 생성
@@ -162,34 +165,8 @@ public class TripService {
         }
 
         // 4. SELECT BOOKMARKS
-        try {
-            // TRIP_ID에 해당하는 모든 BOOKMARK 리스트에 담기
-            List<BookmarkResponse> bookmarks = bookmarkMapper.readBookmarks(tripId);
-            for (BookmarkResponse bookmark : bookmarks) {
-                // 5. BOOKMARK와 연결된 장소 정보 획득 및 가공
-                try {
-                    Area area = areaMapper.readAreaForBookmark(bookmark.getAreaId());
-                    AreaForBookmarkResponse bookmarkArea = AreaForBookmarkResponse.builder()
-                            .name(area.getName())
-                            .mapPos(MapPos.builder()
-                                    .x(area.getMapX())
-                                    .y(area.getMapY())
-                                    .build())
-                            .category(area.getCategory())
-                            .address(area.getAddress())
-                            .roadAddress(area.getRoadAddress())
-                            .link(area.getLink())
-                            .telephone(area.getTelePhone())
-                            .build();
-                    bookmark.setAreaInfo(bookmarkArea);
-                } catch (Exception e) {
-                    throw new BusinessException(ErrorCode.AREA_READ_FAILED);
-                }
-            }
-            trip.setBookmarks(bookmarks);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_READ_FAILED);
-        }
+        trip.setBookmarks(bookmarkService.readBookmarksByTripId(tripId));
+
         return trip;
     }
 
@@ -368,11 +345,8 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
         }
-        try {   // 북마크 삭제
-            bookmarkMapper.deleteBookmarksByTripId(tripId);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_DELETE_FAILED);
-        }
+        // 북마크 삭제
+        bookmarkService.deleteBookmarksByTripId(tripId);
 
         // 2. 여행 삭제
         int result = -1;

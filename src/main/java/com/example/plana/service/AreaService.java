@@ -3,7 +3,9 @@ package com.example.plana.service;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.config.KakaoConfig;
+import com.example.plana.dto.area.create.AreaPlaceCreateRequest;
 import com.example.plana.dto.area.read.*;
+import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.mapper.AreaMapper;
 import com.example.plana.mapper.RegionMapper;
 import com.example.plana.model.Area;
@@ -176,5 +178,62 @@ public class AreaService {
         }
 
         return list;
+    }
+
+    /**
+     * 신규 근처 장소 등록
+     * AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우 호출
+     * @param request AreaPlaceCreateRequest
+     * @return 등록 완료된 AREA ID
+     */
+    public String createNewPlaceAreaBeforeBookmark(AreaPlaceCreateRequest request) {
+        Map<String, Object> areaParams = new HashMap<>();
+        areaParams.put("regionId", request.getRegionId());
+        areaParams.put("name", request.getName());
+        areaParams.put("mapX", request.getMapPos().getX());
+        areaParams.put("mapY", request.getMapPos().getY());
+        areaParams.put("category", request.getCategory());
+        areaParams.put("address", request.getAddress());
+        areaParams.put("roadAddress", request.getRoadAddress());
+        areaParams.put("link", request.getLink());
+        areaParams.put("telephone", request.getTelephone());
+        areaParams.put("description", request.getDescription());
+        areaParams.put("areaId", null);
+
+        log.info(areaParams);
+
+        try {
+            areaMapper.createArea(areaParams);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            throw new BusinessException(ErrorCode.AREA_CREATE_FAILED);
+        }
+
+        return (String) areaParams.get("areaId");
+    }
+
+    /**
+     * Area Data를 AreaForBookmarkResponse로 가공하여 반환
+     * @param areaId 장소 ID
+     * @return AreaForBookmarkResponse
+     */
+    public AreaForBookmarkResponse toBookmarkResponse(String areaId) {
+        try {
+            Area area = areaMapper.readAreaForBookmark(areaId);
+            return AreaForBookmarkResponse.builder()
+                    .name(area.getName())
+                    .mapPos(MapPos.builder()
+                            .x(area.getMapX())
+                            .y(area.getMapY())
+                            .build())
+                    .category(area.getCategory())
+                    .address(area.getAddress())
+                    .roadAddress(area.getRoadAddress())
+                    .link(area.getLink())
+                    .telephone(area.getTelePhone())
+                    .build();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.AREA_READ_FAILED);
+        }
     }
 }
