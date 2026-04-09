@@ -1,4 +1,4 @@
-package com.example.plana.dto.trip.update;
+package com.example.plana.dto.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripStatusUpdateRequest {
+public class StatusUpdateRequest {
     private String status;
 }

@@ -25,6 +25,13 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 내 모든 북마크 상태 갱신  -->
+    <update id="updateBookmarksStatus">
+        UPDATE BOOKMARK
+        SET STATUS = #{status, jdbcType=VARCHAR}
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+
     <!--  북마크 삭제  -->
     <delete id="deleteBookmark">
         DELETE BOOKMARK

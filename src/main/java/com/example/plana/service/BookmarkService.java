@@ -2,11 +2,10 @@ package com.example.plana.service;
 
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
-import com.example.plana.dto.area.create.AreaPlaceCreateRequest;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
 import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
-import com.example.plana.mapper.AreaMapper;
+import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.mapper.BookmarkMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -59,6 +58,40 @@ public class BookmarkService {
                 .build();
     }
 
+    /**
+     * 여행 귀속 북마크 전체 조회
+     * @param tripId 여행 ID
+     * @return List<BookmarkResponse>
+     */
+    public List<BookmarkResponse> readBookmarksByTripId(String tripId) {
+        try {
+            // TRIP_ID에 해당하는 모든 BOOKMARK 리스트에 담기
+            List<BookmarkResponse> bookmarks = bookmarkMapper.readBookmarks(tripId);
+            for (BookmarkResponse bookmark : bookmarks) {
+                // BOOKMARK와 연결된 장소의 가공 데이터 요청 후 담기
+                bookmark.setAreaInfo(areaService.toBookmarkResponse(bookmark.getAreaId()));
+            }
+            return bookmarks;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_READ_FAILED);
+        }
+    }
+
+    /**
+     * 여행 귀속 북마크 전체 상태 갱신
+     * @param tripId 여행 ID
+     * @param request BookmarkStatusUpdateRequest
+     */
+    public void updateBookmarksStatus(String tripId, StatusUpdateRequest request) {
+        Map<String, Object> statusParams = new HashMap<>();
+        statusParams.put("tripId",    tripId);
+        statusParams.put("status", request.getStatus());
+        try {
+            bookmarkMapper.updateBookmarksStatus(statusParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_UPDATE_FAILED);
+        }
+    }
 
     /**
      * 북마크 단건 삭제
@@ -88,22 +121,4 @@ public class BookmarkService {
         }
     }
 
-    /**
-     * 여행 귀속 북마크 전체 조회
-     * @param tripId 여행 ID
-     * @return List<BookmarkResponse>
-     */
-    public List<BookmarkResponse> readBookmarksByTripId(String tripId) {
-        try {
-            // TRIP_ID에 해당하는 모든 BOOKMARK 리스트에 담기
-            List<BookmarkResponse> bookmarks = bookmarkMapper.readBookmarks(tripId);
-            for (BookmarkResponse bookmark : bookmarks) {
-                // BOOKMARK와 연결된 장소의 가공 데이터 요청 후 담기
-                bookmark.setAreaInfo(areaService.toBookmarkResponse(bookmark.getAreaId()));
-            }
-            return bookmarks;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_READ_FAILED);
-        }
-    }
 }

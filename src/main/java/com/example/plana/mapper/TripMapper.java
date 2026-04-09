@@ -13,16 +13,18 @@ public interface TripMapper {
     List<TripDayResponse> readTripDaysByTripId(String tripId);
     List<TripScheduleResponse> readTripSchedulesByTripDayId(String tripDayId);
 
+    // ── 상태(STATUS) 갱신 ───────────────────
+    int updateTripStatus(Map<String, Object> params);
+    void updateTripDaysStatus(Map<String, Object> params);
+    void updateTripSchedulesStatus(Map<String, Object> params);
+
     // ── Trip ──────────────────────────────
     void createTrip(Map<String, Object> params);
     int updateTrip(Map<String, Object> params);
-    int updateTripStatus(Map<String, Object> params);
     int deleteTrip(String tripId);
 
     // ── TripDay ───────────────────────────
     void createTripDay(Map<String, Object> params);   // 여행 생성용 단건 INSERT
-//    void createTripDays(Map<String, Object> params);  // 복구용 전체 필드 INSERT (MERGE)
-//    void updateTripDays(Map<String, Object> params);  // 순서 변경 UPDATE (MERGE)
     int updateTripDaysIndexSort(Map<String, Object> params);
     void deleteTripDaysByTripId(String tripId);
     // 단건 삭제 호출 ──────────────────────
