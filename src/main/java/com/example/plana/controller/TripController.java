@@ -182,9 +182,28 @@ public class TripController {
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 
+    /**
+     * addBookmark 북마크 추가
+     * case1. DB에 있는 근처 장소이거나 관광지 혹은 맛집의 경우
+     * case2. DB에 없는 근처 장소일 경우
+     * @param tripId 여행 ID
+     * @param request BookmarkCreateRequest
+     * @return ResponseBody.data : null
+     */
     @PostMapping("/{tripId}/bookmarks")
     public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request) {
         bookmarkService.createBookmark(tripId, request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, null));
+    }
+
+    /**
+     * deleteBookmark 북마크 삭제
+     * @param bookmarkId 삭제할 북마크 ID
+     * @return ResponseBody.data : null
+     */
+    @DeleteMapping("/{tripId}/bookmarks/{bookmarkId}")
+    public ResponseEntity<ResponseBody> deleteBookmark(@PathVariable String bookmarkId) {
+        bookmarkService.deleteBookmark(bookmarkId);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 }

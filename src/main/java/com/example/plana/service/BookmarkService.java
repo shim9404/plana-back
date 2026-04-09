@@ -41,7 +41,12 @@ public class BookmarkService {
         bookmarkParams.put("tripId", tripId);
         bookmarkParams.put("areaId", areaId);
         bookmarkParams.put("bookmarkType", request.getBookmarkType());
-        bookmarkMapper.createBookmark(bookmarkParams);
+
+        try {
+            bookmarkMapper.createBookmark(bookmarkParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_CREATE_FAILED);
+        }
     }
 
     /**
@@ -74,5 +79,21 @@ public class BookmarkService {
         }
 
         return (String) areaParams.get("areaId");
+    }
+
+    /**
+     * 북마크 삭제
+     * @param bookmarkId 삭제할 북마크 ID
+     */
+    public void deleteBookmark(String bookmarkId) {
+        int result = -1;
+        try {
+            result = bookmarkMapper.deleteBookmark(bookmarkId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_DELETE_FAILED);
+        }
+        if (result == 0) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_NOT_FOUND);
+        }
     }
 }
