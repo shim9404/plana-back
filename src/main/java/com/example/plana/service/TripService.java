@@ -6,6 +6,7 @@ import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.read.*;
 import com.example.plana.dto.trip.update.*;
+import com.example.plana.mapper.BookmarkMapper;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +22,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TripService {
     private final TripMapper tripMapper;
+    private final BookmarkMapper bookmarkMapper;
 
     /**
      * 신규 여행 생성 - 날짜 수만큼 신규 여행 일자 생성 - 각 여행 일자당 1개의 신규 스케줄 생성
@@ -330,6 +332,11 @@ public class TripService {
             tripMapper.deleteTripDaysByTripId(tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
+        }
+        try {   // 북마크 삭제
+            bookmarkMapper.deleteBookmarksByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_DELETE_FAILED);
         }
 
         // 2. 여행 삭제

@@ -21,4 +21,10 @@
         DELETE BOOKMARK
         WHERE BOOKMARK_ID = #{bookmarkId, jdbcType=VARCHAR}
     </delete>
+
+    <!--  여행 귀속 북마크 전체 삭제  -->
+    <delete id="deleteBookmarksByTripId">
+        DELETE BOOKMARK
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </delete>
 </mapper>
