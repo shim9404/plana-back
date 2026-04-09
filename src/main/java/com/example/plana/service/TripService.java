@@ -200,12 +200,12 @@ public class TripService {
         }
 
         // 2. 기존 하위 데이터 전체 삭제 (자식 먼저) : DELETE 사용
-        try {
+        try {   // 스케줄 삭제
             tripMapper.deleteTripSchedulesByTripId(tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
         }
-        try {
+        try {   // 일자 삭제
             tripMapper.deleteTripDaysByTripId(tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
@@ -249,7 +249,7 @@ public class TripService {
                 try {
                     tripMapper.createTripSchedule(scheduleParams);
                 } catch (Exception e) {
-                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
                 }
                 String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
@@ -274,12 +274,15 @@ public class TripService {
                     .build());
         }
 
+        // 4. BOOKMARK SELECT
+        List<BookmarkResponse> bookmarks = bookmarkService.readBookmarksByTripId(tripId);
+
         return TripUpdateResponse.builder()
                 .tripId(tripId)
                 .name((String) tripParams.get("name"))
                 .startDate((String) tripParams.get("startDate"))
                 .endDate((String) tripParams.get("endDate"))
-                .bookmarks(Collections.emptyList())
+                .bookmarks(bookmarks)
                 .days(dayList)
                 .build();
     }
