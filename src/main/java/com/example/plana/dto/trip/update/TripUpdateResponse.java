@@ -1,5 +1,6 @@
 package com.example.plana.dto.trip.update;
 
+import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,6 @@ public class TripUpdateResponse {
     private String name;
     private String startDate;
     private String endDate;
-    private List<Object> bookmarks;
+    private List<BookmarkResponse> bookmarks;
     private List<TripDayUpdateResponse> days;
 }

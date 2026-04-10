@@ -1,5 +1,6 @@
 package com.example.plana.mapper;
 
+import com.example.plana.dto.area.read.AreaForBookmarkResponse;
 import com.example.plana.dto.area.read.AreaReadRequest;
 import com.example.plana.model.Area;
 import org.apache.ibatis.annotations.Mapper;
@@ -11,5 +12,6 @@ import java.util.Map;
 @Mapper
 public interface AreaMapper {
     List<Area> readArea(@Param("regionId") String regionId, @Param("zdoCode") Integer zdoCode);
+    Area readAreaForBookmark(String bookmarkId);
     void createArea(Map<String, Object> params);
 }

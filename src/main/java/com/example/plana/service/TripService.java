@@ -3,8 +3,12 @@ package com.example.plana.service;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
+import com.example.plana.dto.bookmark.read.BookmarkResponse;
+import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.trip.create.*;
-import com.example.plana.dto.trip.read.*;
+import com.example.plana.dto.trip.read.TripDayResponse;
+import com.example.plana.dto.trip.read.TripResponse;
+import com.example.plana.dto.trip.read.TripScheduleResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TripService {
     private final TripMapper tripMapper;
+    private final BookmarkService bookmarkService;
 
     /**
      * 신규 여행 생성 - 날짜 수만큼 신규 여행 일자 생성 - 각 여행 일자당 1개의 신규 스케줄 생성
@@ -153,6 +158,9 @@ public class TripService {
             throw new BusinessException(ErrorCode.TRIP_DAY_READ_FAILED);
         }
 
+        // 4. SELECT BOOKMARKS
+        trip.setBookmarks(bookmarkService.readBookmarksByTripId(tripId));
+
         return trip;
     }
 
@@ -186,12 +194,12 @@ public class TripService {
         }
 
         // 2. 기존 하위 데이터 전체 삭제 (자식 먼저) : DELETE 사용
-        try {
+        try {   // 스케줄 삭제
             tripMapper.deleteTripSchedulesByTripId(tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
         }
-        try {
+        try {   // 일자 삭제
             tripMapper.deleteTripDaysByTripId(tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
@@ -235,7 +243,7 @@ public class TripService {
                 try {
                     tripMapper.createTripSchedule(scheduleParams);
                 } catch (Exception e) {
-                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
                 }
                 String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
@@ -260,12 +268,15 @@ public class TripService {
                     .build());
         }
 
+        // 4. BOOKMARK SELECT
+        List<BookmarkResponse> bookmarks = bookmarkService.readBookmarksByTripId(tripId);
+
         return TripUpdateResponse.builder()
                 .tripId(tripId)
                 .name((String) tripParams.get("name"))
                 .startDate((String) tripParams.get("startDate"))
                 .endDate((String) tripParams.get("endDate"))
-                .bookmarks(Collections.emptyList())
+                .bookmarks(bookmarks)
                 .days(dayList)
                 .build();
     }
@@ -299,19 +310,37 @@ public class TripService {
      * @param tripId 여행 ID
      * @param request TripStatusUpdateResponse : STATUS - ACTIVE(활성) / INACTIVE(비활성) / DELETED(삭제)
      */
-    public void updateTripStatus(String tripId, TripStatusUpdateRequest request) {
-        Map<String, Object> tripParams = new HashMap<>();
-        tripParams.put("tripId",    tripId);
-        tripParams.put("status", request.getStatus());
+    @Transactional
+    public void updateTripStatus(String tripId, StatusUpdateRequest request) {
+        Map<String, Object> statusParams = new HashMap<>();
+        statusParams.put("tripId",    tripId);
+        statusParams.put("status", request.getStatus());
+        // 여행 상태 갱신
         int result = -1;
         try {
-            result = tripMapper.updateTripStatus(tripParams);
+            result = tripMapper.updateTripStatus(statusParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
         }
         if (result == 0) {
             throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
         }
+
+        // 여행 일자 상태 갱신
+        try {
+            tripMapper.updateTripDaysStatus(statusParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_UPDATE_FAILED);
+        }
+        // 여행 스케줄 상태 갱신
+        try {
+            tripMapper.updateTripSchedulesStatus(statusParams);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_UPDATE_FAILED);
+        }
+
+        // 북마크 상태 갱신
+        bookmarkService.updateBookmarksStatus(tripId, request);
     }
 
     /**
@@ -331,6 +360,8 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
         }
+        // 북마크 삭제
+        bookmarkService.deleteBookmarksByTripId(tripId);
 
         // 2. 여행 삭제
         int result = -1;
@@ -539,7 +570,7 @@ public class TripService {
         try {
             result = tripMapper.updateTripSchedule(scheduleParams);
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_SAVE_FAILED);
+            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_UPDATE_FAILED);
         }
 
         if (result == 0) {

@@ -2,7 +2,9 @@ package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
+import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.common.ResponseBody;
+import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
@@ -76,7 +78,7 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{tripId}/status")
-    public ResponseEntity<ResponseBody> editTripStatus(@PathVariable String tripId, @RequestBody TripStatusUpdateRequest request) {
+    public ResponseEntity<ResponseBody> editTripStatus(@PathVariable String tripId, @RequestBody StatusUpdateRequest request) {
         tripService.updateTripStatus(tripId, request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
@@ -192,8 +194,8 @@ public class TripController {
      */
     @PostMapping("/{tripId}/bookmarks")
     public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request) {
-        bookmarkService.createBookmark(tripId, request);
-        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, null));
+        BookmarkCreateResponse data = bookmarkService.createBookmark(tripId, request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
     /**

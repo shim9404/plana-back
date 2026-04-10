@@ -114,6 +114,13 @@
             AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 내 모든 일자 상태 갱신  -->
+    <update id="updateTripDaysStatus">
+        UPDATE TRIP_DAY
+        SET STATUS = #{status, jdbcType=VARCHAR}
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+
     <!--  여행의 일자 전체 삭제  -->
     <delete id="deleteTripDaysByTripId">
         DELETE FROM TRIP_DAY
@@ -221,6 +228,25 @@
         ORDER BY INDEX_SORT
     </select>
 
+    <!-- 스케줄 indexSort 직접 업데이트 -->
+    <update id="updateTripScheduleIndexSort">
+        UPDATE TRIP_SCHEDULE
+        SET TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR},
+        INDEX_SORT  = #{indexSort,  jdbcType=INTEGER}
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
+    </update>
+
+    <!--  여행 내 모든 스케줄 상태 갱신  -->
+    <update id="updateTripSchedulesStatus">
+        UPDATE TRIP_SCHEDULE
+        SET STATUS = #{status, jdbcType=VARCHAR}
+        WHERE TRIP_DAY_ID IN (
+            SELECT TRIP_DAY_ID
+            FROM TRIP_DAY
+            WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+        )
+    </update>
+
     <!--  여행의 스케줄 전체 삭제  -->
     <delete id="deleteTripSchedulesByTripId">
         DELETE FROM TRIP_SCHEDULE
@@ -236,13 +262,4 @@
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
-
-    <!-- 스케줄 indexSort 직접 업데이트 -->
-    <update id="updateTripScheduleIndexSort">
-        UPDATE TRIP_SCHEDULE
-        SET TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR},
-            INDEX_SORT  = #{indexSort,  jdbcType=INTEGER}
-        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
-    </update>
-
 </mapper>

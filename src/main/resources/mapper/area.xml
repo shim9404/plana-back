@@ -32,6 +32,22 @@
         </where>
     </select>
 
+    <!--  장소 단일 호출 : 북마크 표시 용도  -->
+    <select id="readAreaForBookmark" resultType="com.example.plana.model.Area">
+        SELECT  REGION_ID as "regionId",
+                SEARCH_TYPE as "searchType",
+                NAME as "name",
+                MAP_X as "mapX",
+                MAP_Y as "mapY",
+                CATEGORY as "category",
+                ADDRESS as "address",
+                ROAD_ADDRESS as "roadAddress",
+                LINK as "link",
+                TELEPHONE as "telephone"
+        FROM AREA
+        WHERE AREA_ID = #{areaId, jdbcType=VARCHAR}
+    </select>
+
     <!--  신규 근처 장소 등록 : 북마크 신규 등록 용도  -->
     <insert id="createArea" statementType="CALLABLE">
         BEGIN
