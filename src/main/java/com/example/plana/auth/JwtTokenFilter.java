@@ -1,14 +1,18 @@
 package com.example.plana.auth;
 
+import com.example.plana.common.exception.BusinessException;
+import com.example.plana.common.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,6 +23,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
@@ -31,24 +36,23 @@ JwtTokenFilter의 역할은 클라이언트가 요청을 할 때 토큰을 달�
 이 토큰이 정상적인 것인지 서버측에서 검증하는 과정이 필요한데 이것을 여기서 처리함
 즉 토큰을 검증하는 코드를 작성해야 함.
  */
+@Slf4j
 @Component
 public class JwtTokenFilter extends GenericFilter {
+
+    private final HandlerExceptionResolver resolver;
+
+    // 생성자를 직접 작성하여 @Qualifier 적용
+    public JwtTokenFilter(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+        this.resolver = resolver;
+    }
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     /** SecurityConfig permitAll 과 동일 — JWT 없이 통과해야 하는 경로(로그인 시 옛 accessToken 헤더 무시) */
     private static final String[] JWT_EXEMPT_PATHS = {
             "/api/members",
-            "/api/trips",
             "/api/auth/**",
-            "/auth/signin",
-            "/auth/refresh",
-            "/auth/logout",
-            "/api/member/memberInsert",
-            "/api/member/existsNickname",
-            "/member/memberInsert",
-            "/member/doLogin",
-            "/member/google/doLogin",
-            "/member/kakao/doLogin",
+            "/api/members/nickname/**",
             "/api/redis/**",
             "/pds/**",
     };
@@ -77,9 +81,7 @@ public class JwtTokenFilter extends GenericFilter {
                 return true;
             }
         }
-        //TODO : 개발 후 변경 필요
-//        return false;
-        return true;
+        return false;
     }
 
     @Override
@@ -124,12 +126,14 @@ public class JwtTokenFilter extends GenericFilter {
             //필터를 갔다가 다시 FilterChain으로 돌아가게 하는 코드임
             //토큰에 대한 확인이 되었으니 다시 원래 프로세스로 돌아간다.
             filterChain.doFilter(request, response);
-        } catch (Exception e) {
+        }catch (ExpiredJwtException e){
             e.printStackTrace();
-            httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());//401응답줌
-            httpResponse.setContentType("application/json");
-            httpResponse.getWriter().write("invalid token");
+            log.info("액세스 토큰 만료");
+            resolver.resolveException(httpRequest, httpResponse, null, new BusinessException(ErrorCode.ACCESS_TOKEN_EXPIRED));
+        }catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            resolver.resolveException(httpRequest, httpResponse, null, e);
         }
-
     }
 }

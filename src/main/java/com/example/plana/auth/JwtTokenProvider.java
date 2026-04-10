@@ -5,6 +5,7 @@ import com.example.plana.model.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.util.Base64;
@@ -21,16 +22,22 @@ JWT 토큰을 발급하는 스프링 컴포넌트(싱글톤)
 @Component
 public class JwtTokenProvider {
     //인코딩된 시크릿값
-    private final int expiration;
     private SecretKey SECRET_KEY;
-    public JwtTokenProvider(@Value("${jwt.secret}") String  secretKey, @Value("${jwt.expiration}") int expiration) {
-        this.expiration = expiration;
+
+    @Getter
+    private final int refreshTokenTtlMillis;
+    private final int accessTokenTtlMillis;
+
+    public JwtTokenProvider(@Value("${jwt.secret}") String  secretKey, @Value("${jwt.access-token-expiration-ms}") int accessTokenExpiration, @Value("${jwt.refresh-token-expiration-ms}") int refreshTokenExpiration) {
+        this.accessTokenTtlMillis = accessTokenExpiration;
+        this.refreshTokenTtlMillis = refreshTokenExpiration;
         this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKey));
     }//end of JwtTokenProvider
+
     /*
     Claims생성
     JWT의 payload 부분(=실제 데이터)에 들어갈 내용
-    setSubject(email): 이 토큰의 주인은 email(주체정보)
+    setSubject(memberId): 이 토큰의 주인은 memberId(주체정보)
     claims.put("role", role): 사용자 권한(로우 하이어라키)
     토큰 생성
     setIssuedAt(now): 토큰 발급 시간
@@ -41,14 +48,14 @@ public class JwtTokenProvider {
     이 토큰을 프론트엔드(리액트)에게 응답하면, 프론트는 이 토큰(access token)을 저장하고
     API요청할 때 마다 Authorization헤더에 넣어 인증
     */
-    public String createToken(String memberId, String role) {
+    public String createAccessToken(String memberId, String role) {
         // JJWT 0.12+: Jwts.claims()...build() 결과는 불변이라 put 불가. 빌더에 subject/claim을 바로 설정.
         Date now = new Date();
         return Jwts.builder()
                 .subject(memberId)
                 .claim("role", role)
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + expiration * 60 * 1000L))
+                .expiration(new Date(now.getTime() + accessTokenTtlMillis))
                 .signWith(SECRET_KEY)
                 .compact();
     }//end of createToken
@@ -60,27 +67,18 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(memberId)
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + refreshTokenLifetimeMillis()))
+                .expiration(new Date(now.getTime() + refreshTokenTtlMillis))
                 .signWith(SECRET_KEY)
                 .compact();
     }//end of createToken
-    /** Refresh JWT 만료까지의 시간(ms). Redis TTL은 반드시 이 값과 같아야 재발급 직전 만료가 맞는다. */
-    public long getRefreshTokenTtlMillis() {
-        return refreshTokenLifetimeMillis();
-    }
 
-    /** createRefreshToken 만료 계산과 동일한 밀리초(한 곳에서만 정의). */
-    private long refreshTokenLifetimeMillis() {
-        return expiration * 1000L * 60 * 60 * 24 * 7;
-    }
-    //subject를 email로 쓴다.
-    public String extractEmail(String refreshToken) {
+    //subject를 memberId 쓴다.
+    public String extractSubject(String refreshToken) {
         //Claims::getSubject - 람다식
         //파라미터 즉 화면에서 넘어온 refreshToken에서 subject를 꺼냄.
-        //여기 예제에서는 subject에 email이 있는데 실전에서는 회원아이디를 사용함.
-        //왜냐면 이메일은 변경될 수도 있어서 회원 아이디로 처리함.
         return extractClaim(refreshToken, Claims::getSubject);
-    }//end of extractEmail
+    }//end of extractSubject
+
     //토큰에서 특정 값을 꺼내는 공용 메서드
     //<T> : 이 메서드는 T라는 타입을 사용한다.
     //아직 타입을 정하지 않은 반환타입을 T로 놓음.
@@ -113,11 +111,11 @@ public class JwtTokenProvider {
         }
     }
     /**
-     * Access/Refresh JWT 모두 subject에 {@code memberId}를 넣는다({@link #createToken}, {@link #createRefreshToken}).
+     * Access/Refresh JWT 모두 subject에 {@code memberId}를 넣는다({@link #createAccessToken}, {@link #createRefreshToken}).
      * Refresh 재발급 시 회원과의 일치는 이메일이 아니라 회원 ID로 검증해야 한다.
      */
     public boolean isTokenValid(String token, Member member) {
-        final String subject = extractEmail(token);
+        final String subject = extractSubject(token);
         return subject != null
                 && member.getMemberId() != null
                 && subject.equals(member.getMemberId())
