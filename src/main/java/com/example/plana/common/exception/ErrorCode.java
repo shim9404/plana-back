@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_FILE_PATH(400, "C014", "유효하지 않은 파일 경로입니다."),
 
     // Auth
+    LOGIN_FAILED_COUNT(400, "L001", "로그인에 실패했습니다. 남은 횟수: {0}회"),
     LOGIN_INPUT_INVALID(401, "A001", "아이디 또는 비밀번호가 일치하지 않습니다."),
     ACCESS_TOKEN_EXPIRED(401, "A002", "세션이 만료되었습니다."),
     HANDLE_ACCESS_DENIED(403, "A003", "접근 권한이 없습니다."),
@@ -30,16 +31,17 @@ public enum ErrorCode {
     INVALID_TOKEN(401, "A007", "유효하지 않은 인증 토큰입니다."),
     MALFORMED_TOKEN(401, "A008", "토큰 형식이 잘못되었습니다."),
     REFRESH_TOKEN_EXPIRED(401, "A009", "리프레시 토큰이 만료되었습니다. 다시 로그인하세요."),
+    FAIL_REFRESH_TOKEN(401, "A010", "토큰 재발급에 실패하였습니다."),
 
-    // User
     // User
     USER_NOT_FOUND(404, "U001", "존재하지 않는 사용자입니다."),
     EMAIL_DUPLICATION(409, "U002", "이미 등록된 이메일입니다."),
     ALREADY_WITHDRAWN_MEMBER(400, "U003", "탈퇴처리 중인 사용자입니다."),
     DUPLICATE_NICKNAME(409, "U004", "이미 사용 중인 닉네임입니다."),
     INVALID_PASSWORD_FORMAT(400, "U005", "비밀번호 규칙에 위배됩니다."),
-    ACCOUNT_LOCKED(403, "U006", "비밀번호 5회 오류로 계정이 잠겼습니다."),
+    ACCOUNT_LOCKED(403, "U006", "비밀번호 {0}회 오류로 계정이 잠겼습니다."),
     SOCIAL_LINK_ERROR(409, "U007", "이미 다른 소셜 계정과 연동되어 있습니다."),
+    LOCK_REMAIN_TIME(403, "U008", "잠긴 계정입니다. 약 {0}초 후에 다시 시도해 주세요."),
 
     // Trip
     TRIP_CREATE_FAILED(500, "T001", "여행 생성 중 오류가 발생했습니다."),
@@ -74,9 +76,11 @@ public enum ErrorCode {
     @Getter
     private final String message;
 
+
     ErrorCode(int status, String code, String message) {
         this.status = status;
         this.code = code;
         this.message = message;
     }
+
 }

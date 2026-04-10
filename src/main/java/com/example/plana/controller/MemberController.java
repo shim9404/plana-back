@@ -8,17 +8,13 @@ import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
-import com.example.plana.model.Member;
 import lombok.RequiredArgsConstructor;
-import oracle.jdbc.proxy.annotation.Post;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.plana.service.MemberService;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
+
 import java.util.List;
 import java.util.Map;
 

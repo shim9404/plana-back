@@ -10,6 +10,7 @@ import com.example.plana.dto.member.read.MemberTripResponse;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.mapper.MemberMapper;
+import com.example.plana.model.Member;
 import com.example.plana.model.MemberSave;
 import com.example.plana.model.MemberVerify;
 import lombok.extern.log4j.Log4j2;
@@ -39,6 +40,7 @@ public class MemberService {
     @Value("${app.upload-path}")
     private String uploadPath;
 
+
     // 닉네임 중복 체크
     public void existNickname(String nickname) {
         if (memberMapper.existNickname(nickname)) {
@@ -56,6 +58,31 @@ public class MemberService {
         // 회원 정보 호출
         return memberMapper.readMember(memberId);
     }
+
+    // 회원 정보 호출
+    public Member readMemberByEmail(String email) {
+        Member member = memberMapper.readMemberByEmail(email);
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (member == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 회원 정보 호출
+        return member;
+    }
+
+    // 회원 정보 호출
+    public Member readMemberById(String memberId) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 회원 정보 호출
+        return memberMapper.readMemberById(memberId);
+    }
+
+
 
     // 회원 정보 수정
     public void updateMember(String memberId, MemberUpdateRequest memberUpdateRequest) {

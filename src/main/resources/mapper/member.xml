@@ -18,6 +18,17 @@
         WHERE MEMBER_ID = #{memberId}
     </select>
 
+    <select id="readMemberByEmail" parameterType="string" resultType="com.example.plana.model.Member">
+        SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage, PASSWORD as password, ROLE as role
+        FROM MEMBER
+        WHERE EMAIL = #{email}
+    </select>
+    <select id="readMemberById" parameterType="string" resultType="com.example.plana.model.Member">
+        SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage, PASSWORD as password, ROLE as role
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
     <update id="updateMember">
         UPDATE member
         <set>

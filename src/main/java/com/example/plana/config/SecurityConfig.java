@@ -49,6 +49,15 @@ public class SecurityConfig {
                 //특정 url패턴에 대해서는 인증처리(Authentication객체 생성) 제외
                 .authorizeHttpRequests(a-> a
                         .anyRequest().permitAll())
+//                      TODO : 테스트 끝나면 권한 처리 활성화
+//                       .requestMatchers(
+//                                "/api/members"
+//                                , "/api/members/nickname/check"
+//                                ,"/api/auth/login"
+//                                ,"/api/members/password/reset"
+//                                , "/api/auth/tokens/refresh"
+//                        ).permitAll()
+//                        .anyRequest().authenticated())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

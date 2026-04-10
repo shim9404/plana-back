@@ -17,8 +17,11 @@ public enum SuccessCode {
     // 삭제 성공 (DELETE)
     DELETE_SUCCESS(200, "S004", "삭제가 완료되었습니다."),
 
-    // 비밀번호 관련 특화 성공 메시지
-    PASSWORD_UPDATE_SUCCESS(200, "S005", "비밀번호가 안전하게 변경되었습니다.");
+    // 비밀번호 관련 특화 성공 메시지,
+    PASSWORD_UPDATE_SUCCESS(200, "S005", "비밀번호가 안전하게 변경되었습니다."),
+
+    // 로그인 성공
+    LOGIN_SUCCESS(200, "S006", "로그인에 성공하였습니다.");
 
     private final int status;
     private final String code;

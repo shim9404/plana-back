@@ -19,12 +19,12 @@ public class ResponseBody {
     private Object data;
 
     // 에러 응답을 위한 정적 팩토리 메서드 추가
-    public static ResponseBody error(ErrorCode errorCode) {
+    public static ResponseBody error(ErrorCode errorCode, String message) {
         return ResponseBody.builder()
                 .success(false)
                 .status(errorCode.getStatus())
                 .code(errorCode.getCode())
-                .message(errorCode.getMessage())
+                .message(message)
                 .build();
     }
 
