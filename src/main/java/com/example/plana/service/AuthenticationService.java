@@ -3,14 +3,17 @@ package com.example.plana.service;
 import com.example.plana.auth.JwtTokenProvider;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.dto.auth.LogoutRequest;
 import com.example.plana.dto.member.read.LoginRequest;
 import com.example.plana.dto.member.read.LoginResponse;
 import com.example.plana.model.Member;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Log4j2
 @Service
@@ -141,4 +144,69 @@ public class AuthenticationService {
             throw new BusinessException(ErrorCode.FAIL_REFRESH_TOKEN);
         }
     }//end of tokenRefresh
+
+
+    /**
+     * 로그아웃: Redis에서 refresh 삭제, 현재 Access Token을 blacklist:{token} 으로 등록.
+     * Access Token은 서명·subject 검증 후 이메일이 일치할 때만 처리.
+     * 1. 현재 Access Token을 블랙리스트에 등록
+     * 2. Redis에 저장된 Refresh Token 삭제
+     * 즉, 사용자가 로그아웃한 뒤에
+     * 기존 Access Token으로 API 재호출하는 것 방지
+     * 기존 Refresh Token으로 토큰 재발급하는 것 방지
+     * 를 처리하는 코드입니다.
+     *  ### 전체 흐름 ###
+     *  1. 요청에서 email, accessToken 추출
+     *  2. access token에서 email 추출
+     *  3. 요청 email과 토큰 email이 같은지 검증
+     *  4. access token 남은 유효시간 계산
+     *  5. 남은 시간 있으면 블랙 리스트 등록
+     *  6. Redis에 저장된 refresh token삭제
+     *  7. 로그아웃 완료. 로그 출력
+     */
+    public void logout(LogoutRequest request) {
+        log.info("access token: " + request.getAccessToken());
+        // 1. 요청값 null/blank 검증
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        if (request.getAccessToken() == null || request.getAccessToken().isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String email = request.getEmail().trim();
+        String accessToken = request.getAccessToken().trim();
+
+        final String tokenMemberId;
+        try {
+            tokenMemberId = jwtTokenProvider.extractSubject(accessToken);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        Member byEmail = memberService.readMemberByEmail(email);
+        if (byEmail == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        if (!byEmail.getMemberId().equals(tokenMemberId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED); // "토큰과 아이디가 일치하지 않습니다."
+        }
+        // Access Token 블랙 리스트 처리
+        // JWT는 원래 발급 후 만료 전 까지 유효
+        // 그래서 로그아웃해도 토큰 자체는 살아 있을 수 있음.
+        // 이를 막기 위해 Redis에 blacklist:{accessToken} 형태로 저장
+        // TTL은 토큰 남은 만료 시간 만큼만 저장. 즉 남은 30초면 Redis에도 30초만 저장되고 자동 삭제 됨.
+        long ttlMs = jwtTokenProvider.getAccessTokenRemainingTtlMillis(accessToken);
+        if (ttlMs > 0) {
+            redisTokenService.addToBlacklist(accessToken, ttlMs);
+        }
+        // Refresh Token삭제
+        // refresh:{email}키 삭제
+        // 이후 토큰 재발급 불가
+        // 실질적으로 세션 종료 처리
+        redisTokenService.deleteRefreshToken(email);
+        log.info("logout 완료 email={}", email);
+    }
+
 }
