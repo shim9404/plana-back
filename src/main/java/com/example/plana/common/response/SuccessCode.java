@@ -21,8 +21,9 @@ public enum SuccessCode {
     PASSWORD_UPDATE_SUCCESS(200, "S005", "비밀번호가 안전하게 변경되었습니다."),
 
     // 로그인 성공
-    LOGIN_SUCCESS(200, "S006", "로그인에 성공하였습니다.");
-
+    LOGIN_SUCCESS(200, "S006", "로그인에 성공하였습니다."),
+    LOGOUT_SUCCESS(200, "S007", "안전하게 로그아웃되었습니다.");
+    
     private final int status;
     private final String code;
     private final String message;

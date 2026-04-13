@@ -33,6 +33,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_EXPIRED(401, "A009", "리프레시 토큰이 만료되었습니다. 다시 로그인하세요."),
     FAIL_REFRESH_TOKEN(401, "A010", "토큰 재발급에 실패하였습니다."),
 
+
     // User
     USER_NOT_FOUND(404, "U001", "존재하지 않는 사용자입니다."),
     EMAIL_DUPLICATION(409, "U002", "이미 등록된 이메일입니다."),

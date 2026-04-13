@@ -54,6 +54,7 @@ public class SecurityConfig {
 //                                "/api/members"
 //                                , "/api/members/nickname/check"
 //                                ,"/api/auth/login"
+//                                ,"/api/auth/logout"
 //                                ,"/api/members/password/reset"
 //                                , "/api/auth/tokens/refresh"
 //                        ).permitAll()

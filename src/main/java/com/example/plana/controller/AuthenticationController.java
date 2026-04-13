@@ -1,6 +1,7 @@
 package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
+import com.example.plana.dto.auth.LogoutRequest;
 import com.example.plana.dto.auth.TokenRefreshRequest;
 import com.example.plana.dto.member.read.LoginRequest;
 import com.example.plana.dto.member.read.LoginResponse;
@@ -24,8 +25,19 @@ public class AuthenticationController {
         LoginResponse data = authenticationService.signin(loginRequest);
 
         return ResponseEntity.ok(
-                com.example.plana.dto.common.ResponseBody.success(SuccessCode.LOGIN_SUCCESS, data));
+                ResponseBody.success(SuccessCode.LOGIN_SUCCESS, data));
     }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<ResponseBody> logout(@RequestBody LogoutRequest logoutRequest){
+        log.info("logout request");
+        authenticationService.logout(logoutRequest);
+
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.LOGOUT_SUCCESS, null));
+    }
+
 
     // 토큰 리프레시
     @PostMapping("/tokens/refresh")
@@ -34,6 +46,6 @@ public class AuthenticationController {
         LoginResponse data = authenticationService.tokenRefresh(tokenRefreshRequest.getRefreshToken());
 
         return ResponseEntity.ok(
-                com.example.plana.dto.common.ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
     }
 }
