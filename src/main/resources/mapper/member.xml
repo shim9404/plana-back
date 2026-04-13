@@ -75,11 +75,13 @@
         FROM TRIP
         WHERE MEMBER_ID = #{memberId}
     </select>
+
     <insert id="createMember" parameterType="com.example.plana.model.MemberSave">
         INSERT INTO MEMBER (email, password, name, nickname, role ,social_type)
         VALUES (#{member.email,jdbcType=VARCHAR}, #{member.password,jdbcType=VARCHAR}, #{member.name,jdbcType=VARCHAR}
         , #{member.nickname, jdbcType=VARCHAR}, #{member.role,jdbcType=VARCHAR}, #{member.socialType,jdbcType=VARCHAR} )
     </insert>
+
     <!-- 내 정보 · email 존재 여부) -->
     <select id="existsEmail" parameterType="string" resultType="boolean">
         SELECT COUNT(*)
@@ -87,5 +89,47 @@
         WHERE email = #{email}
         AND ROWNUM = 1
     </select>
+
+    <select id="readTripTrash" resultType="com.example.plana.dto.member.read.MemberTripTrashResponse">
+        SELECT
+        t.TRIP_ID as tripId, t.NAME as name, t.STATUS as status,
+        t.START_DATE as startDate, t.END_DATE as endDate, t.LATEST_DATE as latestDate,
+
+        CASE
+        WHEN t.STATUS = 'INACTIVE' THEN COUNT(DISTINCT ts.TRIP_SCHEDULE_ID)
+        ELSE 0
+        END as scheduleCount,
+
+        CASE
+        WHEN t.STATUS = 'INACTIVE' THEN COUNT(DISTINCT b.BOOKMARK_ID)
+        ELSE 0
+        END as bookmarkCount,
+
+        30 - (SYSDATE - TO_DATE(t.LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS')) as remainDate
+
+        FROM TRIP t
+
+        LEFT JOIN TRIP_DAY td
+        ON t.TRIP_ID = td.TRIP_ID
+
+        LEFT JOIN TRIP_SCHEDULE ts
+        ON td.TRIP_DAY_ID = ts.TRIP_DAY_ID
+
+        LEFT JOIN bookmark b
+        ON t.TRIP_ID = b.TRIP_ID
+
+        WHERE t.Member_ID = #{memberId}
+        AND t.STATUS = 'INACTIVE'
+
+        GROUP BY t.TRIP_ID, t.NAME, t.STATUS, t.START_DATE, t.END_DATE, t.LATEST_DATE
+    </select>
+
+    <delete id="deleteOldTrips">
+        DELETE FROM TRIP
+        WHERE STATUS = 'INACTIVE'
+        <![CDATA[
+      AND TO_DATE(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') < SYSDATE - 30
+        ]]>
+    </delete>
 
 </mapper>
