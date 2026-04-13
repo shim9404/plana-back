@@ -107,21 +107,20 @@ public class MemberService {
 
         // 비밀번호 일치 여부 확인(true: 일치 / false: 비일치)
         //  - 같은 비밀번호여도 암호화할 때마다 다른 암호화 결과를 생성됨
-        //   -> PasswordEncoder + matches: 내부적으로 salt, 해시값 비교
-        // TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
-        //  EX) passwordEncoder.matches(dto.getCurrentPassword(), encodedPassword))
-        // 비교(equal) -> 암호화 전 상태로 임의 비교
-        boolean check = encodedPassword.equals(currentPassword);
+        //   -> 내부적으로 salt, 해시값 비교
+        boolean check  = bCryptPasswordEncoder.matches(currentPassword, encodedPassword);
+
         if (!check) { throw new BusinessException(ErrorCode.PASSWORD_MISMATCH); }
     }
 
     // 새 비밀번호 변경
     public void updatePassword(String memberId, String currentPassword, String newPassword) {
-        // TODO: 새 비밀번호 암호화 -> 추후 암호화 기능 제작할 경우, 수정 예정
-
         // 현재 비밀번호와 새 비밀번호가 일치 여부 확인(true : 일치 => ErrorCode 호출)
         boolean check = currentPassword.equals(newPassword);
         if (check) { throw new BusinessException(ErrorCode.PASSWORD_DUPLICATE); }
+
+        // 새 비밀번호 암호화
+        newPassword = bCryptPasswordEncoder.encode(newPassword);
 
         // 새 비밀번호로 변경
         memberMapper.updatePassword(memberId, newPassword);
@@ -136,10 +135,9 @@ public class MemberService {
 
         MemberVerify memberVerify = memberMapper.checkMember(memberId);
         // 이메일, 이름, 비밀번호 일치 확인
-        // TODO: 비교(match) -> 추후 암호화 기능 제작할 경우, 수정 예정
         if (!memberVerify.getEmail().equals(memberStatusRequest.getEmail()) ||
                 !memberVerify.getName().equals(memberStatusRequest.getName()) ||
-                !memberVerify.getPassword().equals(memberStatusRequest.getPassword())) {
+                !bCryptPasswordEncoder.matches(memberStatusRequest.getPassword(), memberVerify.getPassword())) {
             throw new BusinessException(ErrorCode.MEMBER_MISMATCH);
         }
     }
