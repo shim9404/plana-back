@@ -5,6 +5,7 @@ import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.create.MemberCreateRequest;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
+import com.example.plana.dto.member.read.MemberTripTrashResponse;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
@@ -142,6 +143,17 @@ public class MemberController {
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", Map.of("memberId", memberId, "trips", data))));
     }
 
+    /** DEV-119
+     * getTripTrash(): INACTIVE(비활성)된 여행 정보 호출(휴지통 진입)
+     *  -> readTripTrash(): INACTIVE(비활성)된 여행 정보 호출(여행 고유 ID, 이름, 출발 및 도착 일자, 북마크 및 스케줄 수, 남은 보관일)
+     * @param memberId // 회원 고유 ID
+     * @return ResponseBody.data : memberId, List<MemberTripTrashResponse>
+     */
+    @GetMapping("/{memberId}/trips/trashs")
+    public ResponseEntity<ResponseBody> getTripTrash(@PathVariable("memberId") String memberId) {
+        List<MemberTripTrashResponse> data = memberService.readTripTrash(memberId);
 
-
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", Map.of("memberId", memberId, "trips", data))));
+    }
 }
