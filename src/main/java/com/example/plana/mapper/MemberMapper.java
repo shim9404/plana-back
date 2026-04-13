@@ -2,6 +2,7 @@ package com.example.plana.mapper;
 
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
+import com.example.plana.dto.member.read.MemberTripTrashResponse;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.model.Member;
 import com.example.plana.model.MemberSave;
@@ -40,7 +41,7 @@ public interface MemberMapper {
     //  회원 정보 상태 변경(삭제)
     void updateMemberStatus(@Param("memberId") String memberId);
 
-    // 회원 정보 삭제(자동 실행 - 30일 지난 경우)
+    // 회원 정보 삭제(자동 실행 - 30일 지난 경우 & STATUS: 'DELETED')
     void deleteOldMembers();
 
     // 회원 여행 목록 호출
@@ -49,4 +50,10 @@ public interface MemberMapper {
     int createMember(@Param("member") MemberSave memberSave);
 
     boolean existsEmail(String email);
+
+    // INACTIVE(비활성)된 여행 정보 호출
+    List<MemberTripTrashResponse> readTripTrash(@Param("memberId") String memberId);
+
+    // 여행 정보 삭제(자동 실행 - 30일 지난 경우 & STATUS: ''INACTIVE')
+    void deleteOldTrips();
 }

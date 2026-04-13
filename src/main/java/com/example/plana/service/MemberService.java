@@ -7,6 +7,7 @@ import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.member.create.MemberCreateRequest;
 import com.example.plana.dto.member.read.MemberReadResponse;
 import com.example.plana.dto.member.read.MemberTripResponse;
+import com.example.plana.dto.member.read.MemberTripTrashResponse;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.mapper.MemberMapper;
@@ -226,5 +227,20 @@ public class MemberService {
             Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
         }
         return storedName;
+    }
+
+    // INACTIVE(비활성)된 여행 정보 호출
+    public List<MemberTripTrashResponse> readTripTrash(String memberId) {
+        // 회원 정보 존재 하지 않을 시, ErrorCode 호출
+        if (memberMapper.readMember(memberId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return  memberMapper.readTripTrash(memberId);
+    }
+
+    // 여행 정보 삭제(자동 실행)
+    public void deleteOldTrips() {
+        memberMapper.deleteOldTrips();
     }
 }
