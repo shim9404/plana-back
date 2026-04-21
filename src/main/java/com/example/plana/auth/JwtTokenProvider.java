@@ -3,6 +3,7 @@ package com.example.plana.auth;
 
 import com.example.plana.model.Member;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
@@ -78,6 +79,16 @@ public class JwtTokenProvider {
         //파라미터 즉 화면에서 넘어온 refreshToken에서 subject를 꺼냄.
         return extractClaim(refreshToken, Claims::getSubject);
     }//end of extractSubject
+
+    // 만료된 토큰에서도 subject 추출
+    public String extractSubjectIgnoreExpiry(String token) {
+        try {
+            return extractClaim(token, Claims::getSubject); // 정상 토큰이면 그대로
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getSubject(); // ✅ 만료됐어도 claims에서 subject 추출
+        }
+    }
+
 
     //토큰에서 특정 값을 꺼내는 공용 메서드
     //<T> : 이 메서드는 T라는 타입을 사용한다.

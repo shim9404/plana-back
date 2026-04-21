@@ -166,12 +166,15 @@ public class AuthenticationService {
      */
     public void logout(LogoutRequest request) {
         log.info("access token: " + request.getAccessToken());
+        log.info("email: " + request.getEmail());
         // 1. 요청값 null/blank 검증
         if (request.getEmail() == null || request.getEmail().isBlank()) {
+            log.info("이메일 없음");
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         if (request.getAccessToken() == null || request.getAccessToken().isBlank()) {
+            log.info("액세스 토큰 없음");
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
@@ -180,7 +183,8 @@ public class AuthenticationService {
 
         final String tokenMemberId;
         try {
-            tokenMemberId = jwtTokenProvider.extractSubject(accessToken);
+            log.info("token 추출...");
+            tokenMemberId = jwtTokenProvider.extractSubjectIgnoreExpiry(accessToken);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
