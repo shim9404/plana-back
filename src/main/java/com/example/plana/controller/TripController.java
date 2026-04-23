@@ -1,5 +1,6 @@
 package com.example.plana.controller;
 
+import com.example.plana.auth.CustomUserDetails;
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
 import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
@@ -13,6 +14,7 @@ import com.example.plana.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Log4j2
@@ -30,7 +32,7 @@ public class TripController {
      * @return ResponseBody.data : TripResponse
      */
     @PostMapping
-    public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripCreateRequest request) {
+    public ResponseEntity<ResponseBody> generateTrip(@RequestBody TripCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         TripCreateResponse data = tripService.createTrip(request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
@@ -41,8 +43,8 @@ public class TripController {
      * @return ResponseBody.data : TripResponse
      */
     @GetMapping("/{tripId}")
-    public ResponseEntity<ResponseBody> getTrip(@PathVariable String tripId) {
-        TripResponse data = tripService.readTrip(tripId);
+    public ResponseEntity<ResponseBody> getTrip(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripResponse data = tripService.readTrip(tripId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 
@@ -54,8 +56,8 @@ public class TripController {
      * @return ResponseBody.data : TripUpdateResponse
      */
     @PutMapping("/{tripId}")
-    public ResponseEntity<ResponseBody> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request) {
-        TripUpdateResponse data = tripService.saveTrip(tripId, request);
+    public ResponseEntity<ResponseBody> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripUpdateResponse data = tripService.saveTrip(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
     }
 
@@ -66,8 +68,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{tripId}/info")
-    public ResponseEntity<ResponseBody> editTripInfo(@PathVariable String tripId, @RequestBody TripInfoUpdateRequest request) {
-        tripService.updateTripInfo(tripId, request);
+    public ResponseEntity<ResponseBody> editTripInfo(@PathVariable String tripId, @RequestBody TripInfoUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.updateTripInfo(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
@@ -78,8 +80,10 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{tripId}/status")
-    public ResponseEntity<ResponseBody> editTripStatus(@PathVariable String tripId, @RequestBody StatusUpdateRequest request) {
-        tripService.updateTripStatus(tripId, request);
+    public ResponseEntity<ResponseBody> editTripStatus(@PathVariable String tripId, @RequestBody StatusUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+
+        log.info("receive api");
+        tripService.updateTripStatus(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
@@ -89,8 +93,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @DeleteMapping("/{tripId}")
-    public ResponseEntity<ResponseBody> deleteTrip(@PathVariable String tripId) {
-        tripService.deleteTrip(tripId);
+    public ResponseEntity<ResponseBody> deleteTrip(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.deleteTrip(tripId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 
@@ -101,8 +105,8 @@ public class TripController {
      * @return ResponseBody.data : TripDayCreateResponse
      */
     @PostMapping("/{tripId}/days")
-    public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request) {
-        TripDayCreateResponse data = tripService.createTripDay(tripId, request);
+    public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripDayCreateResponse data = tripService.createTripDay(tripId, principal.getMemberId(),  request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
@@ -113,8 +117,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @DeleteMapping("/{tripId}/days/{tripDayId}")
-    public ResponseEntity<ResponseBody> deleteTripDay(@PathVariable String tripId, @PathVariable String tripDayId) {
-        tripService.deleteTripDay(tripId, tripDayId);
+    public ResponseEntity<ResponseBody> deleteTripDay(@PathVariable String tripId, @PathVariable String tripDayId, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.deleteTripDay(tripId, tripDayId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 
@@ -125,8 +129,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{tripId}/days/reorder")
-    public ResponseEntity<ResponseBody> reorderTripDays(@PathVariable String tripId, @RequestBody TripDayOrderUpdateRequest request) {
-        tripService.updateTripDaysIndexSort(tripId, request);
+    public ResponseEntity<ResponseBody> reorderTripDays(@PathVariable String tripId, @RequestBody TripDayOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.updateTripDaysIndexSort(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
@@ -139,8 +143,8 @@ public class TripController {
      */
     @PostMapping("/{tripId}/days/{tripDayId}/schedules")
     public ResponseEntity<ResponseBody> addTripSchedule(
-            @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request) {
-        TripScheduleCreateResponse data = tripService.createTripSchedule(tripDayId, request);
+            @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripScheduleCreateResponse data = tripService.createTripSchedule(tripId, tripDayId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
@@ -152,8 +156,8 @@ public class TripController {
      */
     @PatchMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
     public ResponseEntity<ResponseBody> editTripSchedule(
-            @PathVariable String tripScheduleId, @RequestBody TripScheduleUpdateRequest request) {
-        tripService.updateTripSchedule(tripScheduleId, request);
+            @PathVariable String tripId, @PathVariable String tripScheduleId, @RequestBody TripScheduleUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.updateTripSchedule(tripId, tripScheduleId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
@@ -165,8 +169,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{tripId}/days/{tripDayId}/schedules/reorder")
-    public ResponseEntity<ResponseBody> reorderTripSchedule(@RequestBody TripScheduleOrderUpdateRequest request) {
-        tripService.updateTripScheduleOrder(request);
+    public ResponseEntity<ResponseBody> reorderTripSchedule(@PathVariable String tripId, @RequestBody TripScheduleOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.updateTripScheduleOrder(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
     }
 
@@ -179,8 +183,8 @@ public class TripController {
      */
     @DeleteMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
     public ResponseEntity<ResponseBody> deleteTripSchedule(
-            @PathVariable String tripId, @PathVariable String tripDayId, @PathVariable String tripScheduleId) {
-        tripService.deleteTripSchedule(tripDayId, tripScheduleId);
+            @PathVariable String tripId, @PathVariable String tripDayId, @PathVariable String tripScheduleId, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.deleteTripSchedule(tripId, tripDayId, tripScheduleId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 
@@ -193,8 +197,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @PostMapping("/{tripId}/bookmarks")
-    public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request) {
-        BookmarkCreateResponse data = bookmarkService.createBookmark(tripId, request);
+    public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        BookmarkCreateResponse data = tripService.createBookmark(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
@@ -204,8 +208,8 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @DeleteMapping("/{tripId}/bookmarks/{bookmarkId}")
-    public ResponseEntity<ResponseBody> deleteBookmark(@PathVariable String bookmarkId) {
-        bookmarkService.deleteBookmark(bookmarkId);
+    public ResponseEntity<ResponseBody> deleteBookmark(@PathVariable String bookmarkId, @AuthenticationPrincipal CustomUserDetails principal) {
+        bookmarkService.deleteBookmark(bookmarkId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
     }
 }

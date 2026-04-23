@@ -26,11 +26,26 @@
     <!--  여행 정보 조회  -->
     <select id="readTrip" resultType="com.example.plana.dto.trip.read.TripResponse">
         SELECT  TRIP_ID as "tripId",
+                MEMBER_ID as "memberId",
                 NAME as "name",
                 START_DATE as "startDate",
                 END_DATE as "endDate"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </select>
+
+    <!--  여행 소유자 확인  -->
+    <select id="readTripOwner" resultType="String">
+        SELECT MEMBER_ID as "memberId"
+        FROM TRIP
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </select>
+
+    <!--  여행 일자 존재 확인  -->
+    <select id="existTripDay" resultType="boolean">
+        SELECT COUNT(1)
+        FROM TRIP_DAY
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </select>
 
     <!--  여행 정보 갱신 : 일부 변경 사항 반영  -->
@@ -62,9 +77,10 @@
     <insert id="createTripDay" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_DAY (
-                TRIP_ID, INDEX_SORT
+                TRIP_ID, MEMBER_ID, INDEX_SORT
             ) VALUES (
                 #{tripId,    jdbcType=VARCHAR},
+                #{memberId, jdbcType=VARCHAR},
                 #{indexSort, jdbcType=INTEGER}
             )
             RETURNING TRIP_DAY_ID INTO #{tripDayId, mode=OUT, jdbcType=VARCHAR};
@@ -78,6 +94,7 @@
         <foreach collection="days" item="day" separator=" UNION ALL ">
             SELECT #{day.tripDayId, jdbcType=VARCHAR} AS TRIP_DAY_ID,
             #{tripId,        jdbcType=VARCHAR} AS TRIP_ID,
+            #{memberId,      jdbcType=VARCHAR} AS MEMBER_ID,
             #{day.indexSort, jdbcType=INTEGER} AS INDEX_SORT
             FROM DUAL
         </foreach>
@@ -147,10 +164,11 @@
     <insert id="createTripSchedule" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_SCHEDULE (
-                TRIP_DAY_ID, INDEX_SORT, START_TIME, END_TIME, BOOKMARK_ID,
+                TRIP_DAY_ID, MEMBER_ID, INDEX_SORT, START_TIME, END_TIME, BOOKMARK_ID,
                 CONTEXT, CATEGORY, PRICE, MEMO, LINK
             ) VALUES (
                 #{tripDayId,  jdbcType=VARCHAR},
+                #{memberId,   jdbcType=VARCHAR},
                 #{indexSort,  jdbcType=INTEGER},
                 #{startTime,  jdbcType=VARCHAR},
                 #{endTime,    jdbcType=VARCHAR},
@@ -168,6 +186,7 @@
     <!--  여행 스케줄 전체(여행 일자 ID 기준) 조회  -->
     <select id="readTripSchedulesByTripDayId">
         SELECT  TRIP_SCHEDULE_ID    as "tripScheduleId",
+                MEMBER_ID           as "memberId",
                 INDEX_SORT          as "indexSort",
                 START_TIME          as "startTime",
                 END_TIME            as "endTime",
@@ -187,6 +206,7 @@
         UPDATE TRIP_SCHEDULE
         <set>
             <if test="tripDayId != null">  TRIP_DAY_ID  = #{tripDayId,  jdbcType=VARCHAR},</if>
+            <if test="memberId != null">   MEMBER_ID    = #{memberI,    jdbcType=VARCHAR},</if>
             <if test="startTime != null">  START_TIME   = #{startTime,  jdbcType=VARCHAR},</if>
             <if test="endTime != null">    END_TIME     = #{endTime,    jdbcType=VARCHAR},</if>
             <if test="bookmarkId != null"> BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
@@ -222,7 +242,7 @@
 
     <!--  여행 스케줄 SORT ORDER 재정렬 후 ID 및 IndexSort 조회 -->
     <select id="readTripSchedulesIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
-        SELECT TRIP_SCHEDULE_ID as "tripScheduleId", INDEX_SORT as "indexSort"
+        SELECT TRIP_SCHEDULE_ID as "tripScheduleId",MEMBER_ID as "memberId", INDEX_SORT as "indexSort"
         FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR}
         ORDER BY INDEX_SORT

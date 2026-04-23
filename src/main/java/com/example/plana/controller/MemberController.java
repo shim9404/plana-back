@@ -1,5 +1,6 @@
 package com.example.plana.controller;
 
+import com.example.plana.auth.CustomUserDetails;
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.create.MemberCreateRequest;
@@ -12,6 +13,7 @@ import com.example.plana.dto.member.update.MemberUpdateRequest;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.example.plana.service.MemberService;
 
@@ -61,8 +63,8 @@ public class MemberController {
      * @return ResponseBody.data : MemberReadResponse
      */
     @GetMapping("/{memberId}")
-    public ResponseEntity<ResponseBody> getMember(@PathVariable("memberId") String memberId) {
-        MemberReadResponse data = memberService.readMember(memberId);
+    public ResponseEntity<ResponseBody> getMember(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
+        MemberReadResponse data = memberService.readMember(principal.getMemberId(), memberId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", data)));
@@ -76,8 +78,8 @@ public class MemberController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{memberId}")
-    public ResponseEntity<ResponseBody> editMember(@PathVariable("memberId") String memberId, @RequestBody MemberUpdateRequest memberUpdateRequest) {
-        memberService.updateMember(memberId, memberUpdateRequest);
+    public ResponseEntity<ResponseBody> editMember(@PathVariable("memberId") String memberId, @RequestBody MemberUpdateRequest memberUpdateRequest, @AuthenticationPrincipal CustomUserDetails principal) {
+        memberService.updateMember(principal.getMemberId(), memberId, memberUpdateRequest);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
@@ -93,16 +95,16 @@ public class MemberController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{memberId}/password")
-    public ResponseEntity<ResponseBody> editPassword(@PathVariable("memberId") String memberId, @RequestBody MemberPwUpdateRequest memberPwUpdateRequest) {
+    public ResponseEntity<ResponseBody> editPassword(@PathVariable("memberId") String memberId, @RequestBody MemberPwUpdateRequest memberPwUpdateRequest, @AuthenticationPrincipal CustomUserDetails principal) {
         // 비밀번호 갖고오기(current / new)
         String currentPassword = memberPwUpdateRequest.getCurrentPassword();
         String newPassword = memberPwUpdateRequest.getNewPassword();
 
         // 현재 비밀번호 일치 여부 확인(true : 일치 => 새 비밀번호 수정 / false: 비일치 => ErrorCode 호출)
-        memberService.checkPassword(memberId, currentPassword);
+        memberService.checkPassword(principal.getMemberId(), memberId, currentPassword);
 
         // 새 비밀번호 변경
-        memberService.updatePassword(memberId, currentPassword, newPassword);
+        memberService.updatePassword(principal.getMemberId(), memberId, currentPassword, newPassword);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.PASSWORD_UPDATE_SUCCESS, null));
@@ -118,12 +120,12 @@ public class MemberController {
      * @return ResponseBody.data : null
      */
     @PatchMapping("/{memberId}/withdraw")
-    public ResponseEntity<ResponseBody> withdrawMember(@PathVariable("memberId") String memberId, @RequestBody MemberStatusRequest memberStatusRequest) {
+    public ResponseEntity<ResponseBody> withdrawMember(@PathVariable("memberId") String memberId, @RequestBody MemberStatusRequest memberStatusRequest, @AuthenticationPrincipal CustomUserDetails principal) {
         // 회원 정보 일치 여부 확인(true : 일치 => 계정 상태 변경(삭제) / false: 비일치 => ErrorCode 호출)
-        memberService.checkMember(memberId, memberStatusRequest);
+        memberService.checkMember(principal.getMemberId(), memberId, memberStatusRequest);
 
         // 회원 정보 상태 변경(삭제)
-        memberService.updateMemberStatus(memberId);
+        memberService.updateMemberStatus(principal.getMemberId(), memberId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
@@ -136,8 +138,8 @@ public class MemberController {
      * @return ResponseBody.data : memberId, List<MemberTripResponse>
      */
     @GetMapping("/{memberId}/trips")
-    public ResponseEntity<ResponseBody> getMyTripList(@PathVariable("memberId") String memberId) {
-        List<MemberTripResponse> data = memberService.readTripByMemberId(memberId);
+    public ResponseEntity<ResponseBody> getMyTripList(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
+        List<MemberTripResponse> data = memberService.readTripByMemberId(principal.getMemberId(), memberId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", Map.of("memberId", memberId, "trips", data))));
@@ -150,8 +152,8 @@ public class MemberController {
      * @return ResponseBody.data : memberId, List<MemberTripTrashResponse>
      */
     @GetMapping("/{memberId}/trips/trashs")
-    public ResponseEntity<ResponseBody> getTripTrash(@PathVariable("memberId") String memberId) {
-        List<MemberTripTrashResponse> data = memberService.readTripTrash(memberId);
+    public ResponseEntity<ResponseBody> getTripTrash(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
+        List<MemberTripTrashResponse> data = memberService.readTripTrash(principal.getMemberId(), memberId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("member", Map.of("memberId", memberId, "trips", data))));

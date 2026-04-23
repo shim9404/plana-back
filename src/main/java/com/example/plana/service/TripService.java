@@ -3,6 +3,8 @@ package com.example.plana.service;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
+import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
+import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.trip.create.*;
@@ -26,6 +28,23 @@ import java.util.*;
 public class TripService {
     private final TripMapper tripMapper;
     private final BookmarkService bookmarkService;
+
+
+    /**
+     * 권한 체크
+     * CRUD를 요청한 TripId에서 memberId를 추출하고 현재 로그인한 id를 비교하는 함수
+     * @param tripId 여행 ID
+     * @param memberId 사용자 ID
+     */
+    public void validateTripOwner(String tripId, String memberId) {
+        String tripOwner = tripMapper.readTripOwner(tripId);
+        if (tripOwner == null) {
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
+        if (!tripOwner.equals(memberId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
+    }
 
     /**
      * 신규 여행 생성 - 날짜 수만큼 신규 여행 일자 생성 - 각 여행 일자당 1개의 신규 스케줄 생성
@@ -64,9 +83,9 @@ public class TripService {
             // TRIP_DAY INSERT
             Map<String, Object> dayParams = new HashMap<>();
             dayParams.put("tripId", tripId);
+            dayParams.put("memberId", request.getMemberId());
             dayParams.put("indexSort", i);
             dayParams.put("tripDayId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripDayId의 반환값을 담아야 함
-
             try {
                 tripMapper.createTripDay(dayParams);
             } catch (Exception e) {
@@ -77,6 +96,7 @@ public class TripService {
             // TRIP_SCHEDULE INSERT
             Map<String, Object> scheduleParams = new HashMap<>();
             scheduleParams.put("tripDayId", tripDayId);
+            scheduleParams.put("memberId", request.getMemberId());
             scheduleParams.put("indexSort", 1);
             scheduleParams.put("startTime", null);
             scheduleParams.put("endTime", null);
@@ -124,10 +144,13 @@ public class TripService {
     /**
      * 여행 단건 상세 조회
      * @param tripId 여행 ID
+     * @param memberId 사용자 ID
      * @return TripResponse
      */
     @Transactional
-    public TripResponse readTrip(String tripId) {
+    public TripResponse readTrip(String tripId, String memberId) {
+        validateTripOwner(tripId, memberId);
+
         // 1. SELECT TRIP
         TripResponse trip = null;
         try {
@@ -135,13 +158,12 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
         }
-        log.info(trip);
-        if (trip == null) throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
 
         // 2. SELECT TRIP DAYS
         try {
             // TRIP_ID에 해당하는 모든 TRIP_DAY 리스트에 담기
             List<TripDayResponse> days = tripMapper.readTripDaysByTripId(tripId);
+
             for (TripDayResponse day : days) {
                 log.info(day.getTripDayId());
                 // 3. SELECT TRIP SCHEDULES
@@ -169,29 +191,29 @@ public class TripService {
      * 작동 시나리오 : 네트워크 에러 등의 사유로 편집 시 자동 저장이 이루어지지 않았을 경우, 저장 시점에 기존 데이터를 전부 삭제한 뒤 재생성한다.
      * // @Transactional : 여행 정보 갱신 - 여행 일자 및 스케줄 삭제(delete) - 여행 일자 및 스케줄 재생성(insert)을 하나의 트랜잭션으로
      * @param tripId String
+     * @param memberId 사용자 ID
      * @param request TripUpdateRequest
      * @return TripUpdateResponse
      */
     @Transactional
-    public TripUpdateResponse saveTrip(String tripId, TripUpdateRequest request) {
+    public TripUpdateResponse saveTrip(String tripId, String memberId, TripUpdateRequest request) {
+        validateTripOwner(tripId, memberId);
+
         // 1. TRIP UPDATE
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("tripId",    tripId);
+        tripParams.put("memberId",  memberId);
         tripParams.put("name",      checkName(request.getName(), "[네트워크 에러] 복구된 여행 계획"));
         tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
         tripParams.put("endDate",   DateUtils.checkDate(request.getEndDate()));
         log.info(request);
 
-        int result = -1;
         try {
-            result = tripMapper.updateTrip(tripParams);
+            tripMapper.updateTrip(tripParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
         }
 
-        if (result == 0) {      // 업데이트 결과에 따른 예외 처리
-            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
-        }
 
         // 2. 기존 하위 데이터 전체 삭제 (자식 먼저) : DELETE 사용
         try {   // 스케줄 삭제
@@ -211,9 +233,10 @@ public class TripService {
         for (TripDayUpdateRequest dayRequest : request.getDays()) {
 
             Map<String, Object> dayParams = new HashMap<>();
-            dayParams.put("tripId",    tripId);
-            dayParams.put("indexSort", dayRequest.getIndexSort());
-            dayParams.put("tripDayId", null);
+            dayParams.put("tripId",     tripId);
+            dayParams.put("memberId",   memberId);
+            dayParams.put("indexSort",  dayRequest.getIndexSort());
+            dayParams.put("tripDayId",  null);
 
             try {
                 tripMapper.createTripDay(dayParams);
@@ -229,6 +252,7 @@ public class TripService {
 
                 Map<String, Object> scheduleParams = new HashMap<>();
                 scheduleParams.put("tripDayId",     tripDayId);
+                scheduleParams.put("memberId",      memberId);
                 scheduleParams.put("indexSort",     scheduleRequest.getIndexSort());
                 scheduleParams.put("startTime",     scheduleRequest.getStartTime());
                 scheduleParams.put("endTime",       scheduleRequest.getEndTime());
@@ -284,46 +308,46 @@ public class TripService {
     /**
      * 여행 정보(시작 일자, 종료 일자, 여행명) 갱신
      * @param tripId 여행 ID
+     * @param memberId 사용자 ID
      * @param request TripInfoUpdateRequest
      */
-    public void updateTripInfo(String tripId, TripInfoUpdateRequest request) {
+    public void updateTripInfo(String tripId, String memberId, TripInfoUpdateRequest request) {
+        validateTripOwner(tripId, memberId);
+
         Map<String, Object> tripParams = new HashMap<>();
-        tripParams.put("tripId",    tripId);
-        tripParams.put("startDate", request.getStartDate());
-        tripParams.put("endDate",   request.getEndDate());
-        tripParams.put("name",   request.getName());
+        tripParams.put("tripId"     , tripId);
+        tripParams.put("startDate"  , request.getStartDate());
+        tripParams.put("endDate"    , request.getEndDate());
+        tripParams.put("name"       , request.getName());
         log.info(request);
 
-        int result = -1;
         try {
-            result = tripMapper.updateTrip(tripParams);
+            tripMapper.updateTrip(tripParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
-        }
-        if (result == 0) {      // 업데이트 결과에 따른 예외 처리
-            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
         }
     }
 
     /**
      * 여행 상태(Status) 갱신
      * @param tripId 여행 ID
+     * @param memberId 사용자 ID
      * @param request TripStatusUpdateResponse : STATUS - ACTIVE(활성) / INACTIVE(비활성) / DELETED(삭제)
      */
     @Transactional
-    public void updateTripStatus(String tripId, StatusUpdateRequest request) {
+    public void updateTripStatus(String tripId, String memberId, StatusUpdateRequest request) {
+
+        validateTripOwner(tripId, memberId);
+
         Map<String, Object> statusParams = new HashMap<>();
-        statusParams.put("tripId",    tripId);
-        statusParams.put("status", request.getStatus());
+        statusParams.put("tripId"       , tripId);
+        statusParams.put("status"       , request.getStatus());
+
         // 여행 상태 갱신
-        int result = -1;
         try {
-            result = tripMapper.updateTripStatus(statusParams);
+            tripMapper.updateTripStatus(statusParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
-        }
-        if (result == 0) {
-            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
         }
 
         // 여행 일자 상태 갱신
@@ -346,9 +370,13 @@ public class TripService {
     /**
      * 여행 단건 삭제 - 하위 일자 및 스케줄 전체 삭제
      * @param tripId 여행 ID
+     * @param memberId 사용자 ID
      */
     @Transactional
-    public void deleteTrip(String tripId) {
+    public void deleteTrip(String tripId, String memberId) {
+
+        validateTripOwner(tripId, memberId);
+
         // 1. 여행 하위 데이터 전체 삭제 DELETE
         try {   // 스케줄 우선 삭제
             tripMapper.deleteTripSchedulesByTripId(tripId);
@@ -379,15 +407,20 @@ public class TripService {
     /**
      * 여행 일자 신규 추가
      * @param tripId 여행 ID
+     * @param memberId 사용자 ID
      * @param request TripDayCreateRequest
      * @return TripDayCreateResponse
      */
     @Transactional
-    public TripDayCreateResponse createTripDay(String tripId, TripDayCreateRequest request) {
+    public TripDayCreateResponse createTripDay(String tripId, String memberId, TripDayCreateRequest request) {
+
+        validateTripOwner(tripId, memberId);
+        
         // 1. TRIP_DAY INSERT (단건)
         Map<String, Object> dayParams = new HashMap<>();
         dayParams.put("tripId", tripId);
         dayParams.put("indexSort", request.getIndexSort());
+        dayParams.put("memberId", memberId);
         dayParams.put("tripDayId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripDayId의 반환값을 담아야 함
 
         try {
@@ -400,6 +433,7 @@ public class TripService {
         // 2. TRIP_SCHEDULE INSERT (단건)
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripDayId", tripDayId);
+        scheduleParams.put("memberId", memberId);
         scheduleParams.put("indexSort", 1);
         scheduleParams.put("startTime", null);
         scheduleParams.put("endTime", null);
@@ -436,16 +470,21 @@ public class TripService {
      * 여행 일자 삭제(여행 일자 하위 스케줄 포함)
      * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
+     * @param memberId 사용자 ID
      */
     @Transactional
-    public void deleteTripDay(String tripId, String tripDayId) {
+    public void deleteTripDay(String tripId, String tripDayId, String memberId) {
+        validateTripOwner(tripId, memberId);
+        
+        // 여행 일자가 존재하지 않음
+        if (!tripMapper.existTripDay(tripDayId)) {  throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);  }
+
         Map<String, Object> deleteParams = new HashMap<>();
         deleteParams.put("tripId", tripId);
         deleteParams.put("tripDayId", tripDayId);
         // 1. SELECT TRIP DAY - getIndexSort
         int indexSort = -1;
         indexSort = tripMapper.readTripDayIndexSort(tripDayId);
-        if (indexSort <= 0) throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
 
         // 2. 여행 스케줄 전체 삭제
         int result = -1;
@@ -454,24 +493,18 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
         }
-        if (result == 0) {
-            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
-        }
 
         // 3. 여행 일자 삭제
-        result = -1;
         try {
-            result = tripMapper.deleteTripDay(deleteParams);
+            tripMapper.deleteTripDay(deleteParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
-        }
-        if (result == 0) {
-            throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
         }
 
         // 4. 삭제된 일자 이후의 index sort 재정렬
         Map<String, Object> reorderParams = new HashMap<>();
         reorderParams.put("tripId", tripId);
+        reorderParams.put("memberId", memberId);
         reorderParams.put("indexSort", indexSort);
         try {
             tripMapper.updateTripDaysIndexSortAfterDelete(reorderParams);
@@ -486,20 +519,21 @@ public class TripService {
      * @param request TripDayOrderUpdateRequest
      */
     @Transactional
-    public void updateTripDaysIndexSort(String tripId, TripDayOrderUpdateRequest request) {
+    public void updateTripDaysIndexSort(String tripId, String memberId, TripDayOrderUpdateRequest request) {
+
+        validateTripOwner(tripId, memberId);
+
         for (TripDayOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {
             Map<String, Object> dayParams = new HashMap<>();
             dayParams.put("indexSort", dayOrder.getIndexSort());
             dayParams.put("tripDayId", dayOrder.getTripDayId());
             dayParams.put("tripId", tripId);
-            int result = -1;
+            dayParams.put("memberId", memberId);
+
             try {
-                result = tripMapper.updateTripDaysIndexSort(dayParams);
+                tripMapper.updateTripDaysIndexSort(dayParams);
             } catch (Exception e) {
                 throw new BusinessException(ErrorCode.TRIP_DAY_REORDER_FAILED);
-            }
-            if (result == 0) {      // 업데이트 결과에 따른 예외 처리
-                throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);
             }
         }
     }
@@ -507,13 +541,18 @@ public class TripService {
     /* 여행 스케줄 [TRIP_SCHEDULE] ============================================================================================*/
     /**
      * 여행 스케줄 신규 추가
+     * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
+     * @param memberId 사용자 ID
      * @param request TripScheduleCreateRequest
      * @return TripScheduleCreateResponse
      */
-    public TripScheduleCreateResponse createTripSchedule(String tripDayId, TripScheduleCreateRequest request) {
+    public TripScheduleCreateResponse createTripSchedule(String tripId, String tripDayId, String memberId, TripScheduleCreateRequest request) {
+        validateTripOwner(tripId, memberId);
+
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripDayId",      tripDayId);
+        scheduleParams.put("memberId",       memberId);
         scheduleParams.put("indexSort",      request.getIndexSort());
         scheduleParams.put("startTime",      request.getStartTime());
         scheduleParams.put("endTime",        request.getEndTime());
@@ -550,11 +589,15 @@ public class TripService {
     /**
      * 여행 스케줄 단건 업데이트(수정/갱신)
      * @param tripScheduleId 여행 스케줄 ID
+     * @param memberId 사용자 ID
      * @param request TripScheduleUpdateRequest
      */
-    public void updateTripSchedule(String tripScheduleId, TripScheduleUpdateRequest request) {
+    public void updateTripSchedule(String tripId, String tripScheduleId, String memberId, TripScheduleUpdateRequest request) {
+        validateTripOwner(tripId, memberId);
+
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripScheduleId", tripScheduleId);
+        scheduleParams.put("memberId",       memberId);
         scheduleParams.put("indexSort",      request.getIndexSort());
         scheduleParams.put("startTime",      request.getStartTime());
         scheduleParams.put("endTime",        request.getEndTime());
@@ -566,15 +609,10 @@ public class TripService {
         scheduleParams.put("link",           request.getLink());
 
         log.info(request);
-        int result = -1;
         try {
-            result = tripMapper.updateTripSchedule(scheduleParams);
+            tripMapper.updateTripSchedule(scheduleParams);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_UPDATE_FAILED);
-        }
-
-        if (result == 0) {
-            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
         }
     }
 
@@ -582,16 +620,20 @@ public class TripService {
      * 여행 스케줄 순서 업데이트
      * case1. 같은 일자 내 스케줄 순서 변경
      * case2. 다른 일자로 스케줄 이동 및 순서 변경
+     * @param memberId 사용자 ID
      * @param request TripScheduleOrderUpdateRequest
      */
     @Transactional
-    public void updateTripScheduleOrder(TripScheduleOrderUpdateRequest request) {
+    public void updateTripScheduleOrder(String tripId, String memberId, TripScheduleOrderUpdateRequest request) {
+        validateTripOwner(tripId, memberId);
+
         // Day 리스트 순회 (같은 일자의 경우 1, 다른 일자의 경우 2의 크기를 갖음)
         for (TripScheduleOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {
             // Day 하위의 Schedule 리스트 업데이트 순회
             for (TripScheduleOrderUpdateRequest.ScheduleOrder schedule : dayOrder.getScheduleOrders()) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("tripDayId",      dayOrder.getTripDayId());
+                params.put("memberId",      memberId);
                 params.put("tripScheduleId", schedule.getTripScheduleId());
                 params.put("indexSort",      schedule.getIndexSort());
 
@@ -607,30 +649,29 @@ public class TripService {
     /**
      * 여행 스케줄 단건 삭제
      * @param tripDayId 스케줄이 포함된 여행일자ID
+     * @param memberId 사용자 ID
      * @param tripScheduleId 여행스케줄 ID
      */
     @Transactional
-    public void deleteTripSchedule(String tripDayId, String tripScheduleId) {
+    public void deleteTripSchedule(String tripId, String tripDayId, String tripScheduleId, String memberId) {
+        validateTripOwner(tripId, memberId);
+
         // 1. SELECT TRIP SCHEDULE - getIndexSort
         int indexSort = -1;
         indexSort = tripMapper.readTripScheduleIndexSort(tripScheduleId);
         if (indexSort <= 0) throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
 
         // 2. DELETE TRIP SCHEDULE
-        int result = -1;
         try {
-            result = tripMapper.deleteTripSchedule(tripScheduleId);
+            tripMapper.deleteTripSchedule(tripScheduleId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
-        }
-
-        if (result == 0) {      // 삭제 결과가 없을 경우 예외 처리
-            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_NOT_FOUND);
         }
 
         // 3. UPDATE INDEX SORT - tripDayId 기준 전체
         Map<String, Object> reorderParams = new HashMap<>();
         reorderParams.put("tripDayId", tripDayId);
+        reorderParams.put("memberId", memberId);
         reorderParams.put("indexSort", indexSort);
 
         try {
@@ -638,6 +679,18 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_REORDER_FAILED);
         }
+    }
+
+    /**
+     * 북마크 생성
+     * - 유효성 검증을 위해 한 번 거치는 작업
+     * @param tripId 여행일자ID
+     * @param memberId 사용자 ID
+     * @param request BookmarkCreateRequest ID
+     */
+    public BookmarkCreateResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request){
+        validateTripOwner(tripId, memberId);
+        return bookmarkService.createBookmark(tripId, memberId, request);
     }
 
     /**

@@ -8,6 +8,12 @@ import java.util.Map;
 
 @Mapper
 public interface TripMapper {
+    // ── 소유자 확인 ─────────────────────────
+    String readTripOwner(String tripId);
+
+    // ── 존재 여부 파악 ─────────────────────────
+    boolean existTripDay(String tripDayId);
+
     // ── 전체 조회 : Trip - TripDay - TripSchedule ────
     TripResponse readTrip(String tripId);
     List<TripDayResponse> readTripDaysByTripId(String tripId);

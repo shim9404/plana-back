@@ -89,6 +89,9 @@ public class JwtTokenProvider {
         }
     }
 
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class)); // ✅
+    }
 
     //토큰에서 특정 값을 꺼내는 공용 메서드
     //<T> : 이 메서드는 T라는 타입을 사용한다.

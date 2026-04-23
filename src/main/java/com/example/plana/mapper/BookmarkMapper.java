@@ -8,9 +8,11 @@ import java.util.Map;
 
 @Mapper
 public interface BookmarkMapper {
+    String readBookmarkOwner(String bookmarkId);
     void createBookmark(Map<String, Object> params);
     List<BookmarkResponse> readBookmarks(String tripId);
     void updateBookmarksStatus(Map<String, Object> params);
     int deleteBookmark(String bookmarkId);
     void deleteBookmarksByTripId(String tripId);
+    boolean existBookmark(String bookmarkId);
 }

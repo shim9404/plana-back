@@ -7,6 +7,7 @@ import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.mapper.BookmarkMapper;
+import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -23,15 +24,33 @@ public class BookmarkService {
     private final BookmarkMapper bookmarkMapper;
     private final AreaService areaService;
 
+    /***
+     * 권한 체크
+     * CRUD를 요청한 bookmarkId에서 memberId를 추출하고 현재 로그인한 id를 비교하는 함수
+     * @param bookmarkId 북마크 ID
+     * @param memberId 사용자 ID
+     */
+    public void validateBookmarkOwner(String bookmarkId, String memberId) {
+        String bookmarkOwner = bookmarkMapper.readBookmarkOwner(bookmarkId);
+        if (bookmarkOwner == null) {
+            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_NOT_FOUND);
+        }
+        if (!bookmarkOwner.equals(memberId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
+    }
+
     /**
      * 북마크 등록
      * @param tripId 북마크 귀속 여행 ID
+     * @param memberId 사용자 ID
      * @param request BookmarkCreateRequest
      *                / AreaPlaceCreateRequest: AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크 시도하는 경우 필수 (그 외 null로 요청)
      * @return BookmarkCreateResponse
      */
     @Transactional
-    public BookmarkCreateResponse createBookmark(String tripId, BookmarkCreateRequest request) {
+    public BookmarkCreateResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request) {
+
         String areaId = "";
         if (request.getArea() != null) {    // AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우
             areaId = areaService.createNewPlaceAreaBeforeBookmark(request.getArea());
@@ -42,6 +61,7 @@ public class BookmarkService {
         log.info(areaId);
         Map<String, Object> bookmarkParams = new HashMap<>();
         bookmarkParams.put("tripId", tripId);
+        bookmarkParams.put("memberId", memberId);
         bookmarkParams.put("areaId", areaId);
         bookmarkParams.put("bookmarkType", request.getBookmarkType());
         bookmarkParams.put("bookmarkId", null);     // OUT
@@ -64,6 +84,7 @@ public class BookmarkService {
      * @return List<BookmarkResponse>
      */
     public List<BookmarkResponse> readBookmarksByTripId(String tripId) {
+
         try {
             // TRIP_ID에 해당하는 모든 BOOKMARK 리스트에 담기
             List<BookmarkResponse> bookmarks = bookmarkMapper.readBookmarks(tripId);
@@ -83,9 +104,10 @@ public class BookmarkService {
      * @param request BookmarkStatusUpdateRequest
      */
     public void updateBookmarksStatus(String tripId, StatusUpdateRequest request) {
+
         Map<String, Object> statusParams = new HashMap<>();
-        statusParams.put("tripId",    tripId);
-        statusParams.put("status", request.getStatus());
+        statusParams.put("tripId",      tripId);
+        statusParams.put("status",      request.getStatus());
         try {
             bookmarkMapper.updateBookmarksStatus(statusParams);
         } catch (Exception e) {
@@ -96,16 +118,18 @@ public class BookmarkService {
     /**
      * 북마크 단건 삭제
      * @param bookmarkId 삭제할 북마크 ID
+     * @param memberId 사용자 ID
      */
-    public void deleteBookmark(String bookmarkId) {
-        int result = -1;
+    public void deleteBookmark(String bookmarkId, String memberId) {
+        // 권한
+        validateBookmarkOwner(bookmarkId, memberId);
+
+        if (!bookmarkMapper.existBookmark(bookmarkId)) { throw new BusinessException(ErrorCode.TRIP_BOOKMARK_NOT_FOUND); }
+
         try {
-            result = bookmarkMapper.deleteBookmark(bookmarkId);
+            bookmarkMapper.deleteBookmark(bookmarkId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_BOOKMARK_DELETE_FAILED);
-        }
-        if (result == 0) {
-            throw new BusinessException(ErrorCode.TRIP_BOOKMARK_NOT_FOUND);
         }
     }
 

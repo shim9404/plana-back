@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TripResponse {
     private String tripId;
+    private String memberId;
     private String name;
     private String startDate;
     private String endDate;

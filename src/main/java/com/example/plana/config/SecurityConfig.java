@@ -48,17 +48,17 @@ public class SecurityConfig {
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //특정 url패턴에 대해서는 인증처리(Authentication객체 생성) 제외
                 .authorizeHttpRequests(a-> a
-                        .anyRequest().permitAll())
+//                        .anyRequest().permitAll())
 //                      TODO : 테스트 끝나면 권한 처리 활성화
-//                       .requestMatchers(
-//                                "/api/members"
-//                                , "/api/members/nickname/check"
-//                                ,"/api/auth/login"
-//                                ,"/api/auth/logout"
-//                                ,"/api/members/password/reset"
-//                                , "/api/auth/tokens/refresh"
-//                        ).permitAll()
-//                        .anyRequest().authenticated())
+                       .requestMatchers(
+                               "/api/auth/**",
+                               "/api/members/nickname/**",
+                               "/api/redis/**",
+                               "/pds/**",
+                               "/api/members", // 회원가입
+                               "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
