@@ -42,6 +42,18 @@ public class MemberService {
     private String uploadPath;
 
 
+    /**
+     * 권한 체크
+     * 데이터 CRUD를 요청한 id와 현재 로그인한 id를 비교하는 함수
+     * @param tokenMemberId 토큰에서 추출한 사용자 id
+     * @param pathMemberId url에서 추출한 사용자 id
+     */
+    public void validateOwner(String tokenMemberId, String pathMemberId) {
+        if (!tokenMemberId.equals(pathMemberId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
+    }
+
     // 닉네임 중복 체크
     public void existNickname(String nickname) {
         if (memberMapper.existNickname(nickname)) {
@@ -50,14 +62,16 @@ public class MemberService {
     }
 
     // 회원 정보 호출
-    public MemberReadResponse readMember(String memberId) {
+    public MemberReadResponse readMember(String tokenMemberId, String pathMemberId) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
-        if (memberMapper.readMember(memberId) == null) {
+        if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 회원 정보 호출
-        return memberMapper.readMember(memberId);
+        return memberMapper.readMember(tokenMemberId);
     }
 
     // 회원 정보 호출
@@ -74,6 +88,7 @@ public class MemberService {
 
     // 회원 정보 호출
     public Member readMemberById(String memberId) {
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(memberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
@@ -86,24 +101,28 @@ public class MemberService {
 
 
     // 회원 정보 수정
-    public void updateMember(String memberId, MemberUpdateRequest memberUpdateRequest) {
+    public void updateMember(String tokenMemberId, String pathMemberId, MemberUpdateRequest memberUpdateRequest) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
-        if (memberMapper.readMember(memberId) == null) {
+        if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        memberMapper.updateMember(memberId, memberUpdateRequest);
+        memberMapper.updateMember(tokenMemberId, memberUpdateRequest);
     }
 
     // 현재 비밀번호 일치 여부 확인
-    public void checkPassword(String memberId, String currentPassword) {
+    public void checkPassword(String tokenMemberId, String pathMemberId, String currentPassword) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
-        if (memberMapper.readMember(memberId) == null) {
+        if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         // DB에서 암호화된 비밀번호 가져오기
-        String encodedPassword = memberMapper.checkPassword(memberId);
+        String encodedPassword = memberMapper.checkPassword(tokenMemberId);
 
         // 비밀번호 일치 여부 확인(true: 일치 / false: 비일치)
         //  - 같은 비밀번호여도 암호화할 때마다 다른 암호화 결과를 생성됨
@@ -114,7 +133,9 @@ public class MemberService {
     }
 
     // 새 비밀번호 변경
-    public void updatePassword(String memberId, String currentPassword, String newPassword) {
+    public void updatePassword(String tokenMemberId, String pathMemberId, String currentPassword, String newPassword) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 현재 비밀번호와 새 비밀번호가 일치 여부 확인(true : 일치 => ErrorCode 호출)
         boolean check = currentPassword.equals(newPassword);
         if (check) { throw new BusinessException(ErrorCode.PASSWORD_DUPLICATE); }
@@ -123,17 +144,19 @@ public class MemberService {
         newPassword = bCryptPasswordEncoder.encode(newPassword);
 
         // 새 비밀번호로 변경
-        memberMapper.updatePassword(memberId, newPassword);
+        memberMapper.updatePassword(tokenMemberId, newPassword);
     }
 
     // 회원 정보 일치 여부 확인
-    public void checkMember(String memberId, MemberStatusRequest memberStatusRequest) {
+    public void checkMember(String tokenMemberId, String pathMemberId, MemberStatusRequest memberStatusRequest) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
-        if (memberMapper.readMember(memberId) == null) {
+        if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        MemberVerify memberVerify = memberMapper.checkMember(memberId);
+        MemberVerify memberVerify = memberMapper.checkMember(tokenMemberId);
         // 이메일, 이름, 비밀번호 일치 확인
         if (!memberVerify.getEmail().equals(memberStatusRequest.getEmail()) ||
                 !memberVerify.getName().equals(memberStatusRequest.getName()) ||
@@ -143,8 +166,10 @@ public class MemberService {
     }
 
     //  회원 정보 상태 변경(삭제)
-    public void updateMemberStatus(String memberId) {
-        memberMapper.updateMemberStatus(memberId);
+    public void updateMemberStatus(String tokenMemberId, String pathMemberId) {
+        validateOwner(tokenMemberId, pathMemberId);
+
+        memberMapper.updateMemberStatus(tokenMemberId);
     }
 
     // 회원 정보 삭제(자동 실행)
@@ -153,13 +178,15 @@ public class MemberService {
     }
 
     // 회원 여행 목록 호출
-    public List<MemberTripResponse> readTripByMemberId(String memberId) {
+    public List<MemberTripResponse> readTripByMemberId(String tokenMemberId, String pathMemberId) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
-        if (memberMapper.readMember(memberId) == null) {
+        if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return memberMapper.readTripByMemberId(memberId);
+        return memberMapper.readTripByMemberId(tokenMemberId);
     }
 
     // 회원가입 : email로 가입했을 경우 호출
@@ -228,13 +255,15 @@ public class MemberService {
     }
 
     // INACTIVE(비활성)된 여행 정보 호출
-    public List<MemberTripTrashResponse> readTripTrash(String memberId) {
+    public List<MemberTripTrashResponse> readTripTrash(String tokenMemberId, String pathMemberId) {
+        validateOwner(tokenMemberId, pathMemberId);
+
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
-        if (memberMapper.readMember(memberId) == null) {
+        if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return  memberMapper.readTripTrash(memberId);
+        return  memberMapper.readTripTrash(tokenMemberId);
     }
 
     // 여행 정보 삭제(자동 실행)
