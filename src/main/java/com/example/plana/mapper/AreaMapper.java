@@ -11,7 +11,8 @@ import java.util.Map;
 
 @Mapper
 public interface AreaMapper {
-    List<Area> readArea(@Param("regionId") String regionId, @Param("zdoCode") Integer zdoCode);
+    List<Area> readArea(@Param("regionId") String regionId);
+    List<Area> readAreaByZdoCode(@Param("zdoCode") String zdoCode);
     Area readAreaForBookmark(String bookmarkId);
     void createArea(Map<String, Object> params);
 }

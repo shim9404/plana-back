@@ -27,14 +27,12 @@ public class AreaController {
     /**
      * 전달한 파라미터에 맞는 장소 DB에서 반환
      * @param regionId 행정구역 코드
-     * @param zdoCode 도코드
      * @return ResponseBody.data : AreaReadResponse
      */
     @GetMapping
-    public ResponseEntity<ResponseBody> getArea(@RequestParam(required = false) String regionId,
-                                    @RequestParam(required = false) Integer zdoCode){
+    public ResponseEntity<ResponseBody> getArea(@RequestParam(required = false) String regionId){
 
-        AreaReadResponse data = areaService.getArea(regionId, zdoCode);
+        AreaReadResponse data = areaService.getArea(regionId);
 
         return ResponseEntity.ok(
                     ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
