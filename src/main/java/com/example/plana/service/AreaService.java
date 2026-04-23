@@ -36,21 +36,34 @@ public class AreaService {
     /**
      * 행정구역id 또는 시도code로 area table에 저장된 데이터 불러오기
      * @param regionId 행정구역 id - regionTable pk
-     * @param zdoCode 시도 code - regionTable
-     * @return
+     * @return AreaReadResponse
      */
-    public AreaReadResponse getArea(String regionId, Integer zdoCode){
+    public AreaReadResponse getArea(String regionId){
+        List<Area> areas = null;
 
         // 존재하지 않는 지역입니다.
-        if (regionId != null && regionMapper.checkRegionExists(regionId) == 0){
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
-        // 존재하지 않는 지역입니다.
-        if (zdoCode != null && regionMapper.checkZdoExists(zdoCode) == 0) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
+        if (regionId != null){ 
+            if (regionMapper.checkRegionExists(regionId) == 0){
+                log.info("존재하지 않는 지역입니다.");
+                throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+            }
 
-        List<Area> areas = areaMapper.readArea(regionId, zdoCode);
+            String zdoCode = regionId.substring(0,2);
+            String siguCode = regionId.substring(regionId.length()-3, regionId.length());
+
+            if (siguCode.equals("000")){
+                // zdocode를 가진 전체 area 반환
+                areas = areaMapper.readAreaByZdoCode(zdoCode);
+            }
+            else {
+                // 특정 sigu 반환
+                areas = areaMapper.readArea(regionId);
+            }
+        }
+        else {
+            // Area 테이블 내 모든 정보 반환
+            areas = areaMapper.readArea(null);
+        }
 
         // getSearchType에 따라 그룹화
         Map<String, List<Area>> groupedMap = areas.stream()

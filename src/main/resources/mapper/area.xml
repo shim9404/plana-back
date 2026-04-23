@@ -26,11 +26,33 @@
             <if test="regionId != null and regionId != ''">
                 AND a.region_id = #{regionId}
             </if>
-            <if test="zdoCode != null and zdoCode != 0">
-                AND r.zdo_code = #{zdoCode}
-            </if>
         </where>
     </select>
+
+    <!--  zdoCode에 속하는 Area 반환  -->
+    <select id="readAreaByZdoCode" resultType="com.example.plana.model.Area">
+        SELECT
+        a.AREA_ID as "areaId",
+        a.REGION_ID as "regionId",
+        a.SEARCH_TYPE as "searchType",
+        a.NAME as "name",
+        a.MAP_X as "mapX",
+        a.MAP_Y as "mapY",
+        a.CATEGORY as "category",
+        a.ADDRESS as "address",
+        a.ROAD_ADDRESS as "roadAddress",
+        a.LINK as "link",
+        a.TELEPHONE as "telephone",
+        a.DESCRIPTION as "description",
+        a.BOOKMARK_COUNT as "bookmarkCount",
+        a.CREATE_DATE as "createDate",
+        a.LATEST_DATE as "latestDate",
+        a.STATUS as "status"
+        FROM AREA a
+        INNER JOIN REGION r ON a.region_id = r.region_id
+        WHERE r.zdo_code = #{zdoCode}
+    </select>
+
 
     <!--  장소 단일 호출 : 북마크 표시 용도  -->
     <select id="readAreaForBookmark" resultType="com.example.plana.model.Area">

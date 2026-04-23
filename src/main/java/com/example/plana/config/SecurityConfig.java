@@ -53,6 +53,8 @@ public class SecurityConfig {
                        .requestMatchers(
                                "/api/auth/**",
                                "/api/members/nickname/**",
+                               "/api/regions/**",
+                               "/api/areas/**",
                                "/api/redis/**",
                                "/pds/**",
                                "/api/members", // 회원가입
