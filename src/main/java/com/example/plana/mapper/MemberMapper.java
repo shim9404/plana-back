@@ -17,9 +17,6 @@ public interface MemberMapper {
     // 닉네임 중복 체크
     boolean existNickname(@Param("nickname") String nickname);
 
-    // 이메일 중복 체크
-    boolean existEmail(@Param("email") String email);
-
     // 회원 정보 호출
     MemberReadResponse readMember(@Param("memberId") String memberId);
 

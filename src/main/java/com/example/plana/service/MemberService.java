@@ -210,14 +210,6 @@ public class MemberService {
         }
     }
 
-    // 이메일 중복 파악 후 에러 처리
-    public void existsEmail(String email){
-        boolean isExist = memberMapper.existsEmail(email);
-
-        if (isExist){
-             throw new BusinessException(ErrorCode.EMAIL_DUPLICATION);
-        }
-    }
     
     // 프로필 이미지 저장
     private String storeProfileImage(MultipartFile file) throws IOException {

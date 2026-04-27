@@ -56,20 +56,6 @@ public class MemberController {
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("newNickname", nickname)));
     }
 
-    /** DEV-161
-     * 이메일 중복 체크
-     *  -> existsEmail(): 이메일 중복 체크(true : 일치(중복) => ErrorCode 호출 / false: 비일치(중복 X) => 이메일 반환)
-     * @param email        // 새 닉네임
-     * @return ResponseBody.data : email
-     */
-    @GetMapping("/email/check")
-    public ResponseEntity<ResponseBody> dupliEmail(@RequestParam String email) {
-        memberService.existsEmail(email);
-
-        return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("email", email)));
-    }
-
     /** DEV-47
      * getMember(): 회원 정보 호출 함수(마이페이지 진입)
      *  -> readMember(): 회원 정보 호출(ID, 이메일, 이름, 닉네임, 프로필 이미지)

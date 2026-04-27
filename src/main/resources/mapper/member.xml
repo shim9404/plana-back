@@ -12,14 +12,6 @@
         WHERE NICKNAME = #{nickname}
     </select>
 
-    <select id="existEmail" resultType="boolean">
-        SELECT CASE
-        WHEN COUNT(*) > 0 THEN 1 ELSE 0
-        END AS RESULT
-        FROM MEMBER
-        WHERE EMAIL = #{email}
-    </select>
-
     <select id="readMember" resultType="com.example.plana.dto.member.read.MemberReadResponse">
         SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage
         FROM MEMBER
