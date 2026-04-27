@@ -39,13 +39,13 @@ public class RegionController {
 
     /** DEV-160
      * 지역 간단 정보 호출(여행 계획 페이지 진입)
-     *  -> readRegionSimple(): 지역 간단 정보(좌표 + 이름) 호출
+     *  -> readRegionById(): 지역 간단 정보(좌표 + 이름) 호출
      * @param regionId // 지역 고유 ID
      * @return ResponseBody.data : RegionReadResponse
      */
-    @GetMapping("/simple")
-    public ResponseEntity<ResponseBody> getRegionSimple(@RequestParam String regionId) {
-        RegionReadResponse data = regionService.readRegionSimple(regionId);
+    @GetMapping("/find")
+    public ResponseEntity<ResponseBody> getRegionById(@RequestParam String regionId) {
+        RegionReadResponse data = regionService.readRegionById(regionId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("regions", data))

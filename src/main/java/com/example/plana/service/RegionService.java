@@ -69,7 +69,7 @@ public class RegionService {
     }
 
     // 지역 간단 정보(좌표 + 이름) 호출
-    public RegionReadResponse readRegionSimple(String regionId) {
-        return regionMapper.readRegionSimple(regionId);
+    public RegionReadResponse readRegionById(String regionId) {
+        return regionMapper.readRegionById(regionId);
     }
 }

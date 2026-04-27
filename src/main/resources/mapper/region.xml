@@ -26,7 +26,7 @@
         FROM REGION
         WHERE zdo_code = #{zdoCode}
     </select>
-    <select id="readRegionSimple" resultType="com.example.plana.dto.region.read.RegionReadResponse">
+    <select id="readRegionById" resultType="com.example.plana.dto.region.read.RegionReadResponse">
         SELECT  REGION_ID as regionId,
                 ZDO_NAME as zdoName, SIGU_NAME as siguName,
                 MAP_X as mapX, MAP_Y as mapY

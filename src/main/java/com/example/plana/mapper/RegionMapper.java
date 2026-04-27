@@ -14,5 +14,5 @@ public interface RegionMapper {
     int checkZdoExists(@Param("zdoCode") Integer zdoCode);
 
     // 지역 간단 정보(좌표 + 이름) 호출
-    RegionReadResponse readRegionSimple(@Param("regionId") String regionId);
+    RegionReadResponse readRegionById(@Param("regionId") String regionId);
 }
