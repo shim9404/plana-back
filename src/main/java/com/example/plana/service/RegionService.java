@@ -2,6 +2,7 @@ package com.example.plana.service;
 
 
 import com.example.plana.dto.area.read.MapPos;
+import com.example.plana.dto.region.read.RegionReadResponse;
 import com.example.plana.dto.region.read.SiguResponse;
 import com.example.plana.dto.region.read.ZdoResponse;
 import com.example.plana.mapper.RegionMapper;
@@ -65,5 +66,10 @@ public class RegionService {
         }
 
         return new ArrayList<>(regionMap.values());
+    }
+
+    // 지역 간단 정보(좌표 + 이름) 호출
+    public RegionReadResponse readRegionById(String regionId) {
+        return regionMapper.readRegionById(regionId);
     }
 }
