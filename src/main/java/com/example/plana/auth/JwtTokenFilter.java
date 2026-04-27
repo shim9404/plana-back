@@ -58,6 +58,7 @@ public class JwtTokenFilter extends GenericFilter {
     private static final String[] JWT_EXEMPT_PATHS = {
             "/api/auth/**",
             "/api/members/nickname/**",
+            "/api/members/email/**",
             "/api/regions/**",
             "/api/areas/**",
             "/api/redis/**",

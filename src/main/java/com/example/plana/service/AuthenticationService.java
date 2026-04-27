@@ -6,19 +6,19 @@ import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.auth.LogoutRequest;
 import com.example.plana.dto.member.read.LoginRequest;
 import com.example.plana.dto.member.read.LoginResponse;
+import com.example.plana.mapper.AuthenticationMapper;
 import com.example.plana.model.Member;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Log4j2
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+    private final AuthenticationMapper authenticationMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberService memberService;
     private final RedisTokenService redisTokenService;
@@ -213,4 +213,13 @@ public class AuthenticationService {
         log.info("logout 완료 email={}", email);
     }
 
+
+    // 이메일 중복 파악 후 에러 처리
+    public void existsEmail(String email){
+        boolean isExist = authenticationMapper.existEmail(email);
+
+        if (isExist){
+            throw new BusinessException(ErrorCode.EMAIL_DUPLICATION);
+        }
+    }
 }
