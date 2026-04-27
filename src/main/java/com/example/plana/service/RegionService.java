@@ -1,6 +1,7 @@
 package com.example.plana.service;
 
 
+import com.example.plana.dto.area.read.MapPos;
 import com.example.plana.dto.region.read.SiguResponse;
 import com.example.plana.dto.region.read.ZdoResponse;
 import com.example.plana.mapper.RegionMapper;
@@ -50,6 +51,10 @@ public class RegionService {
             sigu.setRegionId(siguData.getRegionId());
             sigu.setSiguCode(siguData.getSiguCode());
             sigu.setSiguName(siguData.getSiguName());
+            MapPos mapPos = new MapPos();
+            mapPos.setX(siguData.getMapX());
+            mapPos.setY(siguData.getMapY());
+            sigu.setMapPos(mapPos);
             sigu.setCreateDate(siguData.getCreateDate());
             sigu.setLatestDate(siguData.getLatestDate());
             sigu.setStatus(siguData.getStatus());
