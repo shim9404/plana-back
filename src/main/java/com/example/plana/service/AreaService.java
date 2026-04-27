@@ -179,7 +179,7 @@ public class AreaService {
                 placeReadResponse.setCategory("기타");
             }
             else {
-                placeReadResponse.setCategory((String) doc.get("category_group_name"));
+                placeReadResponse.setCategory((String) doc.get("category_group_code"));
             }
             placeReadResponse.setAddress((String) doc.get("address_name"));
             placeReadResponse.setRoadAddress((String) doc.get("road_address_name"));
