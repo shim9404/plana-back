@@ -11,7 +11,7 @@
                 CREATE_DATE as "createDate",
                 LATEST_DATE as "latestDate",
                 MAP_X as "mapX",
-                MAP_Y as "maxY",
+                MAP_Y as "mapY",
                 STATUS as "status"
         FROM region
         WHERE STATUS != 'DELETED'
