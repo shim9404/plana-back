@@ -19,6 +19,7 @@ public enum ErrorCode {
     PAYLOAD_TOO_LARGE(413, "C012", "업로드 가능한 파일 크기를 초과하였습니다."),
     FILE_WRITE_ERROR(500, "C013", "파일 쓰기 중 오류가 발생했습니다."),
     INVALID_FILE_PATH(400, "C014", "유효하지 않은 파일 경로입니다."),
+    TOO_MANY_REQUESTS(429, "C015", "요청이 많습니다. 잠시 후 다시 시도해주세요."),
 
     // Auth
     LOGIN_FAILED_COUNT(400, "L001", "로그인에 실패했습니다. 남은 횟수: {0}회"),
@@ -71,6 +72,11 @@ public enum ErrorCode {
     // Region & Area
     AREA_CREATE_FAILED(500, "R001", "신규 장소 등록 중 오류가 발생했습니다."),
     AREA_READ_FAILED(500, "R002", "장소 정보 조회 중 오류가 발생했습니다."),
+
+    EMAIL_NOT_VERIFIED(400, "E001", "이메일 인증이 완료되지 않았습니다."),
+    INVALID_AUTH_CODE(400, "E002", "인증번호가 올바르지 않습니다."),
+    EXPIRED_AUTH_CODE(400, "E003", "인증번호가 만료되었습니다."),
+    EMAIL_SEND_FAILED(500, "E004", "이메일 발송에 실패했습니다."),
 
     ;
 
