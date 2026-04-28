@@ -1,11 +1,12 @@
 package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
-import com.example.plana.dto.auth.LogoutRequest;
-import com.example.plana.dto.auth.TokenRefreshRequest;
+import com.example.plana.dto.auth.*;
 import com.example.plana.dto.member.read.LoginRequest;
 import com.example.plana.dto.member.read.LoginResponse;
 import com.example.plana.service.AuthenticationService;
+import com.example.plana.service.MailAuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,32 @@ import java.util.Map;
 @Log4j2
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
+    private final MailAuthService mailAuthService;
+
+    /**
+     * 인증번호 발송
+     */
+    @PostMapping("/email/send")
+    public ResponseEntity<ResponseBody> sendMail(@Valid @RequestBody EmailSendRequest request) {
+        log.info("sendMail request: {}", request);
+        mailAuthService.sendVerificationCode(request.getEmail());
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.EMAIL_VERIFY_CODE_SENT, null));
+    }
+
+    /**
+     * 인증번호 확인
+     */
+    @PostMapping("/email/verify")
+    public ResponseEntity<ResponseBody> verifyMail( @Valid @RequestBody EmailVerifyRequest request) {
+        mailAuthService.verifyCode(request.getEmail(), request.getAuthCode());
+
+        EmailVerifyResponse response = new EmailVerifyResponse(
+                request.getEmail().trim().toLowerCase(),
+                true
+        );
+
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.EMAIL_VERIFIED, response));
+    }
 
     // 로그인
     @PostMapping("/login")

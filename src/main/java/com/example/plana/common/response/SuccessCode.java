@@ -22,8 +22,12 @@ public enum SuccessCode {
 
     // 로그인 성공
     LOGIN_SUCCESS(200, "S006", "로그인에 성공하였습니다."),
-    LOGOUT_SUCCESS(200, "S007", "안전하게 로그아웃되었습니다.");
-    
+    LOGOUT_SUCCESS(200, "S007", "안전하게 로그아웃되었습니다."),
+
+    // 이메일
+    EMAIL_VERIFY_CODE_SENT(200, "S008", "인증번호를 발송했습니다."),
+    EMAIL_VERIFIED(200, "S009", "이메일 인증이 완료되었습니다.");
+
     private final int status;
     private final String code;
     private final String message;

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.plana.mapper.EmailVerificationMapper">
+
+    <!--
+        이메일 기준으로 가장 최근 인증 정보 1건 조회
+        Oracle 11g는 LIMIT 문법이 없으므로
+        정렬한 후 바깥에서 ROWNUM = 1 처리
+    -->
+    <select id="findTopByEmailOrderByCreatedAtDesc" parameterType="string" resultType="com.example.plana.model.EmailVerification">
+        SELECT *
+        FROM  PLANA_ADMIN.EMAIL_VERIFICATION
+        WHERE EMAIL = #{email}
+        ORDER BY CREATED_AT DESC
+        FETCH FIRST 1 ROWS ONLY
+    </select>
+
+    <!--
+        이메일 인증 정보 신규 저장
+        - Oracle 11g 에서는 ID를 시퀀스 + 트리거로 자동 채번
+    -->
+    <insert id="insertEmailVerification"
+            parameterType="com.example.plana.model.EmailVerification">
+        INSERT INTO EMAIL_VERIFICATION (
+        EMAIL,
+        AUTH_CODE,
+        VERIFIED,
+        EXPIRED_AT,
+        CREATED_AT,
+        VERIFIED_AT
+        ) VALUES (
+        #{email},
+        #{authCode},
+        #{verified},
+        #{expiredAt, jdbcType=TIMESTAMP},
+        #{createdAt, jdbcType=TIMESTAMP},
+        #{verifiedAt, jdbcType=TIMESTAMP}
+        )
+    </insert>
+
+    <!--
+        이메일 인증 정보 수정
+        - 최근 인증 이력 1건을 다시 발급 상태로 업데이트
+    -->
+    <update id="updateEmailVerification"
+            parameterType="com.example.plana.model.EmailVerification">
+        UPDATE EMAIL_VERIFICATION
+        SET
+        AUTH_CODE = #{authCode},
+        VERIFIED = #{verified},
+        EXPIRED_AT = #{expiredAt, jdbcType=TIMESTAMP},
+        CREATED_AT = #{createdAt, jdbcType=TIMESTAMP},
+        VERIFIED_AT = #{verifiedAt, jdbcType=TIMESTAMP}
+        WHERE ID = #{id}
+    </update>
+
+</mapper>
