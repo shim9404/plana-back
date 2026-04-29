@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlaceReadResponse {
+    private String placeId;
+    private String areaId;
     private String searchType;
-    private String bookmarkType;
     private String name;
     private MapPos mapPos;
     private String category;
