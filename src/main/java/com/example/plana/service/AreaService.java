@@ -134,8 +134,15 @@ public class AreaService {
         RestTemplate restTemplate = new RestTemplate();
 
         // GET URL
-        String url = "https://dapi.kakao.com/v2/local/search/keyword.json?query="
+        // 키워드용 URL
+        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?query="
                 + keyword
+                + "&x=" + mapX
+                + "&y=" + mapY
+                + "&radius=20000" + "&sort=distance";
+
+        // 카테고리용 URL(초기 - 지역 시청/도청 근처 음식점)
+        String urlCategory = "https://dapi.kakao.com/v2/local/search/category.json?&category_group_code=FD6"
                 + "&x=" + mapX
                 + "&y=" + mapY
                 + "&radius=20000" + "&sort=distance";
@@ -146,6 +153,10 @@ public class AreaService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         // 근처 장소 검색
+        String url = null;
+        if (keyword == null || keyword.isEmpty()) { url = urlCategory; }
+        else { url = urlKeyword; };
+
         ResponseEntity<String> response = restTemplate.exchange(
                 url, HttpMethod.GET, entity, String.class );
 
