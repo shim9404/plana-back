@@ -74,12 +74,13 @@
     <insert id="createArea" statementType="CALLABLE">
         BEGIN
             INSERT INTO AREA (
-                SEARCH_TYPE, REGION_ID, NAME, CATEGORY,
+                SEARCH_TYPE, REGION_ID, PLACE_ID, NAME, CATEGORY,
                 MAP_X, MAP_Y, ADDRESS, ROAD_ADDRESS, LINK, TELEPHONE, DESCRIPTION,
                 BOOKMARK_COUNT
             ) VALUES (
                 'PLACE',
                 #{regionId,     jdbcType=VARCHAR},
+                #{placeId,      jdbcType=VARCHAR},
                 #{name,         jdbcType=VARCHAR},
                 #{category,     jdbcType=VARCHAR},
                 #{mapX,         jdbcType=VARCHAR},

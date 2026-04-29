@@ -216,6 +216,7 @@ public class AreaService {
     public String createNewPlaceAreaBeforeBookmark(AreaPlaceCreateRequest request) {
         Map<String, Object> areaParams = new HashMap<>();
         areaParams.put("regionId", request.getRegionId());
+        areaParams.put("placeId", request.getPlaceId());
         areaParams.put("name", request.getName());
         areaParams.put("mapX", request.getMapPos().getX());
         areaParams.put("mapY", request.getMapPos().getY());
