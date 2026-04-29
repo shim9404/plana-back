@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
  */
 public class AreaPlaceCreateRequest {
     private String areaId;  // 생성 후 반환값을 담을 변수
+    private String placeId;
     private String regionId;
     private String name;
     private MapPos mapPos;
