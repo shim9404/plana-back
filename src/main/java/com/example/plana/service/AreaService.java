@@ -178,16 +178,19 @@ public class AreaService {
 
         for (Map<String, Object> doc: documents) {
             PlaceReadResponse placeReadResponse = new PlaceReadResponse();
+            // AREA Table 내 PLACE_ID 일치 확인 및 AREA_ID 갖고오기
+            placeReadResponse.setPlaceId((String)doc.get("id"));
+            String areaId = areaMapper.readAreaIdByPlaceId(placeReadResponse.getPlaceId());
+            placeReadResponse.setAreaId(areaId);
+            // 나머지 정보
             placeReadResponse.setSearchType("PLACE");
-            // TODO: Bookmark 되어 있는지 확인하고 저장하는 코드 필요
-            placeReadResponse.setBookmarkType("None");
             placeReadResponse.setName((String) doc.get("place_name"));
             MapPos mapPos = new MapPos();
             mapPos.setX(Double.parseDouble((String) doc.get("x")));
             mapPos.setY(Double.parseDouble((String) doc.get("y")));
             placeReadResponse.setMapPos(mapPos);
-            if (doc.get("category_group_name") == null || doc.get("category_group_name") == "") {
-                placeReadResponse.setCategory("기타");
+            if (doc.get("category_group_code") == null || doc.get("category_group_code") == "") {
+                placeReadResponse.setCategory("ETC");
             }
             else {
                 placeReadResponse.setCategory((String) doc.get("category_group_code"));
@@ -196,7 +199,7 @@ public class AreaService {
             placeReadResponse.setRoadAddress((String) doc.get("road_address_name"));
             placeReadResponse.setLink((String) doc.get("place_url"));
             placeReadResponse.setTelePhone((String) doc.get("phone"));
-            placeReadResponse.setDescription("카카오개발자센터_키워드로 장소 검색");
+            placeReadResponse.setDescription("카카오개발자센터 장소 검색");
 
             list.add(placeReadResponse);
         }

@@ -94,4 +94,10 @@
             RETURNING AREA_ID INTO #{areaId, mode=OUT, jdbcType=VARCHAR};
         END;
     </insert>
+    <select id="readAreaIdByPlaceId" resultType="string">
+        SELECT AREA_ID
+        FROM AREA
+        WHERE PLACE_ID = #{placeId}
+        AND SEARCH_TYPE = 'PLACE'
+    </select>
 </mapper>

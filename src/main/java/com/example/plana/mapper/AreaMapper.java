@@ -15,4 +15,5 @@ public interface AreaMapper {
     List<Area> readAreaByZdoCode(@Param("zdoCode") String zdoCode);
     Area readAreaForBookmark(String bookmarkId);
     void createArea(Map<String, Object> params);
+    String readAreaIdByPlaceId(@Param("placeId") String placeId);
 }
