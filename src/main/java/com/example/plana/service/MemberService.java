@@ -48,7 +48,12 @@ public class MemberService {
      * @param tokenMemberId 토큰에서 추출한 사용자 id
      * @param pathMemberId url에서 추출한 사용자 id
      */
-    public void validateOwner(String tokenMemberId, String pathMemberId) {
+    public void validateOwner(String tokenMemberId, String pathMemberId, Role role) {
+        log.info("pathId:: ",pathMemberId);
+        log.info("tokenMemberId:: ",tokenMemberId);
+        log.info("접근 권한 체크 발생");
+        if (role == Role.ADMIN) return;;
+
         if (!tokenMemberId.equals(pathMemberId)) {
             throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
         }
@@ -62,8 +67,8 @@ public class MemberService {
     }
 
     // 회원 정보 호출
-    public MemberReadResponse readMember(String tokenMemberId, String pathMemberId) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public MemberReadResponse readMember(String tokenMemberId, String pathMemberId, Role role) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(tokenMemberId) == null) {
@@ -98,23 +103,21 @@ public class MemberService {
         return memberMapper.readMemberById(memberId);
     }
 
-
-
     // 회원 정보 수정
-    public void updateMember(String tokenMemberId, String pathMemberId, MemberUpdateRequest memberUpdateRequest) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public void updateMember(String tokenMemberId, String pathMemberId, Role role, MemberUpdateRequest memberUpdateRequest) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(tokenMemberId) == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
-
-        memberMapper.updateMember(tokenMemberId, memberUpdateRequest);
+        // 관리자가 다른 사용자의 데이터를 업데이트할 때 path로 보낸걸로 판단하게 해야함. 아니면 관리자꺼 업데이트됨 
+        memberMapper.updateMember(pathMemberId, memberUpdateRequest);
     }
 
     // 현재 비밀번호 일치 여부 확인
-    public void checkPassword(String tokenMemberId, String pathMemberId, String currentPassword) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public void checkPassword(String tokenMemberId, String pathMemberId, Role role, String currentPassword) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(tokenMemberId) == null) {
@@ -133,8 +136,8 @@ public class MemberService {
     }
 
     // 새 비밀번호 변경
-    public void updatePassword(String tokenMemberId, String pathMemberId, String currentPassword, String newPassword) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public void updatePassword(String tokenMemberId, String pathMemberId, Role role, String currentPassword, String newPassword) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 현재 비밀번호와 새 비밀번호가 일치 여부 확인(true : 일치 => ErrorCode 호출)
         boolean check = currentPassword.equals(newPassword);
@@ -148,8 +151,8 @@ public class MemberService {
     }
 
     // 회원 정보 일치 여부 확인
-    public void checkMember(String tokenMemberId, String pathMemberId, MemberStatusRequest memberStatusRequest) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public void checkMember(String tokenMemberId, String pathMemberId, Role role, MemberStatusRequest memberStatusRequest) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(tokenMemberId) == null) {
@@ -166,10 +169,8 @@ public class MemberService {
     }
 
     //  회원 정보 상태 변경(삭제)
-    public void updateMemberStatus(String tokenMemberId, String pathMemberId) {
-        validateOwner(tokenMemberId, pathMemberId);
-
-        memberMapper.updateMemberStatus(tokenMemberId);
+    public void updateMemberStatus(String tokenMemberId, String pathMemberId, Role role) {
+        memberMapper.updateMemberStatus(tokenMemberId, "DELETED");
     }
 
     // 회원 정보 삭제(자동 실행)
@@ -178,8 +179,8 @@ public class MemberService {
     }
 
     // 회원 여행 목록 호출
-    public List<MemberTripResponse> readTripByMemberId(String tokenMemberId, String pathMemberId) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public List<MemberTripResponse> readTripByMemberId(String tokenMemberId, String pathMemberId, Role role) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(tokenMemberId) == null) {
@@ -247,8 +248,8 @@ public class MemberService {
     }
 
     // INACTIVE(비활성)된 여행 정보 호출
-    public List<MemberTripTrashResponse> readTripTrash(String tokenMemberId, String pathMemberId) {
-        validateOwner(tokenMemberId, pathMemberId);
+    public List<MemberTripTrashResponse> readTripTrash(String tokenMemberId, String pathMemberId, Role role) {
+        validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
         if (memberMapper.readMember(tokenMemberId) == null) {
