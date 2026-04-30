@@ -3,10 +3,13 @@ package com.example.plana.controller;
 import com.example.plana.auth.CustomUserDetails;
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
-import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
+import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
-import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.create.TripCreateRequest;
+import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.create.TripDayCreateResponse;
+import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.service.BookmarkService;
@@ -209,7 +212,7 @@ public class TripController {
      */
     @PostMapping("/{tripId}/bookmarks")
     public ResponseEntity<ResponseBody> addBookmark(@PathVariable String tripId, @RequestBody BookmarkCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
-        BookmarkCreateResponse data = tripService.createBookmark(tripId, principal.getMemberId(), request);
+        BookmarkResponse data = tripService.createBookmark(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 

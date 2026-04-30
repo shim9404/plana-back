@@ -3,11 +3,9 @@ package com.example.plana.service;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
-import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.mapper.BookmarkMapper;
-import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -46,10 +44,10 @@ public class BookmarkService {
      * @param memberId 사용자 ID
      * @param request BookmarkCreateRequest
      *                / AreaPlaceCreateRequest: AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크 시도하는 경우 필수 (그 외 null로 요청)
-     * @return BookmarkCreateResponse
+     * @return BookmarkResponse
      */
     @Transactional
-    public BookmarkCreateResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request) {
+    public BookmarkResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request) {
 
         String areaId = "";
         if (request.getArea() != null) {    // AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우
@@ -72,9 +70,12 @@ public class BookmarkService {
         }
         String bookmarkId = (String) bookmarkParams.get("bookmarkId");
 
-        return BookmarkCreateResponse.builder()
+        return BookmarkResponse.builder()
                 .bookmarkId(bookmarkId)
                 .areaId(areaId)
+                .placeId(request.getArea().getPlaceId())
+                .areaInfo(areaService.toBookmarkResponse(areaId))
+                .bookmarkType(request.getBookmarkType())
                 .build();
     }
 
@@ -84,6 +85,7 @@ public class BookmarkService {
      * @return List<BookmarkResponse>
      */
     public List<BookmarkResponse> readBookmarksByTripId(String tripId) {
+        log.info(tripId);
 
         try {
             // TRIP_ID에 해당하는 모든 BOOKMARK 리스트에 담기

@@ -4,10 +4,12 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
-import com.example.plana.dto.bookmark.create.BookmarkCreateResponse;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.StatusUpdateRequest;
-import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.create.TripCreateRequest;
+import com.example.plana.dto.trip.create.TripCreateResponse;
+import com.example.plana.dto.trip.create.TripDayCreateResponse;
+import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
 import com.example.plana.dto.trip.read.TripDayResponse;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.read.TripScheduleResponse;
@@ -672,7 +674,7 @@ public class TripService {
      * @param memberId 사용자 ID
      * @param request BookmarkCreateRequest ID
      */
-    public BookmarkCreateResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request){
+    public BookmarkResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request){
         validateTripOwner(tripId, memberId);
         return bookmarkService.createBookmark(tripId, memberId, request);
     }
