@@ -217,7 +217,7 @@
         UPDATE TRIP_SCHEDULE
         <set>
             <if test="tripDayId != null">  TRIP_DAY_ID  = #{tripDayId,  jdbcType=VARCHAR},</if>
-            <if test="memberId != null">   MEMBER_ID    = #{memberI,    jdbcType=VARCHAR},</if>
+            <if test="memberId != null">   MEMBER_ID    = #{memberId,   jdbcType=VARCHAR},</if>
             <if test="startTime != null">  START_TIME   = #{startTime,  jdbcType=VARCHAR},</if>
             <if test="endTime != null">    END_TIME     = #{endTime,    jdbcType=VARCHAR},</if>
             <if test="bookmarkId != null"> BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
