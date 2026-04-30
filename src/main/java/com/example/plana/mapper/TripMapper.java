@@ -30,7 +30,8 @@ public interface TripMapper {
     int deleteTrip(String tripId);
 
     // ── TripDay ───────────────────────────
-    void createTripDay(Map<String, Object> params);   // 여행 생성용 단건 INSERT
+    void createTripDay(Map<String, Object> params);     // 여행 생성용 단건 INSERT
+    int countTripDays(String tripId);                   // 여행 내 일자 수
     int updateTripDaysIndexSort(Map<String, Object> params);
     void deleteTripDaysByTripId(String tripId);
     // 단건 삭제 호출 ──────────────────────

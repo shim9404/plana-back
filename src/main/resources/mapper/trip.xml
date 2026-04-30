@@ -8,16 +8,12 @@
     <insert id="createTrip" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP (
-                MEMBER_ID, NAME, START_DATE, END_DATE,
-                CREATE_DATE, LATEST_DATE, STATUS
+                MEMBER_ID, NAME, START_DATE, END_DATE
             ) VALUES (
                 #{memberId,  jdbcType=VARCHAR},
                 #{name,      jdbcType=VARCHAR},
                 #{startDate, jdbcType=VARCHAR},
-                #{endDate,   jdbcType=VARCHAR},
-                TO_CHAR(SYSDATE, 'YYYYMMDD'),
-                NULL,
-                'ACTIVE'
+                #{endDate,   jdbcType=VARCHAR}
             )
             RETURNING TRIP_ID INTO #{tripId, mode=OUT, jdbcType=VARCHAR};
         END;
@@ -53,6 +49,7 @@
         UPDATE TRIP
         <set>
             <if test="name != null">       NAME        = #{name,       jdbcType=VARCHAR},</if>
+            <if test="entryCount != null"> ENTRY_COUNT = #{entryCount, jdbcType=VARCHAR},</if>
             <if test="startDate != null">  START_DATE  = #{startDate,  jdbcType=VARCHAR},</if>
             <if test="endDate != null">    END_DATE    = #{endDate,    jdbcType=VARCHAR}</if>
         </set>
@@ -77,13 +74,21 @@
     <insert id="createTripDay" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_DAY (
-                TRIP_ID, MEMBER_ID, INDEX_SORT
+                TRIP_ID,
+                MEMBER_ID,
+                INDEX_SORT
             ) VALUES (
                 #{tripId,    jdbcType=VARCHAR},
-                #{memberId, jdbcType=VARCHAR},
-                #{indexSort, jdbcType=INTEGER}
+                #{memberId,  jdbcType=VARCHAR},
+                (
+                    SELECT NVL(MAX(INDEX_SORT), 0) + 1
+                    FROM TRIP_DAY
+                    WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+                )
             )
-            RETURNING TRIP_DAY_ID INTO #{tripDayId, mode=OUT, jdbcType=VARCHAR};
+            RETURNING TRIP_DAY_ID, INDEX_SORT
+            INTO #{tripDayId, mode=OUT, jdbcType=VARCHAR},
+                 #{indexSort, mode=OUT, jdbcType=INTEGER};
         END;
     </insert>
 
@@ -121,6 +126,13 @@
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+    </select>
+
+    <!-- 현재 TRIP_DAY 수 조회 -->
+    <select id="countTripDays" resultType="int">
+        SELECT COUNT(*)
+        FROM TRIP_DAY
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
     <!--  여행 일자 정렬 순서 전체 갱신  -->
