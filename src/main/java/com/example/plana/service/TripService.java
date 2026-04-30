@@ -672,7 +672,7 @@ public class TripService {
      * @param memberId 사용자 ID
      * @param request BookmarkCreateRequest ID
      */
-    public BookmarkCreateResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request){
+    public BookmarkResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request){
         validateTripOwner(tripId, memberId);
         return bookmarkService.createBookmark(tripId, memberId, request);
     }
