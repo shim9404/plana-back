@@ -138,13 +138,12 @@ public class TripController {
      * addTripSchedule 여행 스케줄 신규 추가
      * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
-     * @param request TripScheduleCreateRequest
      * @return ResponseBody.data : TripScheduleCreateResponse
      */
     @PostMapping("/{tripId}/days/{tripDayId}/schedules")
     public ResponseEntity<ResponseBody> addTripSchedule(
-            @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
-        TripScheduleCreateResponse data = tripService.createTripSchedule(tripId, tripDayId, principal.getMemberId(), request);
+            @PathVariable String tripId, @PathVariable String tripDayId, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripScheduleCreateResponse data = tripService.createTripSchedule(tripId, tripDayId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 

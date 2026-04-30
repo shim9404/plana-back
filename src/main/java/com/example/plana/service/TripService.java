@@ -544,27 +544,18 @@ public class TripService {
      * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
      * @param memberId 사용자 ID
-     * @param request TripScheduleCreateRequest
      * @return TripScheduleCreateResponse
      */
-    public TripScheduleCreateResponse createTripSchedule(String tripId, String tripDayId, String memberId, TripScheduleCreateRequest request) {
+    public TripScheduleCreateResponse createTripSchedule(String tripId, String tripDayId, String memberId/*, TripScheduleCreateRequest request*/) {
         validateTripOwner(tripId, memberId);
 
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripDayId",      tripDayId);
         scheduleParams.put("memberId",       memberId);
-        scheduleParams.put("indexSort",      request.getIndexSort());
-        scheduleParams.put("startTime",      request.getStartTime());
-        scheduleParams.put("endTime",        request.getEndTime());
-        scheduleParams.put("bookmarkId",     request.getBookmarkId());
-        scheduleParams.put("context",        request.getContext());
-        scheduleParams.put("category",       request.getCategory());
-        scheduleParams.put("price",          request.getPrice());
-        scheduleParams.put("memo",           request.getMemo());
-        scheduleParams.put("link",           request.getLink());
-        scheduleParams.put("tripScheduleId", null);
+        scheduleParams.put("indexSort",      null);     // OUT
+        scheduleParams.put("tripScheduleId", null);     // OUT
 
-        log.info(request);
+        log.info(scheduleParams);
         try {
             tripMapper.createTripSchedule(scheduleParams);
         } catch (Exception e) {
@@ -572,17 +563,11 @@ public class TripService {
         }
 
         String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
+        int indexSort = (int) scheduleParams.get("indexSort");
         return TripScheduleCreateResponse.builder()
                 .tripScheduleId(tripScheduleId)
                 .tripDayId(tripDayId)
-                .indexSort(request.getIndexSort())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .context(request.getContext())
-                .category(request.getCategory())
-                .price(request.getPrice())
-                .memo(request.getMemo())
-                .link(request.getLink())
+                .indexSort(indexSort)
                 .build();
     }
 

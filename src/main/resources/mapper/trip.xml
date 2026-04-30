@@ -164,22 +164,21 @@
     <insert id="createTripSchedule" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP_SCHEDULE (
-                TRIP_DAY_ID, MEMBER_ID, INDEX_SORT, START_TIME, END_TIME, BOOKMARK_ID,
-                CONTEXT, CATEGORY, PRICE, MEMO, LINK
+                TRIP_DAY_ID,
+                MEMBER_ID,
+                INDEX_SORT
             ) VALUES (
-                #{tripDayId,  jdbcType=VARCHAR},
-                #{memberId,   jdbcType=VARCHAR},
-                #{indexSort,  jdbcType=INTEGER},
-                #{startTime,  jdbcType=VARCHAR},
-                #{endTime,    jdbcType=VARCHAR},
-                #{bookmarkId, jdbcType=VARCHAR},
-                #{context,    jdbcType=VARCHAR},
-                #{category,   jdbcType=VARCHAR},
-                #{price,      jdbcType=NUMERIC},
-                #{memo,       jdbcType=VARCHAR},
-                #{link,       jdbcType=VARCHAR}
+                #{tripDayId, jdbcType=VARCHAR},
+                #{memberId,  jdbcType=VARCHAR},
+                (
+                    SELECT NVL(MAX(INDEX_SORT), 0) + 1
+                    FROM TRIP_SCHEDULE
+                    WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+                )
             )
-            RETURNING TRIP_SCHEDULE_ID INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR};
+            RETURNING TRIP_SCHEDULE_ID, INDEX_SORT
+            INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR},
+                 #{indexSort,      mode=OUT, jdbcType=INTEGER};
         END;
     </insert>
 
