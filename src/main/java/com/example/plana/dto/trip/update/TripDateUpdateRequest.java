@@ -1,4 +1,4 @@
-package com.example.plana.dto.trip.create;
+package com.example.plana.dto.trip.update;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripDayCreateRequest {
-    private int indexSort;
+public class TripDateUpdateRequest {
+    private String startDate;
+    private String endDate;
 }

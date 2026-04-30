@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TripInfoUpdateRequest {
-    private String startDate;
-    private String endDate;
     private String name;
+    private int entryCount;
 }

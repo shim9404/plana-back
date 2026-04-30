@@ -74,6 +74,18 @@ public class TripController {
     }
 
     /**
+     * editTripInfo 여행 일자(시작 일자, 종료 일자) 갱신 후 부족한 일자 생성 및 반환
+     * @param tripId 여행 ID
+     * @param request TripDateUpdateRequest
+     * @return ResponseBody.data : TripDateUpdateResponse
+     */
+    @PatchMapping("/{tripId}/date")
+    public ResponseEntity<ResponseBody> editTripDate(@PathVariable String tripId, @RequestBody TripDateUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripDateUpdateResponse data = tripService.updateTripDate(tripId, principal.getMemberId(), request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
+    }
+
+    /**
      * editTripStatus 여행 상태(ACTIVE/INACTIVE/DELETED) 갱신
      * @param tripId 여행 ID
      * @param request TripStatusUpdateResponse
@@ -101,12 +113,12 @@ public class TripController {
     /**
      * addTripDay 여행 일자 신규 추가
      * @param tripId 여행 ID
-     * @param request TripDayCreateRequest
      * @return ResponseBody.data : TripDayCreateResponse
      */
+    @SuppressWarnings("unused")
     @PostMapping("/{tripId}/days")
-    public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @RequestBody TripDayCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
-        TripDayCreateResponse data = tripService.createTripDay(tripId, principal.getMemberId(),  request);
+    public ResponseEntity<ResponseBody> addTripDay(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripDayCreateResponse data = tripService.createTripDay(tripId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
@@ -138,13 +150,12 @@ public class TripController {
      * addTripSchedule 여행 스케줄 신규 추가
      * @param tripId 여행 ID
      * @param tripDayId 여행 일자 ID
-     * @param request TripScheduleCreateRequest
      * @return ResponseBody.data : TripScheduleCreateResponse
      */
     @PostMapping("/{tripId}/days/{tripDayId}/schedules")
     public ResponseEntity<ResponseBody> addTripSchedule(
-            @PathVariable String tripId, @PathVariable String tripDayId, @RequestBody TripScheduleCreateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
-        TripScheduleCreateResponse data = tripService.createTripSchedule(tripId, tripDayId, principal.getMemberId(), request);
+            @PathVariable String tripId, @PathVariable String tripDayId, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripScheduleCreateResponse data = tripService.createTripSchedule(tripId, tripDayId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
