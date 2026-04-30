@@ -28,7 +28,6 @@
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}
     </select>
-
     <update id="updateMember">
         UPDATE member
         <set>
@@ -55,13 +54,6 @@
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}
     </select>
-
-    <update id="updateMemberStatus">
-        UPDATE MEMBER
-        SET STATUS = 'DELETED'
-        WHERE MEMBER_ID = #{memberId}
-    </update>
-
     <delete id="deleteOldMembers">
         DELETE FROM MEMBER
         WHERE STATUS = 'DELETED'
@@ -132,4 +124,60 @@
         ]]>
     </delete>
 
+
+    <select id="memberList" parameterType="map" resultType="map">
+        select member_id as "memberId", email as "email", password as "password", name as "name", nickname as "nickname"
+        , profile_image as "profileImage" , social_type as "socialType", role as "role", create_date as "createDate" , latest_date as "latestDate", status as "status"
+        from member
+        <where>
+            <if test="status != null and status != '' and status != 'all'">
+                and upper(trim(status)) = upper(trim(#{status}))
+            </if>
+            <if test="role != null and role != '' and role != 'all'">
+                and role = #{role}
+            </if>
+            <if test="joinDateStart != null and joinDateStart != ''">
+                and create_date &gt;= #{joinDateStart}
+            </if>
+            <if test="joinDateEnd != null and joinDateEnd != ''">
+                and create_date &lt;= #{joinDateEnd}
+            </if>
+            <if test="lastLoginStart != null and lastLoginStart != ''">
+                and latest_date is not null
+                and SUBSTR(latest_date, 1, 10) &gt;= #{lastLoginStart}
+            </if>
+            <if test="lastLoginEnd != null and lastLoginEnd != ''">
+                and latest_date is not null
+                and SUBSTR(latest_date, 1, 10) &lt;= #{lastLoginEnd}
+            </if>
+            <if test="socialType != null and socialType != ''">
+                and upper(trim(social_type)) = upper(trim(#{socialType}))
+            </if>
+            <if test="keyword != null and keyword != '' and keywordField != null and keywordField != ''">
+                <choose>
+                    <when test="keywordField == 'email'">
+                        and lower(email) like '%' || lower(#{keyword}) || '%'
+                    </when>
+                    <when test="keywordField == 'name'">
+                        and lower(name) like '%' || lower(#{keyword}) || '%'
+                    </when>
+                    <when test="keywordField == 'nickname'">
+                        and lower(nickname) like '%' || lower(#{keyword}) || '%'
+                    </when>
+                </choose>
+            </if>
+        </where>
+        order by create_date desc nulls last
+    </select>
+    <update id="updateMemberRole">
+        UPDATE MEMBER
+        SET role = #{role}
+        WHERE member_id = #{memberId}
+    </update>
+
+    <update id="updateMemberStatus">
+        UPDATE MEMBER
+        SET status = #{status}
+        WHERE member_id = #{memberId}
+    </update>
 </mapper>

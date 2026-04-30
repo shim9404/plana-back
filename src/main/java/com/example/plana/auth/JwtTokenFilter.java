@@ -138,8 +138,8 @@ public class JwtTokenFilter extends GenericFilter {
                 CustomUserDetails userDetails = new CustomUserDetails(claims.getSubject(), role);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, jwtToken, userDetails.getAuthorities());
                 log.info("role:: "+role);
-                log.info("authentication: {}", authentication.getName()); // ✅
-                log.info("authorities: {}", authentication.getAuthorities()); // ✅
+                log.info("authentication: {}", authentication.getName());
+                log.info("authorities: {}", authentication.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
             //아래 코드가 없으면 다음 필터로 연결이 안됨.

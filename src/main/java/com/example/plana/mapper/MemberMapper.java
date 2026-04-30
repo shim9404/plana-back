@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface MemberMapper {
@@ -38,9 +39,6 @@ public interface MemberMapper {
     // 회원 정보 일치 여부 확인
     MemberVerify checkMember(@Param("memberId") String memberId);
 
-    //  회원 정보 상태 변경(삭제)
-    void updateMemberStatus(@Param("memberId") String memberId);
-
     // 회원 정보 삭제(자동 실행 - 30일 지난 경우 & STATUS: 'DELETED')
     void deleteOldMembers();
 
@@ -56,4 +54,9 @@ public interface MemberMapper {
 
     // 여행 정보 삭제(자동 실행 - 30일 지난 경우 & STATUS: ''INACTIVE')
     void deleteOldTrips();
+
+    List<Map<String, Object>> memberList(Map<String, Object> map);
+
+    int updateMemberRole (@Param("memberId") String memberId, @Param("role") String role);
+    int updateMemberStatus (@Param("memberId") String memberId, @Param("status") String status);
 }

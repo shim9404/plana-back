@@ -74,7 +74,10 @@ public class AuthenticationService {
         loginResponse.setRefreshToken(refreshToken);
         loginResponse.setAccessToken(accessToken);
         loginResponse.setRole(role);
+        loginResponse.setName(memberSavedData.getName());
+        loginResponse.setNickname(memberSavedData.getNickname());
         loginResponse.setMemberId(memberId);
+        loginResponse.setProfileImage(memberSavedData.getProfileImage());
 
         return loginResponse;
     }//end of signin
@@ -132,6 +135,10 @@ public class AuthenticationService {
             loginResponse.setRefreshToken(newRefreshToken);
             loginResponse.setAccessToken(accessToken);
             loginResponse.setMemberId(memberId);
+            loginResponse.setRole(memberSavedData.getRole());
+            loginResponse.setName(memberSavedData.getName());
+            loginResponse.setNickname(memberSavedData.getNickname());
+            loginResponse.setProfileImage(memberSavedData.getProfileImage());
 
             return loginResponse;
         } catch (ExpiredJwtException e) {
