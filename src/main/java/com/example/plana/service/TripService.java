@@ -73,14 +73,13 @@ public class TripService {
         String tripId = (String) tripParams.get("tripId");
 
         // 2. 날짜 범위 계산
-        LocalDate startDate = DateUtils.parseDate(tripParams.get("startDate").toString());
-        LocalDate endDate   = DateUtils.parseDate(tripParams.get("endDate").toString());
-        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        int diffDay = DateUtils.getDiffDay(tripParams.get("startDate").toString(),
+                                            tripParams.get("endDate").toString());
 
         // 3. TRIP_DAY INSERT
         List<TripDayCreateResponse> dayList = new ArrayList<>();
 
-        for (int i = 1; i <= days; i++) {
+        for (int i = 1; i <= diffDay; i++) {
             TripDayCreateResponse day = createTripDay(tripId, request.getMemberId());
             dayList.add(day);
         }
@@ -91,6 +90,7 @@ public class TripService {
                 .name((String) tripParams.get("name"))
                 .startDate((String) tripParams.get("startDate"))
                 .endDate((String) tripParams.get("endDate"))
+                .activeDayCount(diffDay)
                 .bookmarks(Collections.emptyList())
                 .days(dayList)
                 .build();
@@ -137,6 +137,10 @@ public class TripService {
 
         // 4. SELECT BOOKMARKS
         trip.setBookmarks(bookmarkService.readBookmarksByTripId(tripId));
+
+        // 5. activeDayCount (활성화 시킬 일자 수)
+        int diffDay = DateUtils.getDiffDay(trip.getStartDate(),trip.getEndDate());
+        trip.setActiveDayCount(diffDay);
 
         return trip;
     }
@@ -250,11 +254,17 @@ public class TripService {
         // 4. BOOKMARK SELECT
         List<BookmarkResponse> bookmarks = bookmarkService.readBookmarksByTripId(tripId);
 
+
+        // 5. activeDayCount (활성화 시킬 일자 수)
+        int diffDay = DateUtils.getDiffDay(tripParams.get("startDate").toString(),
+                tripParams.get("endDate").toString());
+
         return TripUpdateResponse.builder()
                 .tripId(tripId)
                 .name((String) tripParams.get("name"))
                 .startDate((String) tripParams.get("startDate"))
                 .endDate((String) tripParams.get("endDate"))
+                .activeDayCount(diffDay)
                 .bookmarks(bookmarks)
                 .days(dayList)
                 .build();
@@ -313,9 +323,7 @@ public class TripService {
         }
 
         // 3. 변경된 날짜 범위 계산
-        LocalDate startDate = DateUtils.parseDate(request.getStartDate());
-        LocalDate endDate   = DateUtils.parseDate(request.getEndDate());
-        int targetDayCount = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        int targetDayCount = DateUtils.getDiffDay(request.getStartDate(), request.getEndDate());
 
         // 4. 비교해서 부족한 수만큼 일자 생성 진행
         List<TripDayCreateResponse> addDays = new ArrayList<>();
