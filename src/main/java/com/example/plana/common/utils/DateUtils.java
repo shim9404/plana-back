@@ -2,6 +2,7 @@ package com.example.plana.common.utils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 public class DateUtils {
 
@@ -25,4 +26,9 @@ public class DateUtils {
         return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    public static int getDiffDay(String start, String end) {
+        LocalDate startDate = parseDate(start);
+        LocalDate endDate   = parseDate(end);
+        return (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+    }
 }
