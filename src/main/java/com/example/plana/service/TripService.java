@@ -261,7 +261,7 @@ public class TripService {
     }
 
     /**
-     * 여행 정보(시작 일자, 종료 일자, 여행명) 갱신
+     * 여행 정보(여행명, 참여 인원) 갱신
      * @param tripId 여행 ID
      * @param memberId 사용자 ID
      * @param request TripInfoUpdateRequest
@@ -272,7 +272,7 @@ public class TripService {
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("tripId"     , tripId);
         tripParams.put("name"       , request.getName());
-        tripParams.put("entryCount" , Math.max(request.getEntryCount(), 1));
+        tripParams.put("entryCount" , request.getEntryCount());
         log.info(request);
 
         try {
