@@ -51,7 +51,7 @@ public class BookmarkService {
 
         String areaId = "";
         if (request.getArea() != null) {    // AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우
-            areaId = areaService.createNewPlaceAreaBeforeBookmark(request.getArea());
+            areaId = areaService.getOrCreatePlaceArea(request.getArea());
         } else {
             areaId = request.getAreaId();
         }
