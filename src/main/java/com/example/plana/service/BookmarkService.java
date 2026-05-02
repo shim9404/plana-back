@@ -50,8 +50,10 @@ public class BookmarkService {
     public BookmarkResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request) {
 
         String areaId = "";
+        String placeId = "";
         if (request.getArea() != null) {    // AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우
             areaId = areaService.getOrCreatePlaceArea(request.getArea());
+            placeId = request.getArea().getPlaceId();
         } else {
             areaId = request.getAreaId();
         }
@@ -73,7 +75,7 @@ public class BookmarkService {
         return BookmarkResponse.builder()
                 .bookmarkId(bookmarkId)
                 .areaId(areaId)
-                .placeId(request.getArea().getPlaceId())
+                .placeId(placeId)
                 .areaInfo(areaService.toBookmarkResponse(areaId))
                 .bookmarkType(request.getBookmarkType())
                 .build();
