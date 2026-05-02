@@ -98,6 +98,7 @@ public class AreaService {
         return new AreaTypeResponse(searchType, totalCount, totalPages, page, size, details);
     }
 
+
     /**
      * Area Data를 AreaDetailRespose데이터로 가공하여 반환
      * @param area
@@ -133,6 +134,10 @@ public class AreaService {
     // 근처 장소 검색(API)
     public PlaceReadPageResponse readPlace(String keyword, double mapX, double mapY, int page, int size) {
         RestTemplate restTemplate = new RestTemplate();
+
+        log.info("mapX:: "+mapX);
+        log.info("mapY:: "+mapY);
+
 
         // 카카오 API는 page 파라미터 지원 (1~45), size 파라미터 지원 (1~15 기본값 15)
         // size 최대 15 제한이 있으므로 초과 시 15로 고정
@@ -217,7 +222,7 @@ public class AreaService {
      * @param request AreaPlaceCreateRequest
      * @return 등록 완료된 AREA ID
      */
-    public String createNewPlaceAreaBeforeBookmark(AreaPlaceCreateRequest request) {
+    private String createNewPlaceAreaBeforeBookmark(AreaPlaceCreateRequest request) {
         Map<String, Object> areaParams = new HashMap<>();
         areaParams.put("regionId", request.getRegionId());
         areaParams.put("placeId", request.getPlaceId());
@@ -267,5 +272,16 @@ public class AreaService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.AREA_READ_FAILED);
         }
+    }
+
+
+    public String getOrCreatePlaceArea(AreaPlaceCreateRequest areaRequest) {
+        // placeId로 먼저 조회
+        String existingAreaId = areaMapper.readAreaIdByPlaceId(areaRequest.getPlaceId());
+        if (existingAreaId != null) {
+            return existingAreaId; // 이미 있으면 기존 areaId 반환
+        }
+        // 없으면 새로 INSERT
+        return createNewPlaceAreaBeforeBookmark(areaRequest);
     }
 }
