@@ -2,34 +2,39 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.plana.mapper.AreaMapper">
-    <select id="readArea" resultType="com.example.plana.model.Area">
+    <!-- 특정 region의 searchType별 페이징 조회 -->
+    <select id="readAreaByPage" resultType="com.example.plana.model.Area">
         SELECT
-            a.AREA_ID as "areaId",
-            a.REGION_ID as "regionId",
-            a.SEARCH_TYPE as "searchType",
-            a.NAME as "name",
-            a.MAP_X as "mapX",
-            a.MAP_Y as "mapY",
-            a.CATEGORY as "category",
-            a.ADDRESS as "address",
-            a.ROAD_ADDRESS as "roadAddress",
-            a.LINK as "link",
-            a.TELEPHONE as "telephone",
-            a.DESCRIPTION as "description",
-            a.BOOKMARK_COUNT as "bookmarkCount",
-            a.CREATE_DATE as "createDate",
-            a.LATEST_DATE as "latestDate",
-            a.STATUS as "status"
+        a.AREA_ID as "areaId",
+        a.REGION_ID as "regionId",
+        a.SEARCH_TYPE as "searchType",
+        a.NAME as "name",
+        a.MAP_X as "mapX",
+        a.MAP_Y as "mapY",
+        a.CATEGORY as "category",
+        a.ADDRESS as "address",
+        a.ROAD_ADDRESS as "roadAddress",
+        a.LINK as "link",
+        a.TELEPHONE as "telephone",
+        a.DESCRIPTION as "description",
+        a.BOOKMARK_COUNT as "bookmarkCount",
+        a.CREATE_DATE as "createDate",
+        a.LATEST_DATE as "latestDate",
+        a.STATUS as "status"
         FROM AREA a
-        INNER JOIN REGION r ON a.region_id = r.region_id
         <where>
             <if test="regionId != null and regionId != ''">
-                AND a.region_id = #{regionId}
+                AND a.REGION_ID = #{regionId}
+            </if>
+            <if test="searchType != null and searchType != ''">
+                AND a.SEARCH_TYPE = #{searchType}
             </if>
         </where>
+        ORDER BY a.AREA_ID
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 
-    <!--  zdoCode에 속하는 Area 반환  -->
+    <!-- 시/도 단위 searchType별 페이징 조회 -->
     <select id="readAreaByZdoCode" resultType="com.example.plana.model.Area">
         SELECT
         a.AREA_ID as "areaId",
@@ -49,10 +54,42 @@
         a.LATEST_DATE as "latestDate",
         a.STATUS as "status"
         FROM AREA a
-        INNER JOIN REGION r ON a.region_id = r.region_id
-        WHERE r.zdo_code = #{zdoCode}
+        WHERE a.REGION_ID IN (
+        SELECT r.REGION_ID FROM REGION r WHERE r.ZDO_CODE = #{zdoCode}
+        )
+        <if test="searchType != null and searchType != ''">
+            AND a.SEARCH_TYPE = #{searchType}
+        </if>
+        ORDER BY a.AREA_ID
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 
+    <!-- 특정 region의 searchType별 전체 개수 -->
+    <select id="countAreaByType" resultType="int">
+        SELECT COUNT(*)
+        FROM AREA a
+        <where>
+            <if test="regionId != null and regionId != ''">
+                AND a.REGION_ID = #{regionId}
+            </if>
+            <if test="searchType != null and searchType != ''">
+                AND a.SEARCH_TYPE = #{searchType}
+            </if>
+        </where>
+    </select>
+
+
+    <!-- 시/도 단위 searchType별 전체 개수 -->
+    <select id="countAreaByZdoCode" resultType="int">
+        SELECT COUNT(*)
+        FROM AREA a
+        WHERE a.REGION_ID IN (
+        SELECT r.REGION_ID FROM REGION r WHERE r.ZDO_CODE = #{zdoCode}
+        )
+        <if test="searchType != null and searchType != ''">
+            AND a.SEARCH_TYPE = #{searchType}
+        </if>
+    </select>
 
     <!--  장소 단일 호출 : 북마크 표시 용도  -->
     <select id="readAreaForBookmark" resultType="com.example.plana.model.Area">

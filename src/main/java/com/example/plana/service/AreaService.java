@@ -33,67 +33,69 @@ public class AreaService {
     private final KakaoConfig kakaoConfig; // kakao apiKey
     private final RegionMapper regionMapper;
 
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
     /**
-     * 행정구역id 또는 시도code로 area table에 저장된 데이터 불러오기
-     * @param regionId 행정구역 id - regionTable pk
-     * @return AreaReadResponse
+     * 초기 로드 - 각 searchType 1페이지씩 반환
      */
-    public AreaReadResponse getArea(String regionId){
-        List<Area> areas = null;
+    public AreaReadResponse getArea(String regionId) {
 
-        // 존재하지 않는 지역입니다.
-        if (regionId != null){ 
-            if (regionMapper.checkRegionExists(regionId) == 0){
-                log.info("존재하지 않는 지역입니다.");
-                throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-            }
-
-            String zdoCode = regionId.substring(0,2);
-            String siguCode = regionId.substring(regionId.length()-3, regionId.length());
-
-            if (siguCode.equals("000")){
-                // zdocode를 가진 전체 area 반환
-                areas = areaMapper.readAreaByZdoCode(zdoCode);
-            }
-            else {
-                // 특정 sigu 반환
-                areas = areaMapper.readArea(regionId);
-            }
-        }
-        else {
-            // Area 테이블 내 모든 정보 반환
-            areas = areaMapper.readArea(null);
+        if (regionId != null && regionMapper.checkRegionExists(regionId) == 0) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
-        // getSearchType에 따라 그룹화
-        Map<String, List<Area>> groupedMap = areas.stream()
-                .collect(Collectors.groupingBy(Area::getSearchType));
+        AreaTypeResponse place = getPagedType(regionId, "PLACE", 1, DEFAULT_PAGE_SIZE);
+        AreaTypeResponse spot  = getPagedType(regionId, "SPOT",  1, DEFAULT_PAGE_SIZE);
+        AreaTypeResponse food  = getPagedType(regionId, "FOOD",  1, DEFAULT_PAGE_SIZE);
 
-        AreaReadResponse response = new AreaReadResponse();
-        response.setRegionId(regionId);
-
-        // 각 타입별로 변환해서 세팅
-        AreaTypeResponse place = createTypeResponse("PLACE", groupedMap.get("PLACE"));
-        AreaTypeResponse spot = createTypeResponse("SPOT",groupedMap.get("SPOT"));
-        AreaTypeResponse food = createTypeResponse("FOOD",groupedMap.get("FOOD"));
-
-        return new AreaReadResponse(areas.size(), regionId, place, spot, food);
+        return new AreaReadResponse(regionId, place, spot, food);
     }
 
     /**
-     * 특정 타입의 데이터를 받아 AreaTypeResponse 객체로 변환
+     * 특정 searchType 페이지 조회
      */
-    private AreaTypeResponse createTypeResponse(String type, List<Area> areas) {
-        if (areas == null || areas.isEmpty()) {
-            return new AreaTypeResponse(type, 0, Collections.emptyList());
+    public AreaTypePageResponse getAreaByType(String regionId, String searchType, int page, int size) {
+
+        if (regionId != null && regionMapper.checkRegionExists(regionId) == 0) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
-        // Area(Model) -> AreaDetailResponse(DTO) 변환
-        List<AreaDetailResponse> detailList = areas.stream()
+        AreaTypeResponse typeResponse = getPagedType(regionId, searchType, page, size);
+        return new AreaTypePageResponse(regionId, typeResponse);
+    }
+
+    /**
+     * 공통 페이징 조회
+     */
+    private AreaTypeResponse getPagedType(String regionId, String searchType, int page, int size) {
+
+        boolean isZdo = regionId != null && regionId.endsWith("000");
+
+        AreaPageRequest request = AreaPageRequest.builder()
+                .regionId(regionId)
+                .searchType(searchType)
+                .page(page)
+                .size(size)
+                .build();
+
+        int totalCount;
+        List<Area> areas;
+
+        if (isZdo) {
+            totalCount = areaMapper.countAreaByZdoCode(request);
+            areas = totalCount > 0 ? areaMapper.readAreaByZdoCode(request) : List.of();
+        } else {
+            totalCount = areaMapper.countAreaByType(request);
+            areas = totalCount > 0 ? areaMapper.readAreaByPage(request) : List.of();
+        }
+
+        int totalPages = (int) Math.ceil((double) totalCount / size);
+
+        List<AreaDetailResponse> details = areas.stream()
                 .map(this::toDetailResponse)
                 .collect(Collectors.toList());
 
-        return new AreaTypeResponse(type, detailList.size(), detailList);
+        return new AreaTypeResponse(searchType, totalCount, totalPages, page, size, details);
     }
 
     /**
@@ -129,70 +131,73 @@ public class AreaService {
     }
 
     // 근처 장소 검색(API)
-    public List<PlaceReadResponse> readPlace(String keyword, double mapX, double mapY) {
-        // RestTemplate: RESTful API 웹 서비스와의 상호작용을 쉽게 외부 도메인에서 데이터를 가져오거나 전송할 때 사용
+    public PlaceReadPageResponse readPlace(String keyword, double mapX, double mapY, int page, int size) {
         RestTemplate restTemplate = new RestTemplate();
 
-        // GET URL
-        // 키워드용 URL
+        // 카카오 API는 page 파라미터 지원 (1~45), size 파라미터 지원 (1~15 기본값 15)
+        // size 최대 15 제한이 있으므로 초과 시 15로 고정
+        int kakaoSize = Math.min(size, 15);
+
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?query="
                 + keyword
                 + "&x=" + mapX
                 + "&y=" + mapY
-                + "&radius=20000" + "&sort=distance";
+                + "&radius=20000"
+                + "&sort=distance"
+                + "&page=" + page
+                + "&size=" + kakaoSize;
 
-        // 카테고리용 URL(초기 - 지역 시청/도청 근처 음식점)
-        String urlCategory = "https://dapi.kakao.com/v2/local/search/category.json?&category_group_code=FD6"
+        String urlCategory = "https://dapi.kakao.com/v2/local/search/category.json?category_group_code=FD6"
                 + "&x=" + mapX
                 + "&y=" + mapY
-                + "&radius=20000" + "&sort=distance";
+                + "&radius=20000"
+                + "&sort=distance"
+                + "&page=" + page
+                + "&size=" + kakaoSize;
 
-        // Header 부분(인증 키)
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", kakaoConfig.getClientId());
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        // 근처 장소 검색
-        String url = null;
-        if (keyword == null || keyword.isEmpty()) { url = urlCategory; }
-        else { url = urlKeyword; };
+        String url = (keyword == null || keyword.isEmpty()) ? urlCategory : urlKeyword;
 
         ResponseEntity<String> response = restTemplate.exchange(
-                url, HttpMethod.GET, entity, String.class );
+                url, HttpMethod.GET, entity, String.class);
 
-        // JSON -> MAP 변환
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> result;
-        // 검색 실패 시, error code 호출
         try {
             result = objectMapper.readValue(response.getBody(), Map.class);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // documents 꺼내기
+        // 페이징 메타 정보 꺼내기
+        Map<String, Object> meta = (Map<String, Object>) result.get("meta");
+        int totalCount = (int) meta.get("total_count");     // 18822 (표시용)
+        int pageableCount = (int) meta.get("pageable_count"); // 45 (실제 페이징 가능 수)
+        boolean isEnd = (boolean) meta.get("is_end");
+
+        int totalPages = (int) Math.ceil((double) pageableCount / kakaoSize); // 45 / 15 = 3페이지
+
+
         List<Map<String, Object>> documents = (List<Map<String, Object>>) result.get("documents");
 
-        // 필요한 값만 저장
         List<PlaceReadResponse> list = new ArrayList<>();
-
-        for (Map<String, Object> doc: documents) {
+        for (Map<String, Object> doc : documents) {
             PlaceReadResponse placeReadResponse = new PlaceReadResponse();
-            // AREA Table 내 PLACE_ID 일치 확인 및 AREA_ID 갖고오기
-            placeReadResponse.setPlaceId((String)doc.get("id"));
+            placeReadResponse.setPlaceId((String) doc.get("id"));
             String areaId = areaMapper.readAreaIdByPlaceId(placeReadResponse.getPlaceId());
             placeReadResponse.setAreaId(areaId);
-            // 나머지 정보
             placeReadResponse.setSearchType("PLACE");
             placeReadResponse.setName((String) doc.get("place_name"));
             MapPos mapPos = new MapPos();
             mapPos.setX(Double.parseDouble((String) doc.get("x")));
             mapPos.setY(Double.parseDouble((String) doc.get("y")));
             placeReadResponse.setMapPos(mapPos);
-            if (doc.get("category_group_code") == null || doc.get("category_group_code") == "") {
+            if (doc.get("category_group_code") == null || doc.get("category_group_code").equals("")) {
                 placeReadResponse.setCategory("ETC");
-            }
-            else {
+            } else {
                 placeReadResponse.setCategory((String) doc.get("category_group_code"));
             }
             placeReadResponse.setAddress((String) doc.get("address_name"));
@@ -200,11 +205,10 @@ public class AreaService {
             placeReadResponse.setLink((String) doc.get("place_url"));
             placeReadResponse.setTelePhone((String) doc.get("phone"));
             placeReadResponse.setDescription("카카오개발자센터 장소 검색");
-
             list.add(placeReadResponse);
         }
 
-        return list;
+        return new PlaceReadPageResponse(pageableCount, totalPages, page, kakaoSize, isEnd, list);
     }
 
     /**

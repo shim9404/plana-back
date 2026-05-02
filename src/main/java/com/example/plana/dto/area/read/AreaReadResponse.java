@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AreaReadResponse {
-    private int totalCount;
     private String regionId;
     private AreaTypeResponse place;
     private AreaTypeResponse spot;
