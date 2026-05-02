@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
-public class AreaReadRequest {
+@AllArgsConstructor
+@NoArgsConstructor
+public class AreaTypePageResponse {
     private String regionId;
-    // 근처 장소 DB 파악용
-    private double mapX;
-    private double mapY;
+    private AreaTypeResponse data;
 }
