@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class TripCreateRequest {
     private String memberId;
     private String name;
+    private String regionId;
     private String startDate;
     private String endDate;
     private String status;

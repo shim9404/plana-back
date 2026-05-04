@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class TripInfoUpdateRequest {
     private String name;
     private int entryCount;
+    private String regionId;
 }
