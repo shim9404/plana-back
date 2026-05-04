@@ -168,6 +168,7 @@ public class TripService {
         tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
         tripParams.put("endDate",   DateUtils.checkDate(request.getEndDate()));
         tripParams.put("regionId",  request.getRegionId());
+        tripParams.put("entryCount", request.getEntryCount());
         log.info(request);
 
         try {
@@ -269,6 +270,7 @@ public class TripService {
                 .endDate((String) tripParams.get("endDate"))
                 .activeDayCount(diffDay)
                 .regionId((String) tripParams.get("regionId"))
+                .entryCount((Integer) tripParams.get("entryCount"))
                 .bookmarks(bookmarks)
                 .days(dayList)
                 .build();

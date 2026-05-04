@@ -18,5 +18,6 @@ public class TripUpdateRequest {
     private String startDate;
     private String endDate;
     private String regionId;
+    private int entryCount;
     private List<TripDayUpdateRequest> days;
 }

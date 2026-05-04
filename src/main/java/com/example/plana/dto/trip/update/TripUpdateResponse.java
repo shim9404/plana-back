@@ -19,6 +19,7 @@ public class TripUpdateResponse {
     private String endDate;
     private int activeDayCount;
     private String regionId;
+    private int entryCount;
     private List<BookmarkResponse> bookmarks;
     private List<TripDayUpdateResponse> days;
 }

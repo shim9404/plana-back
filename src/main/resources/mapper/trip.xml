@@ -27,7 +27,8 @@
                 NAME as "name",
                 START_DATE as "startDate",
                 END_DATE as "endDate",
-                REGION_ID as "regionId"
+                REGION_ID as "regionId",
+                ENTRY_COUNT as "entryCount"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
