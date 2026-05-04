@@ -182,7 +182,7 @@ public class TripController {
      * @param request TripScheduleOrderUpdateRequest
      * @return ResponseBody.data : null
      */
-    @PatchMapping("/{tripId}/days/{tripDayId}/schedules/reorder")
+    @PatchMapping("/{tripId}/days/schedules/reorder")
     public ResponseEntity<ResponseBody> reorderTripSchedule(@PathVariable String tripId, @RequestBody TripScheduleOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.updateTripScheduleOrder(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
