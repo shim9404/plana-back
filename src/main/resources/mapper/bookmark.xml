@@ -26,7 +26,7 @@
 
     <!-- 북마크 존재 여부 -->
     <select id="existBookmark" resultType="boolean">
-        SELECT COUNT(1) > 0
+        SELECT COUNT(1)
         FROM BOOKMARK
         WHERE BOOKMARK_ID = #{bookmarkId, jdbcType=VARCHAR}
     </select>
@@ -49,13 +49,13 @@
 
     <!--  북마크 삭제  -->
     <delete id="deleteBookmark">
-        DELETE BOOKMARK
+        DELETE FROM BOOKMARK
         WHERE BOOKMARK_ID = #{bookmarkId, jdbcType=VARCHAR}
     </delete>
 
     <!--  여행 귀속 북마크 전체 삭제  -->
     <delete id="deleteBookmarksByTripId">
-        DELETE BOOKMARK
+        DELETE FROM BOOKMARK
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 </mapper>
