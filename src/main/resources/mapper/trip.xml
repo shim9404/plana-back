@@ -8,12 +8,13 @@
     <insert id="createTrip" statementType="CALLABLE">
         BEGIN
             INSERT INTO TRIP (
-                MEMBER_ID, NAME, START_DATE, END_DATE
+                MEMBER_ID, NAME, START_DATE, END_DATE, REGION_ID
             ) VALUES (
                 #{memberId,  jdbcType=VARCHAR},
                 #{name,      jdbcType=VARCHAR},
                 #{startDate, jdbcType=VARCHAR},
-                #{endDate,   jdbcType=VARCHAR}
+                #{endDate,   jdbcType=VARCHAR},
+                #{regionId,  jdbcType=VARCHAR}
             )
             RETURNING TRIP_ID INTO #{tripId, mode=OUT, jdbcType=VARCHAR};
         END;
@@ -25,7 +26,8 @@
                 MEMBER_ID as "memberId",
                 NAME as "name",
                 START_DATE as "startDate",
-                END_DATE as "endDate"
+                END_DATE as "endDate",
+                REGION_ID as "regionId"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
@@ -51,7 +53,8 @@
             <if test="name       != null">      NAME        = #{name,       jdbcType=VARCHAR},</if>
             <if test="entryCount != 0">         ENTRY_COUNT = #{entryCount, jdbcType=INTEGER},</if>
             <if test="startDate  != null">      START_DATE  = #{startDate,  jdbcType=VARCHAR},</if>
-            <if test="endDate    != null">      END_DATE    = #{endDate,    jdbcType=VARCHAR} </if>
+            <if test="endDate    != null">      END_DATE    = #{endDate,    jdbcType=VARCHAR}, </if>
+            <if test="regionId    != null">     REGION_ID   = #{regionId,   jdbcType=VARCHAR} </if>
         </set>
         WHERE TRIP_ID = #{tripId,       jdbcType=VARCHAR}
     </update>

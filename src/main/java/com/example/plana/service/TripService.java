@@ -20,8 +20,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Log4j2
@@ -63,11 +61,13 @@ public class TripService {
         tripParams.put("name", checkName(request.getName(), "나의 새로운 여행"));
         tripParams.put("startDate", request.getStartDate());
         tripParams.put("endDate", request.getEndDate());
+        tripParams.put("regionId", request.getRegionId());
         tripParams.put("tripId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripId의 반환값을 담아야 함
 
         try {
             tripMapper.createTrip(tripParams);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
         }
         String tripId = (String) tripParams.get("tripId");
@@ -91,6 +91,7 @@ public class TripService {
                 .startDate((String) tripParams.get("startDate"))
                 .endDate((String) tripParams.get("endDate"))
                 .activeDayCount(diffDay)
+                .regionId((String) tripParams.get("regionId"))
                 .bookmarks(Collections.emptyList())
                 .days(dayList)
                 .build();
@@ -111,6 +112,7 @@ public class TripService {
         try {
             trip = tripMapper.readTrip(tripId);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
         }
 
@@ -165,6 +167,7 @@ public class TripService {
         tripParams.put("name",      checkName(request.getName(), "[네트워크 에러] 복구된 여행 계획"));
         tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
         tripParams.put("endDate",   DateUtils.checkDate(request.getEndDate()));
+        tripParams.put("regionId",  request.getRegionId());
         log.info(request);
 
         try {
@@ -265,13 +268,14 @@ public class TripService {
                 .startDate((String) tripParams.get("startDate"))
                 .endDate((String) tripParams.get("endDate"))
                 .activeDayCount(diffDay)
+                .regionId((String) tripParams.get("regionId"))
                 .bookmarks(bookmarks)
                 .days(dayList)
                 .build();
     }
 
     /**
-     * 여행 정보(여행명, 참여 인원) 갱신
+     * 여행 정보(여행명, 참여 인원, 선택 지역) 갱신
      * @param tripId 여행 ID
      * @param memberId 사용자 ID
      * @param request TripInfoUpdateRequest
@@ -283,6 +287,7 @@ public class TripService {
         tripParams.put("tripId"     , tripId);
         tripParams.put("name"       , request.getName());
         tripParams.put("entryCount" , request.getEntryCount());
+        tripParams.put("regionId" , request.getRegionId());
         log.info(request);
 
         try {
