@@ -66,6 +66,7 @@
         SELECT TRIP_ID as tripId, NAME as name, STATUS as status
         FROM TRIP
         WHERE MEMBER_ID = #{memberId}
+        ORDER BY TO_DATE( NVL(LATEST_DATE, CREATE_DATE), 'YYYY-MM-DD HH24:MI:SS' ) DESC
     </select>
 
     <insert id="createMember" parameterType="com.example.plana.model.MemberSave">
