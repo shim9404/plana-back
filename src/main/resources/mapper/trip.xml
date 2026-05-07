@@ -227,7 +227,7 @@
             <if test="bookmarkId != null"> BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
             <if test="context != null">    CONTEXT      = #{context,    jdbcType=VARCHAR},</if>
             <if test="category != null">   CATEGORY     = #{category,   jdbcType=VARCHAR},</if>
-            <if test="price != null">      PRICE        = #{price,      jdbcType=NUMERIC},</if>
+            <if test="price != 0">      PRICE        = #{price,      jdbcType=INTEGER},</if>
             <if test="memo != null">       MEMO         = #{memo,       jdbcType=VARCHAR},</if>
             <if test="link != null">       LINK         = #{link,       jdbcType=VARCHAR}</if>
         </set>
