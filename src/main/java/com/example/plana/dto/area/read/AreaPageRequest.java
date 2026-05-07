@@ -14,6 +14,7 @@ public class AreaPageRequest {
     private String searchType;
     private int page;
     private int size;
+    private String keyword;
 
     public int getOffset() {
         return (page - 1) * size;

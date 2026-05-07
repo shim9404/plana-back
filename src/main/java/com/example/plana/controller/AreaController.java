@@ -45,10 +45,12 @@ public class AreaController {
             @RequestParam(required = false) String regionId,
             @RequestParam String searchType,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false, defaultValue = "") String keyword) {
 
-
-        AreaTypePageResponse data = areaService.getAreaByType(regionId, searchType, page, size);
+        log.info("keyword:: "+keyword);
+        log.info(keyword);
+        AreaTypePageResponse data = areaService.getAreaByType(regionId, searchType, page, size, keyword);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 

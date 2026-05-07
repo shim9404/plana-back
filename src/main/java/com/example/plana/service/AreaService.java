@@ -44,9 +44,9 @@ public class AreaService {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
-        AreaTypeResponse place = getPagedType(regionId, "PLACE", 1, DEFAULT_PAGE_SIZE);
-        AreaTypeResponse spot  = getPagedType(regionId, "SPOT",  1, DEFAULT_PAGE_SIZE);
-        AreaTypeResponse food  = getPagedType(regionId, "FOOD",  1, DEFAULT_PAGE_SIZE);
+        AreaTypeResponse place = getPagedType(regionId, "PLACE", 1, DEFAULT_PAGE_SIZE, "");
+        AreaTypeResponse spot  = getPagedType(regionId, "SPOT",  1, DEFAULT_PAGE_SIZE, "");
+        AreaTypeResponse food  = getPagedType(regionId, "FOOD",  1, DEFAULT_PAGE_SIZE, "");
 
         return new AreaReadResponse(regionId, place, spot, food);
     }
@@ -54,21 +54,21 @@ public class AreaService {
     /**
      * 특정 searchType 페이지 조회
      */
-    public AreaTypePageResponse getAreaByType(String regionId, String searchType, int page, int size) {
+    public AreaTypePageResponse getAreaByType(String regionId, String searchType, int page, int size, String keyword) {
 
         if (regionId != null && regionMapper.checkRegionExists(regionId) == 0) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
-        AreaTypeResponse typeResponse = getPagedType(regionId, searchType, page, size);
+        AreaTypeResponse typeResponse = getPagedType(regionId, searchType, page, size, keyword);
         return new AreaTypePageResponse(regionId, typeResponse);
     }
 
     /**
      * 공통 페이징 조회
      */
-    private AreaTypeResponse getPagedType(String regionId, String searchType, int page, int size) {
-
+    private AreaTypeResponse getPagedType(String regionId, String searchType, int page, int size, String keyword) {
+        log.info("keyword getPagedType:: "+keyword);
         boolean isZdo = regionId != null && regionId.endsWith("000");
 
         AreaPageRequest request = AreaPageRequest.builder()
@@ -76,6 +76,7 @@ public class AreaService {
                 .searchType(searchType)
                 .page(page)
                 .size(size)
+                .keyword(keyword)
                 .build();
 
         int totalCount;

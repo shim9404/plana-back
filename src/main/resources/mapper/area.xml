@@ -29,6 +29,9 @@
             <if test="searchType != null and searchType != ''">
                 AND a.SEARCH_TYPE = #{searchType}
             </if>
+            <if test="keyword != null and keyword != ''">
+                AND LOWER(a.NAME) LIKE LOWER('%' || #{keyword} || '%')
+            </if>
         </where>
         ORDER BY a.AREA_ID
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
@@ -60,6 +63,9 @@
         <if test="searchType != null and searchType != ''">
             AND a.SEARCH_TYPE = #{searchType}
         </if>
+        <if test="keyword != null and keyword != ''">
+            AND LOWER(a.NAME) LIKE LOWER('%' || #{keyword} || '%')
+        </if>
         ORDER BY a.AREA_ID
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
@@ -75,6 +81,9 @@
             <if test="searchType != null and searchType != ''">
                 AND a.SEARCH_TYPE = #{searchType}
             </if>
+            <if test="keyword != null and keyword != ''">
+                AND LOWER(a.NAME) LIKE LOWER('%' || #{keyword} || '%')
+            </if>
         </where>
     </select>
 
@@ -88,6 +97,9 @@
         )
         <if test="searchType != null and searchType != ''">
             AND a.SEARCH_TYPE = #{searchType}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND LOWER(a.NAME) LIKE LOWER('%' || #{keyword} || '%')
         </if>
     </select>
 
