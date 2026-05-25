@@ -21,6 +21,7 @@ public class ResponseBody<T> {
     private String code;
     @Schema(description = "응답 메세지 내용")
     private String message;
+    @Schema(description = "응답 데이터", nullable = true)
     private T data;
 
     // 에러 응답을 위한 정적 팩토리 메서드 추가
@@ -34,7 +35,7 @@ public class ResponseBody<T> {
     }
 
 
-    // 성공 응답을 위한 메서드
+    // 성공 응답을 위한 메서드 (반환 데이터 O)
     public static <T> ResponseBody<T> success(SuccessCode successCode, T data) {
         return ResponseBody.<T>builder()
                 .success(true)
@@ -42,6 +43,17 @@ public class ResponseBody<T> {
                 .message(successCode.getMessage())
                 .code(successCode.getCode())
                 .data(data)
+                .build();
+    }
+
+    // 성공 응답을 위한 메서드 (반환 데이터 X)
+    public static <T> ResponseBody<T> success(SuccessCode successCode) {
+        return ResponseBody.<T>builder()
+                .success(true)
+                .status(successCode.getStatus())
+                .message(successCode.getMessage())
+                .code(successCode.getCode())
+                .data(null)
                 .build();
     }
 }
