@@ -153,7 +153,7 @@ public class TripController {
     @Operation(summary = "여행 정보 변경", description = "여행의 이름과 참여 인원을 갱신한다.")
     @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> editTripInfo(@PathVariable String tripId, @RequestBody TripInfoUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<ResponseBody<EmptyData>> editTripInfo(@PathVariable String tripId, @RequestBody TripInfoUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.updateTripInfo(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
     }
@@ -168,7 +168,7 @@ public class TripController {
     @Operation(summary = "여행 상태(STATUS) 변경", description = "여행을 휴지통에 버리거나 휴지통에서 복구한다.")
     @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> editTripStatus(@PathVariable String tripId, @RequestBody StatusUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<ResponseBody<EmptyData>> editTripStatus(@PathVariable String tripId, @RequestBody StatusUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.updateTripStatus(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
     }
@@ -186,7 +186,7 @@ public class TripController {
             @Parameter(name = "tripDayId", description = "삭제할 일자 ID", required = true),
     })
     @ApiResponse(responseCode = "200", description = "[S004] 삭제가 완료되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> deleteTripDay(@PathVariable String tripId, @PathVariable String tripDayId, @AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<ResponseBody<EmptyData>> deleteTripDay(@PathVariable String tripId, @PathVariable String tripDayId, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.deleteTripDay(tripId, tripDayId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
     }
@@ -201,7 +201,7 @@ public class TripController {
     @Operation(summary = "여행 일자 순서 변경", description = "여행에 속한 여행 일자들의 정렬 순서를 갱신한다.")
     @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> reorderTripDays(@PathVariable String tripId, @RequestBody TripDayOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<ResponseBody<EmptyData>> reorderTripDays(@PathVariable String tripId, @RequestBody TripDayOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.updateTripDaysIndexSort(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
     }
@@ -239,7 +239,7 @@ public class TripController {
             @Parameter(name = "tripScheduleId", description = "수정할 스케줄 ID", required = true),
     })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> editTripSchedule(
+    public ResponseEntity<ResponseBody<EmptyData>> editTripSchedule(
             @PathVariable String tripId, @PathVariable String tripScheduleId, @RequestBody TripScheduleUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.updateTripSchedule(tripId, tripScheduleId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
@@ -256,7 +256,7 @@ public class TripController {
     @Operation(summary = "여행 스케줄 순서 변경", description = "여행에 속한 여행 스케줄들의 정렬 순서 및 소속 일차를 갱신한다.")
     @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> reorderTripSchedule(@PathVariable String tripId, @RequestBody TripScheduleOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<ResponseBody<EmptyData>> reorderTripSchedule(@PathVariable String tripId, @RequestBody TripScheduleOrderUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.updateTripScheduleOrder(tripId, principal.getMemberId(), request);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
     }
@@ -276,7 +276,7 @@ public class TripController {
             @Parameter(name = "tripScheduleId", description = "삭제할 스케줄 ID", required = true),
     })
     @ApiResponse(responseCode = "200", description = "[S004] 삭제가 완료되었습니다.")
-    public ResponseEntity<ResponseBody<Void>> deleteTripSchedule(
+    public ResponseEntity<ResponseBody<EmptyData>> deleteTripSchedule(
             @PathVariable String tripId, @PathVariable String tripDayId, @PathVariable String tripScheduleId, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.deleteTripSchedule(tripId, tripDayId, tripScheduleId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
