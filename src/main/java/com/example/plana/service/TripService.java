@@ -67,7 +67,6 @@ public class TripService {
         try {
             tripMapper.createTrip(tripParams);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
         }
         String tripId = (String) tripParams.get("tripId");
@@ -112,7 +111,6 @@ public class TripService {
         try {
             trip = tripMapper.readTrip(tripId);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
         }
 
