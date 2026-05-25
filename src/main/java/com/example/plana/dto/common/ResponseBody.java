@@ -21,7 +21,7 @@ public class ResponseBody<T> {
     private String code;
     @Schema(description = "응답 메세지 내용")
     private String message;
-    @Schema(description = "응답 데이터", nullable = true)
+    @Schema(description = "응답 데이터")
     private T data;
 
     // 에러 응답을 위한 정적 팩토리 메서드 추가

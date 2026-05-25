@@ -1,5 +1,6 @@
 package com.example.plana.dto.trip.create;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,11 +10,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "여행 생성 요청")
 public class TripCreateRequest {
+    @Schema(description = "회원 고유 ID", example = "M24")
     private String memberId;
+    @Schema(description = "여행명", example = "세종 여행 계획")
     private String name;
+    @Schema(description = "여행 지역 코드", example = "29000")
     private String regionId;
+    @Schema(description = "여행 시작일", example = "2026-05-22")
     private String startDate;
+    @Schema(description = "여행 종료일", example = "2026-05-23")
     private String endDate;
-    private String status;
 }
