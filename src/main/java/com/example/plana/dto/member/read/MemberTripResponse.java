@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "회원 여행 목록 조회 응답")
+@Schema(description = "여행 목록 리스트")
 public class MemberTripResponse {
     @Schema(description = "여행 ID", example = "T35")
     private String tripId;

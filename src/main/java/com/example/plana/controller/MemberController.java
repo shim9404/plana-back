@@ -5,9 +5,7 @@ import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.member.create.MemberCreateRequest;
-import com.example.plana.dto.member.read.MemberReadResponse;
-import com.example.plana.dto.member.read.MemberTripResponse;
-import com.example.plana.dto.member.read.MemberTripTrashResponse;
+import com.example.plana.dto.member.read.*;
 import com.example.plana.dto.member.update.MemberPwUpdateRequest;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
@@ -26,7 +24,6 @@ import com.example.plana.service.MemberService;
 
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -63,11 +60,11 @@ public class MemberController {
     @Operation(summary = "닉네임 중복 체크", description = "변경할 닉네임의 중복 여부를 확인한다.")
     @Parameters({ @Parameter(name = "nickname", description = "새 닉네임", required = true) })
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
-    public ResponseEntity<ResponseBody<String>> dupliNickname(@RequestParam("nickname") String nickname) {
-        memberService.existNickname(nickname);
+    public ResponseEntity<ResponseBody<DupliNicknameRespone>> dupliNickname(@RequestParam("nickname") String nickname) {
+        DupliNicknameRespone data =  memberService.existNickname(nickname);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS, nickname));
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 
     /**
@@ -169,8 +166,8 @@ public class MemberController {
     @Operation(summary = "회원의 여행 목록 호출", description = "사용자의 여행 목록을 호출한다.")
     @Parameters({ @Parameter(name = "memberId", description = "회원 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
-    public ResponseEntity<ResponseBody<List<MemberTripResponse>>> getMyTripList(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
-        List<MemberTripResponse> data = memberService.readTripByMemberId(principal.getMemberId(), memberId, principal.getRole());
+    public ResponseEntity<ResponseBody<MemberTripsResponse>> getMyTripList(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
+        MemberTripsResponse data = memberService.readTripByMemberId(principal.getMemberId(), memberId, principal.getRole());
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
@@ -186,8 +183,8 @@ public class MemberController {
     @Operation(summary = "비활성화된 여행 요약 정보 호출", description = "비활성화된 여행의 전체 정보를 정리해서 호출한다.")
     @Parameters({ @Parameter(name = "memberId", description = "회원 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
-    public ResponseEntity<ResponseBody<List<MemberTripTrashResponse>>> getTripTrash(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
-        List<MemberTripTrashResponse> data = memberService.readTripTrash(principal.getMemberId(), memberId, principal.getRole());
+    public ResponseEntity<ResponseBody<MemberTripTrashsResponse>> getTripTrash(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
+        MemberTripTrashsResponse data = memberService.readTripTrash(principal.getMemberId(), memberId, principal.getRole());
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
