@@ -50,7 +50,7 @@ public class MemberController {
         memberService.createMemberByEmail(member);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.INSERT_SUCCESS, null));
+                ResponseBody.success(SuccessCode.INSERT_SUCCESS));
     }
 
     /**
@@ -104,7 +104,7 @@ public class MemberController {
         memberService.updateMember(principal.getMemberId(), memberId, principal.getRole(), memberUpdateRequest);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
     }
 
     /**
@@ -132,7 +132,7 @@ public class MemberController {
         memberService.updatePassword(principal.getMemberId(), memberId, principal.getRole(), currentPassword, newPassword);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.PASSWORD_UPDATE_SUCCESS, null));
+                ResponseBody.success(SuccessCode.PASSWORD_UPDATE_SUCCESS));
     }
 
     /**
@@ -156,7 +156,7 @@ public class MemberController {
         memberService.updateMemberStatus(principal.getMemberId(), memberId, principal.getRole());
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, null));
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
     }
 
     /**
