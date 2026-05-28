@@ -3,6 +3,7 @@ package com.example.plana.service;
 
 import com.example.plana.dto.area.read.MapPos;
 import com.example.plana.dto.region.read.RegionReadResponse;
+import com.example.plana.dto.region.read.RegionZdoListResponse;
 import com.example.plana.dto.region.read.SiguResponse;
 import com.example.plana.dto.region.read.ZdoResponse;
 import com.example.plana.mapper.RegionMapper;
@@ -24,7 +25,7 @@ public class RegionService {
      * 지역 정보 불러오기
      * @return RegionResponse 시도리스트 -> 시군구 리스트 뎁스 구조로 반환
      */
-    public List<ZdoResponse> readRegion(){
+    public RegionZdoListResponse readRegion(){
 
         // DB에서 지역 정보 불러오기
         List<Region> siguDatas = regionMapper.readRegion();
@@ -65,7 +66,10 @@ public class RegionService {
             regionMap.put(zdo.getZdoCode(), zdo);
         }
 
-        return new ArrayList<>(regionMap.values());
+        RegionZdoListResponse data = new RegionZdoListResponse();
+        data.setRegions(new ArrayList<>(regionMap.values()));
+
+        return data;
     }
 
     // 지역 간단 정보(좌표 + 이름) 호출
