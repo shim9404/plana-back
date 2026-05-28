@@ -3,9 +3,15 @@ package com.example.plana.controller;
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.region.read.RegionReadResponse;
+import com.example.plana.dto.region.read.RegionZdoListResponse;
 import com.example.plana.dto.region.read.ZdoResponse;
 import com.example.plana.model.Region;
 import com.example.plana.service.RegionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/regions")
+@Tag(name = "Region API", description = "행정 구역 API 목록")
 public class RegionController {
     private final RegionService regionService;
 
@@ -28,12 +35,14 @@ public class RegionController {
      * @return ResponseBody.data : RegionResponse
      */
     @GetMapping
-    public ResponseEntity<ResponseBody> region(){
+    @Operation(summary = "지역 정보 호출", description = "행정구역 정보(시/도, 시/군/구) 목록을 조회한다.")
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<RegionZdoListResponse>> region(){
 
-        List<ZdoResponse> data = regionService.readRegion();
+        RegionZdoListResponse data = regionService.readRegion();
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("regions",data))
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data)
         );
     }
 
@@ -44,11 +53,14 @@ public class RegionController {
      * @return ResponseBody.data : RegionReadResponse
      */
     @GetMapping("/find")
-    public ResponseEntity<ResponseBody> getRegionById(@RequestParam String regionId) {
+    @Operation(summary = "지역 간단 정보 호출", description = "선택된 지역의 행정 구역 좌표 및 이름(시/도, 시/군/구)을 호출한다.")
+    @Parameters({ @Parameter(name = "regionId", description = "행정 구역 ID", required = true) })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<RegionReadResponse>> getRegionById(@RequestParam String regionId) {
         RegionReadResponse data = regionService.readRegionById(regionId);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS, Map.of("regions", data))
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data)
         );
     }
 }
