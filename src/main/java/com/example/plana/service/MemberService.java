@@ -5,9 +5,7 @@ import com.example.plana.auth.SocialType;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.member.create.MemberCreateRequest;
-import com.example.plana.dto.member.read.MemberReadResponse;
-import com.example.plana.dto.member.read.MemberTripResponse;
-import com.example.plana.dto.member.read.MemberTripTrashResponse;
+import com.example.plana.dto.member.read.*;
 import com.example.plana.dto.member.update.MemberStatusRequest;
 import com.example.plana.dto.member.update.MemberUpdateRequest;
 import com.example.plana.mapper.MemberMapper;
@@ -60,9 +58,11 @@ public class MemberService {
     }
 
     // 닉네임 중복 체크
-    public void existNickname(String nickname) {
+    public DupliNicknameRespone existNickname(String nickname) {;
         if (memberMapper.existNickname(nickname)) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }else {
+            return new DupliNicknameRespone(nickname);
         }
     }
 
@@ -179,7 +179,7 @@ public class MemberService {
     }
 
     // 회원 여행 목록 호출
-    public List<MemberTripResponse> readTripByMemberId(String tokenMemberId, String pathMemberId, Role role) {
+    public MemberTripsResponse readTripByMemberId(String tokenMemberId, String pathMemberId, Role role) {
         validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
@@ -187,7 +187,7 @@ public class MemberService {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return memberMapper.readTripByMemberId(tokenMemberId);
+        return new MemberTripsResponse(tokenMemberId, memberMapper.readTripByMemberId(tokenMemberId));
     }
 
     // 회원가입 : email로 가입했을 경우 호출
@@ -248,7 +248,7 @@ public class MemberService {
     }
 
     // INACTIVE(비활성)된 여행 정보 호출
-    public List<MemberTripTrashResponse> readTripTrash(String tokenMemberId, String pathMemberId, Role role) {
+    public MemberTripTrashsResponse readTripTrash(String tokenMemberId, String pathMemberId, Role role) {
         validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
@@ -256,7 +256,7 @@ public class MemberService {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return  memberMapper.readTripTrash(tokenMemberId);
+        return new MemberTripTrashsResponse(tokenMemberId, memberMapper.readTripTrash(tokenMemberId));
     }
 
     // 여행 정보 삭제(자동 실행)

@@ -90,7 +90,7 @@ public class TripController {
     @ApiResponse(responseCode = "200", description = "[S004] 삭제가 완료되었습니다.")
     public ResponseEntity<ResponseBody<EmptyData>> deleteTrip(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
         tripService.deleteTrip(tripId, principal.getMemberId());
-        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS, null));
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
     }
 
     /**
