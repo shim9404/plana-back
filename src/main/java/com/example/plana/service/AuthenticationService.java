@@ -3,6 +3,7 @@ package com.example.plana.service;
 import com.example.plana.auth.JwtTokenProvider;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.dto.auth.DupliEmailResponse;
 import com.example.plana.dto.auth.LogoutRequest;
 import com.example.plana.dto.member.read.LoginRequest;
 import com.example.plana.dto.member.read.LoginResponse;
@@ -222,11 +223,16 @@ public class AuthenticationService {
 
 
     // 이메일 중복 파악 후 에러 처리
-    public void existsEmail(String email){
+    public DupliEmailResponse existsEmail(String email){
         boolean isExist = authenticationMapper.existEmail(email);
 
         if (isExist){
             throw new BusinessException(ErrorCode.EMAIL_DUPLICATION);
+        } else  {
+            DupliEmailResponse data = new DupliEmailResponse();
+            data.setEmail(email);
+
+            return data;
         }
     }
 }
