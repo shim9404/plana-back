@@ -7,9 +7,7 @@ import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
-import com.example.plana.dto.trip.create.TripCreateRequest;
-import com.example.plana.dto.trip.create.TripCreateResponse;
-import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
+import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.service.BookmarkService;
@@ -64,19 +62,19 @@ public class TripController {
     }
 
     /**
-     * saveTrip 여행 전체 저장
-     * 작동 시나리오 : 네트워크 에러 등의 사유로 편집 시 자동 저장이 이루어지지 않았을 경우, 저장 시점에 기존 데이터를 전부 삭제한 뒤 재생성한다.
+     * copyTrip 여행 복제 저장
+     * 작동 시나리오 : 커뮤니티 등을 통해 공개된 여행을 Viewer가 자신의 여행 계획으로 복제 저장
      * @param tripId 여행 ID
-     * @param request TripUpdateRequest
-     * @return ResponseBody.data : TripUpdateResponse
+     * @param request TripCopyRequest
+     * @return ResponseBody.data : TripCopyResponse
      */
-    @PutMapping("/{tripId}")
-    @Operation(summary = "[변경 예정] 여행 전체 저장", description = "작성 중인 여행 전체를 저장한다.")
+    @PostMapping("/{tripId}/copy")
+    @Operation(summary = "여행 복제 저장", description = "작성된 여행 계획을 복사하여 저장한다.")
     @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
-    @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<TripUpdateResponse>> saveTrip(@PathVariable String tripId, @RequestBody TripUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
-        TripUpdateResponse data = tripService.saveTrip(tripId, principal.getMemberId(), request);
-        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
+    @ApiResponse(responseCode = "201", description = "[S002] 등록이 완료되었습니다.")
+    public ResponseEntity<ResponseBody<TripCopyResponse>> copyTrip(@PathVariable String tripId, @RequestBody TripCopyRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripCopyResponse data = tripService.copyTrip(tripId, principal.getMemberId(), request);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
     }
 
     /**
