@@ -18,6 +18,5 @@ public class TripDayCopyRequest {
     private String tripDayId;
     @Schema(description = "여행 일자 정렬 순서(N일차)", example = "1")
     private int indexSort;
-    private List<BookmarkCreateRequest> bookmarks;
     private List<TripScheduleCopyRequest> schedules;
 }
