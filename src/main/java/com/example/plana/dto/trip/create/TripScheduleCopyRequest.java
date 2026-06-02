@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "여행 스케줄 수정 요청")
 public class TripScheduleCopyRequest {
-    @Schema(description = "여행 스케줄 ID", example = "TD100")
+    @Schema(description = "여행 스케줄 ID", example = "TS1234")
     private String tripScheduleId;
     @Schema(description = "여행 스케줄 정렬 순서", example = "1")
     private int indexSort;

@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "여행 복사 요청")
 public class TripCopyRequest {
-    @Schema(description = "여행 ID", example = "T50")
+    @Schema(description = "회원 고유 ID", example = "M24")
     private String memberId;
     @Schema(description = "여행명", example = "세종 여행 계획")
     private String name;
