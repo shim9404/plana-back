@@ -198,6 +198,39 @@
         END;
     </insert>
 
+    <!-- 기존 데이터 복사용 : 여행 스케줄 단건 INSERT -->
+    <insert id="copyTripSchedule" statementType="CALLABLE">
+        BEGIN
+            INSERT INTO TRIP_SCHEDULE (
+                TRIP_DAY_ID,
+                MEMBER_ID,
+                INDEX_SORT,
+                START_TIME,
+                END_TIME,
+                BOOKMARK_ID,
+                CONTEXT,
+                CATEGORY,
+                PRICE,
+                MEMO,
+                LINK
+            ) VALUES (
+                 #{tripDayId,  jdbcType=VARCHAR},
+                 #{memberId,   jdbcType=VARCHAR},
+                 #{indexSort,  jdbcType=INTEGER},
+                 #{startTime,  jdbcType=VARCHAR},
+                 #{endTime,    jdbcType=VARCHAR},
+                 #{bookmarkId, jdbcType=VARCHAR},
+                 #{context,    jdbcType=VARCHAR},
+                 #{category,   jdbcType=VARCHAR},
+                 #{price,      jdbcType=INTEGER},
+                 #{memo,       jdbcType=VARCHAR},
+                 #{link,       jdbcType=VARCHAR}
+                )
+                RETURNING TRIP_SCHEDULE_ID
+            INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR};
+        END;
+    </insert>
+
     <!--  여행 스케줄 전체(여행 일자 ID 기준) 조회  -->
     <select id="readTripSchedulesByTripDayId">
         SELECT  TRIP_SCHEDULE_ID    as "tripScheduleId",
@@ -227,7 +260,7 @@
             <if test="bookmarkId != null"> BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
             <if test="context != null">    CONTEXT      = #{context,    jdbcType=VARCHAR},</if>
             <if test="category != null">   CATEGORY     = #{category,   jdbcType=VARCHAR},</if>
-            <if test="price != 0">      PRICE        = #{price,      jdbcType=INTEGER},</if>
+            <if test="price != 0">         PRICE        = #{price,      jdbcType=INTEGER},</if>
             <if test="memo != null">       MEMO         = #{memo,       jdbcType=VARCHAR},</if>
             <if test="link != null">       LINK         = #{link,       jdbcType=VARCHAR}</if>
         </set>

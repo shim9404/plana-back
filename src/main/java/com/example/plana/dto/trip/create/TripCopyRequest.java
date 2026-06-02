@@ -1,6 +1,6 @@
-package com.example.plana.dto.trip.update;
+package com.example.plana.dto.trip.create;
 
-import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
+import com.example.plana.dto.bookmark.create.BookmarkCopyRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,12 +12,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripUpdateRequest {
+public class TripCopyRequest {
     private String memberId;
     private String name;
     private String startDate;
     private String endDate;
     private String regionId;
-    private int entryCount;
-    private List<TripDayUpdateRequest> days;
+    private List<BookmarkCopyRequest> bookmarks;
+    private List<TripDayCopyRequest> days;
 }
