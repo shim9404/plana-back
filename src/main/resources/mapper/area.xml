@@ -106,44 +106,46 @@
     <!--  장소 단일 호출 : 북마크 표시 용도  -->
     <select id="readAreaForBookmark" resultType="com.example.plana.model.Area">
         SELECT  REGION_ID as "regionId",
-                SEARCH_TYPE as "searchType",
-                NAME as "name",
-                MAP_X as "mapX",
-                MAP_Y as "mapY",
-                CATEGORY as "category",
-                ADDRESS as "address",
-                ROAD_ADDRESS as "roadAddress",
-                LINK as "link",
-                TELEPHONE as "telephone"
+        SEARCH_TYPE as "searchType",
+        NAME as "name",
+        MAP_X as "mapX",
+        MAP_Y as "mapY",
+        CATEGORY as "category",
+        ADDRESS as "address",
+        ROAD_ADDRESS as "roadAddress",
+        LINK as "link",
+        TELEPHONE as "telephone"
         FROM AREA
         WHERE AREA_ID = #{areaId, jdbcType=VARCHAR}
     </select>
 
     <!--  신규 근처 장소 등록 : 북마크 신규 등록 용도  -->
-    <insert id="createArea" statementType="CALLABLE">
-        BEGIN
-            INSERT INTO AREA (
-                SEARCH_TYPE, REGION_ID, PLACE_ID, NAME, CATEGORY,
-                MAP_X, MAP_Y, ADDRESS, ROAD_ADDRESS, LINK, TELEPHONE, DESCRIPTION,
-                BOOKMARK_COUNT
-            ) VALUES (
-                'PLACE',
-                #{regionId,     jdbcType=VARCHAR},
-                #{placeId,      jdbcType=VARCHAR},
-                #{name,         jdbcType=VARCHAR},
-                #{category,     jdbcType=VARCHAR},
-                #{mapX,         jdbcType=VARCHAR},
-                #{mapY,         jdbcType=VARCHAR},
-                #{address,      jdbcType=VARCHAR},
-                #{roadAddress,  jdbcType=VARCHAR},
-                #{link,         jdbcType=VARCHAR},
-                #{telephone,    jdbcType=VARCHAR},
-                #{description,  jdbcType=VARCHAR},
-                1
-            )
-            RETURNING AREA_ID INTO #{areaId, mode=OUT, jdbcType=VARCHAR};
-        END;
+    <insert id="createArea" parameterType="map">
+        <selectKey keyProperty="areaId" resultType="string" order="BEFORE">
+            SELECT GENERATE_PK('A', 'SEQ_AREA')
+        </selectKey>
+        INSERT INTO AREA (
+        AREA_ID, SEARCH_TYPE, REGION_ID, PLACE_ID, NAME, CATEGORY,
+        MAP_X, MAP_Y, ADDRESS, ROAD_ADDRESS, LINK, TELEPHONE, DESCRIPTION,
+        BOOKMARK_COUNT
+        ) VALUES (
+        #{areaId,       jdbcType=VARCHAR},
+        'PLACE',
+        #{regionId,     jdbcType=VARCHAR},
+        #{placeId,      jdbcType=VARCHAR},
+        #{name,         jdbcType=VARCHAR},
+        #{category,     jdbcType=VARCHAR},
+        #{mapX,         jdbcType=VARCHAR},
+        #{mapY,         jdbcType=VARCHAR},
+        #{address,      jdbcType=VARCHAR},
+        #{roadAddress,  jdbcType=VARCHAR},
+        #{link,         jdbcType=VARCHAR},
+        #{telephone,    jdbcType=VARCHAR},
+        #{description,  jdbcType=VARCHAR},
+        1
+        )
     </insert>
+
     <select id="readAreaIdByPlaceId" resultType="string">
         SELECT AREA_ID
         FROM AREA

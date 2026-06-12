@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MemberSave {
+    private String memberId;
     private String email;
     private String password;
     private String name;

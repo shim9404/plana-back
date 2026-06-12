@@ -6,12 +6,10 @@
 
     <!--
         이메일 기준으로 가장 최근 인증 정보 1건 조회
-        Oracle 11g는 LIMIT 문법이 없으므로
-        정렬한 후 바깥에서 ROWNUM = 1 처리
     -->
     <select id="findTopByEmailOrderByCreatedAtDesc" parameterType="string" resultType="com.example.plana.model.EmailVerification">
         SELECT *
-        FROM  PLANA_ADMIN.EMAIL_VERIFICATION
+        FROM  EMAIL_VERIFICATION
         WHERE EMAIL = #{email}
         ORDER BY CREATED_AT DESC
         FETCH FIRST 1 ROWS ONLY
@@ -19,11 +17,15 @@
 
     <!--
         이메일 인증 정보 신규 저장
-        - Oracle 11g 에서는 ID를 시퀀스 + 트리거로 자동 채번
+        - PostgreSQL: GENERATE_PK 함수로 ID 채번
     -->
     <insert id="insertEmailVerification"
             parameterType="com.example.plana.model.EmailVerification">
+        <selectKey keyProperty="id" resultType="string" order="BEFORE">
+            SELECT GENERATE_PK('EV', 'SEQ_EMAIL_VERIFICATION')
+        </selectKey>
         INSERT INTO EMAIL_VERIFICATION (
+        ID,
         EMAIL,
         AUTH_CODE,
         VERIFIED,
@@ -31,6 +33,7 @@
         CREATED_AT,
         VERIFIED_AT
         ) VALUES (
+        #{id},
         #{email},
         #{authCode},
         #{verified},
