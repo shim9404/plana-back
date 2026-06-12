@@ -3,17 +3,16 @@ package com.example.plana.service;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
+import com.example.plana.dto.bookmark.create.BookmarkCopyRequest;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.dto.common.StatusUpdateRequest;
-import com.example.plana.dto.trip.create.TripCreateRequest;
-import com.example.plana.dto.trip.create.TripCreateResponse;
-import com.example.plana.dto.trip.create.TripDayCreateResponse;
-import com.example.plana.dto.trip.create.TripScheduleCreateResponse;
+import com.example.plana.dto.trip.create.*;
 import com.example.plana.dto.trip.read.TripDayResponse;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.read.TripScheduleResponse;
 import com.example.plana.dto.trip.update.*;
+import com.example.plana.mapper.BookmarkMapper;
 import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -28,6 +27,7 @@ import java.util.*;
 public class TripService {
     private final TripMapper tripMapper;
     private final BookmarkService bookmarkService;
+    private final BookmarkMapper bookmarkMapper;
 
 
     /**
@@ -67,7 +67,6 @@ public class TripService {
         try {
             tripMapper.createTrip(tripParams);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
         }
         String tripId = (String) tripParams.get("tripId");
@@ -112,7 +111,6 @@ public class TripService {
         try {
             trip = tripMapper.readTrip(tripId);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
         }
 
@@ -148,55 +146,70 @@ public class TripService {
     }
 
     /**
-     * 여행 전체 저장
-     * 작동 시나리오 : 네트워크 에러 등의 사유로 편집 시 자동 저장이 이루어지지 않았을 경우, 저장 시점에 기존 데이터를 전부 삭제한 뒤 재생성한다.
-     * // @Transactional : 여행 정보 갱신 - 여행 일자 및 스케줄 삭제(delete) - 여행 일자 및 스케줄 재생성(insert)을 하나의 트랜잭션으로
+     * 여행 복제하여 내 여행으로 저장
+     * // @Transactional : 여행 신규 복사(insert) - 여행 북마크 복사(insert) - 여행 일자 및 스케줄 복사(insert)을 하나의 트랜잭션으로
      * @param tripId String
      * @param memberId 사용자 ID
-     * @param request TripUpdateRequest
-     * @return TripUpdateResponse
+     * @param request TripCopyRequest
+     * @return TripCopyResponse
      */
     @Transactional
-    public TripUpdateResponse saveTrip(String tripId, String memberId, TripUpdateRequest request) {
-        validateTripOwner(tripId, memberId);
+    public TripCopyResponse copyTrip(String tripId, String memberId, TripCopyRequest request) {
+        // TODO: tripId에 해당하는 여행이 복제 가능하도록 Public Open 상태인지 체크하는 로직 필요
+//        validateTripOwner(tripId, memberId);
 
-        // 1. TRIP UPDATE
+        // 1. TRIP INSERT - 복제할 여행 정보로 신규 여행 생성
         Map<String, Object> tripParams = new HashMap<>();
-        tripParams.put("tripId",    tripId);
-        tripParams.put("memberId",  memberId);
-        tripParams.put("name",      checkName(request.getName(), "[네트워크 에러] 복구된 여행 계획"));
-        tripParams.put("startDate", DateUtils.checkDate(request.getStartDate()));
-        tripParams.put("endDate",   DateUtils.checkDate(request.getEndDate()));
-        tripParams.put("regionId",  request.getRegionId());
-        tripParams.put("entryCount", request.getEntryCount());
-        log.info(request);
+        tripParams.put("memberId", request.getMemberId());
+        tripParams.put("name", request.getName());
+        tripParams.put("startDate", request.getStartDate());
+        tripParams.put("endDate", request.getEndDate());
+        tripParams.put("regionId", request.getRegionId());
+        tripParams.put("tripId", null);  // OUT : Insert 요청 후, 트리거로 생성된 tripId의 반환값을 담아야 함
 
         try {
-            tripMapper.updateTrip(tripParams);
+            tripMapper.createTrip(tripParams);
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
+            throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
+        }
+        String createdTripId = (String) tripParams.get("tripId");
+
+        // 신규 등록된 북마크와 스케줄 link 작업용
+        Map<String, String> bookmarkMatchs = new HashMap<>();
+
+        // 2. BOOKMARK INSERT
+        List<BookmarkResponse> bookmarks = new ArrayList<>();
+        for (BookmarkCopyRequest bookmark: request.getBookmarks()) {
+            Map<String, Object> bookmarkParam = new HashMap<>();
+            bookmarkParam.put("tripId", createdTripId);
+            bookmarkParam.put("memberId", memberId);
+            bookmarkParam.put("bookmarkType", bookmark.getBookmarkType());
+            bookmarkParam.put("areaId", bookmark.getAreaId());
+            bookmarkParam.put("bookmarkId", null);  // OUT
+
+            try {
+                bookmarkMapper.createBookmark(bookmarkParam);
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.TRIP_BOOKMARK_CREATE_FAILED);
+            }
+            String bookmarkId = (String) bookmarkParam.get("bookmarkId");
+            bookmarks.add(BookmarkResponse.builder()
+                            .bookmarkId(bookmarkId)
+                            .bookmarkType(bookmark.getBookmarkType())
+                            .areaId(bookmark.getAreaId())
+                            .build());
+
+            // 신규 등록된 북마크와 스케줄 link 작업용
+            bookmarkMatchs.put(bookmark.getBookmarkId(), bookmarkId);
         }
 
+        // 3. TRIP_DAY + TRIP_SCHEDULE 복사된 데이터로 삽입
+        List<TripDayCreateResponse> dayList = new ArrayList<>();
 
-        // 2. 기존 하위 데이터 전체 삭제 (자식 먼저) : DELETE 사용
-        try {   // 스케줄 삭제
-            tripMapper.deleteTripSchedulesByTripId(tripId);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_SCHEDULE_DELETE_FAILED);
-        }
-        try {   // 일자 삭제
-            tripMapper.deleteTripDaysByTripId(tripId);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
-        }
-
-        // 3. TRIP_DAY + TRIP_SCHEDULE 재삽입 : CREATE 사용
-        List<TripDayUpdateResponse> dayList = new ArrayList<>();
-
-        for (TripDayUpdateRequest dayRequest : request.getDays()) {
+        for (TripDayCopyRequest dayRequest : request.getDays()) {
 
             Map<String, Object> dayParams = new HashMap<>();
-            dayParams.put("tripId",     tripId);
+            dayParams.put("tripId",     createdTripId);
             dayParams.put("memberId",   memberId);
             dayParams.put("indexSort",  dayRequest.getIndexSort());
             dayParams.put("tripDayId",  null);
@@ -208,9 +221,9 @@ public class TripService {
             }
             String tripDayId = (String) dayParams.get("tripDayId");
 
-            List<TripScheduleUpdateResponse> scheduleList = new ArrayList<>();
+            List<TripScheduleCreateResponse> scheduleList = new ArrayList<>();
 
-            for (TripScheduleUpdateRequest scheduleRequest
+            for (TripScheduleCopyRequest scheduleRequest
                     : dayRequest.getSchedules()) {
 
                 Map<String, Object> scheduleParams = new HashMap<>();
@@ -219,7 +232,7 @@ public class TripService {
                 scheduleParams.put("indexSort",     scheduleRequest.getIndexSort());
                 scheduleParams.put("startTime",     scheduleRequest.getStartTime());
                 scheduleParams.put("endTime",       scheduleRequest.getEndTime());
-                scheduleParams.put("bookmarkId",    scheduleRequest.getBookmarkId());
+                scheduleParams.put("bookmarkId",    bookmarkMatchs.get(scheduleRequest.getBookmarkId()));   // 신규 등록된 북마크와 스케줄 link 매치
                 scheduleParams.put("context",       scheduleRequest.getContext());
                 scheduleParams.put("category",      scheduleRequest.getCategory());
                 scheduleParams.put("price",         scheduleRequest.getPrice());
@@ -228,13 +241,13 @@ public class TripService {
                 scheduleParams.put("tripScheduleId", null);
 
                 try {
-                    tripMapper.createTripSchedule(scheduleParams);
+                    tripMapper.copyTripSchedule(scheduleParams);
                 } catch (Exception e) {
                     throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
                 }
                 String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
 
-                scheduleList.add(TripScheduleUpdateResponse.builder()
+                scheduleList.add(TripScheduleCreateResponse.builder()
                         .tripScheduleId(tripScheduleId)
                         .tripDayId(tripDayId)
                         .indexSort(scheduleRequest.getIndexSort())
@@ -248,31 +261,17 @@ public class TripService {
                         .build());
             }
 
-            dayList.add(TripDayUpdateResponse.builder()
+            dayList.add(TripDayCreateResponse.builder()
                     .tripDayId(tripDayId)
                     .indexSort(dayRequest.getIndexSort())
                     .schedules(scheduleList)
                     .build());
         }
 
-        // 4. BOOKMARK SELECT
-        List<BookmarkResponse> bookmarks = bookmarkService.readBookmarksByTripId(tripId);
-
-
-        // 5. activeDayCount (활성화 시킬 일자 수)
-        int diffDay = DateUtils.getDiffDay(tripParams.get("startDate").toString(),
-                tripParams.get("endDate").toString());
-
-        return TripUpdateResponse.builder()
-                .tripId(tripId)
+        // 복제 성공 시 확인용 이름과 즉시 편집 요청을 위한 ID 반환
+        return TripCopyResponse.builder()
+                .tripId(createdTripId)
                 .name((String) tripParams.get("name"))
-                .startDate((String) tripParams.get("startDate"))
-                .endDate((String) tripParams.get("endDate"))
-                .activeDayCount(diffDay)
-                .regionId((String) tripParams.get("regionId"))
-                .entryCount((Integer) tripParams.get("entryCount"))
-                .bookmarks(bookmarks)
-                .days(dayList)
                 .build();
     }
 

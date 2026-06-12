@@ -1,6 +1,6 @@
-package com.example.plana.dto.trip.read;
+package com.example.plana.dto.trip.create;
 
-import com.example.plana.dto.bookmark.read.BookmarkResponse;
+import com.example.plana.dto.bookmark.create.BookmarkCopyRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,11 +13,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "여행 조회 응답")
-public class TripResponse {
-    @Schema(description = "여행 ID", example = "T100")
-    private String tripId;
-    @Schema(description = "여행 소유자 ID", example = "M24")
+@Schema(description = "여행 복사 요청")
+public class TripCopyRequest {
+    @Schema(description = "회원 고유 ID", example = "M24")
     private String memberId;
     @Schema(description = "여행명", example = "세종 여행 계획")
     private String name;
@@ -27,10 +25,6 @@ public class TripResponse {
     private String endDate;
     @Schema(description = "여행 지역 코드", example = "29000")
     private String regionId;
-    @Schema(description = "참여 인원", example = "4")
-    private int entryCount;
-    @Schema(description = "여행 기간(활성화 일자 수)", example = "2")
-    private int activeDayCount;
-    private List<BookmarkResponse> bookmarks;
-    private List<TripDayResponse> days;
+    private List<BookmarkCopyRequest> bookmarks;
+    private List<TripDayCopyRequest> days;
 }

@@ -1,277 +1,292 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.plana.mapper.TripMapper">
 
-    <!-- === [ TRIP ]  ====================================================================================== -->
-    <!-- 여행 신규 생성 -->
-    <insert id="createTrip" statementType="CALLABLE">
-        BEGIN
-            INSERT INTO TRIP (
-                MEMBER_ID, NAME, START_DATE, END_DATE, REGION_ID
-            ) VALUES (
-                #{memberId,  jdbcType=VARCHAR},
-                #{name,      jdbcType=VARCHAR},
-                #{startDate, jdbcType=VARCHAR},
-                #{endDate,   jdbcType=VARCHAR},
-                #{regionId,  jdbcType=VARCHAR}
-            )
-            RETURNING TRIP_ID INTO #{tripId, mode=OUT, jdbcType=VARCHAR};
-        END;
+    <insert id="createTrip" parameterType="map">
+        <selectKey keyProperty="tripId" resultType="string" order="BEFORE">
+            SELECT GENERATE_PK('T', 'SEQ_TRIP')
+        </selectKey>
+        INSERT INTO TRIP (
+            TRIP_ID,
+            MEMBER_ID,
+            NAME,
+            START_DATE,
+            END_DATE,
+            REGION_ID
+        ) VALUES (
+            #{tripId,    jdbcType=VARCHAR},
+            #{memberId,  jdbcType=VARCHAR},
+            #{name,      jdbcType=VARCHAR},
+            #{startDate, jdbcType=VARCHAR},
+            #{endDate,   jdbcType=VARCHAR},
+            #{regionId,  jdbcType=VARCHAR}
+        )
     </insert>
 
-    <!--  여행 정보 조회  -->
     <select id="readTrip" resultType="com.example.plana.dto.trip.read.TripResponse">
-        SELECT  TRIP_ID as "tripId",
-                MEMBER_ID as "memberId",
-                NAME as "name",
-                START_DATE as "startDate",
-                END_DATE as "endDate",
-                REGION_ID as "regionId",
-                ENTRY_COUNT as "entryCount"
+        SELECT
+            TRIP_ID     as "tripId",
+            MEMBER_ID   as "memberId",
+            NAME        as "name",
+            START_DATE  as "startDate",
+            END_DATE    as "endDate",
+            REGION_ID   as "regionId",
+            ENTRY_COUNT as "entryCount"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
-    <!--  여행 소유자 확인  -->
     <select id="readTripOwner" resultType="String">
         SELECT MEMBER_ID as "memberId"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
-    <!--  여행 일자 존재 확인  -->
     <select id="existTripDay" resultType="boolean">
         SELECT COUNT(1)
         FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </select>
 
-    <!--  여행 정보 갱신 : 일부 변경 사항 반영  -->
     <update id="updateTrip">
         UPDATE TRIP
         <set>
-            <if test="name       != null">      NAME        = #{name,       jdbcType=VARCHAR},</if>
-            <if test="entryCount != 0">         ENTRY_COUNT = #{entryCount, jdbcType=INTEGER},</if>
-            <if test="startDate  != null">      START_DATE  = #{startDate,  jdbcType=VARCHAR},</if>
-            <if test="endDate    != null">      END_DATE    = #{endDate,    jdbcType=VARCHAR}, </if>
-            <if test="regionId    != null">     REGION_ID   = #{regionId,   jdbcType=VARCHAR} </if>
+            <if test="name != null">        NAME        = #{name,       jdbcType=VARCHAR},</if>
+            <if test="entryCount != 0">     ENTRY_COUNT = #{entryCount, jdbcType=INTEGER},</if>
+            <if test="startDate != null">   START_DATE  = #{startDate,  jdbcType=VARCHAR},</if>
+            <if test="endDate != null">     END_DATE    = #{endDate,    jdbcType=VARCHAR},</if>
+            <if test="regionId != null">    REGION_ID   = #{regionId,   jdbcType=VARCHAR}</if>
         </set>
-        WHERE TRIP_ID = #{tripId,       jdbcType=VARCHAR}
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
-    <!--  여행 상태 갱신  -->
     <update id="updateTripStatus">
         UPDATE TRIP
         SET STATUS = #{status, jdbcType=VARCHAR}
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
-    <!--  여행 삭제  -->
     <delete id="deleteTrip">
-        DELETE TRIP
+        DELETE FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
-    <!-- === [ TRIP DAY ]  ================================================================================= -->
-    <!-- 신규 생성용 : 여행 일자 단건 INSERT -->
-    <insert id="createTripDay" statementType="CALLABLE">
-        BEGIN
-            INSERT INTO TRIP_DAY (
-                TRIP_ID,
-                MEMBER_ID,
-                INDEX_SORT
-            ) VALUES (
-                #{tripId,    jdbcType=VARCHAR},
-                #{memberId,  jdbcType=VARCHAR},
-                (
-                    SELECT NVL(MAX(INDEX_SORT), 0) + 1
-                    FROM TRIP_DAY
-                    WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
-                )
-            )
-            RETURNING TRIP_DAY_ID, INDEX_SORT
-            INTO #{tripDayId, mode=OUT, jdbcType=VARCHAR},
-                 #{indexSort, mode=OUT, jdbcType=INTEGER};
-        END;
+    <insert id="createTripDay" parameterType="map">
+        <selectKey keyProperty="tripDayId,indexSort" resultType="map" order="BEFORE">
+            SELECT
+                GENERATE_PK('TD', 'SEQ_TRIP_DAY') AS "tripDayId",
+                CAST(COALESCE(MAX(INDEX_SORT), 0) + 1 AS INTEGER) AS "indexSort"
+            FROM TRIP_DAY
+            WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+        </selectKey>
+        INSERT INTO TRIP_DAY (
+            TRIP_DAY_ID,
+            TRIP_ID,
+            MEMBER_ID,
+            INDEX_SORT
+        ) VALUES (
+            #{tripDayId,  jdbcType=VARCHAR},
+            #{tripId,     jdbcType=VARCHAR},
+            #{memberId,   jdbcType=VARCHAR},
+            #{indexSort,  jdbcType=INTEGER}
+        )
     </insert>
 
-    <!-- 여행 일자 전체 갱신용 : 정렬 순서 갱신 및 신규 추가 MERGE -->
     <insert id="updateTripDays">
-        MERGE INTO TRIP_DAY target
-        USING (
-        <foreach collection="days" item="day" separator=" UNION ALL ">
-            SELECT #{day.tripDayId, jdbcType=VARCHAR} AS TRIP_DAY_ID,
-            #{tripId,        jdbcType=VARCHAR} AS TRIP_ID,
-            #{memberId,      jdbcType=VARCHAR} AS MEMBER_ID,
-            #{day.indexSort, jdbcType=INTEGER} AS INDEX_SORT
-            FROM DUAL
+        INSERT INTO TRIP_DAY (
+            TRIP_DAY_ID,
+            TRIP_ID,
+            MEMBER_ID,
+            INDEX_SORT
+        ) VALUES
+        <foreach collection="days" item="day" separator=",">
+            (
+                COALESCE(#{day.tripDayId, jdbcType=VARCHAR}, GENERATE_PK('TD', 'SEQ_TRIP_DAY')),
+                #{tripId,        jdbcType=VARCHAR},
+                #{memberId,      jdbcType=VARCHAR},
+                #{day.indexSort, jdbcType=INTEGER}
+            )
         </foreach>
-        ) source
-        ON (target.TRIP_DAY_ID = source.TRIP_DAY_ID)
-        WHEN MATCHED THEN
-        UPDATE SET target.INDEX_SORT = source.INDEX_SORT
-        WHEN NOT MATCHED THEN
-        INSERT (TRIP_ID, INDEX_SORT)
-        VALUES (source.TRIP_ID, source.INDEX_SORT)
+        ON CONFLICT (TRIP_DAY_ID)
+        DO UPDATE SET INDEX_SORT = EXCLUDED.INDEX_SORT
     </insert>
 
-    <!--  여행 일자 전체(여행ID 기준) 조회  -->
     <select id="readTripDaysByTripId" resultType="com.example.plana.dto.trip.read.TripDayResponse">
-        SELECT  TRIP_DAY_ID as "tripDayId",
-                INDEX_SORT  as "indexSort"
+        SELECT
+            TRIP_DAY_ID as "tripDayId",
+            INDEX_SORT  as "indexSort"
         FROM TRIP_DAY
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
         ORDER BY INDEX_SORT
     </select>
 
-    <!--  여행 일자 index sort 조회  -->
     <select id="readTripDayIndexSort" resultType="Integer">
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </select>
 
-    <!-- 현재 TRIP_DAY 수 조회 -->
     <select id="countTripDays" resultType="int">
         SELECT COUNT(*)
         FROM TRIP_DAY
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
-    <!--  여행 일자 정렬 순서 전체 갱신  -->
     <update id="updateTripDaysIndexSort">
         UPDATE TRIP_DAY
         SET INDEX_SORT = #{indexSort, jdbcType=INTEGER}
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
-            AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
+          AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
-    <!--  여행 내 모든 일자 상태 갱신  -->
     <update id="updateTripDaysStatus">
         UPDATE TRIP_DAY
         SET STATUS = #{status, jdbcType=VARCHAR}
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
-    <!--  여행의 일자 전체 삭제  -->
     <delete id="deleteTripDaysByTripId">
         DELETE FROM TRIP_DAY
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
-    <!--  여행 일자 단건 삭제  -->
     <delete id="deleteTripDay">
         DELETE FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
-        AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
+          AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
-    <!--  여행 일자 단건 삭제 이후 SORT ORDER 재정렬  -->
     <update id="updateTripDaysIndexSortAfterDelete">
         UPDATE TRIP_DAY
         SET INDEX_SORT = INDEX_SORT - 1
         WHERE TRIP_ID = #{tripId,  jdbcType=VARCHAR}
-            AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
+          AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
     </update>
 
-    <!-- === [ TRIP SCHEDULE ]  =========================================================================== -->
-    <!-- 신규 생성용 : 여행 스케줄 단건 INSERT -->
-    <insert id="createTripSchedule" statementType="CALLABLE">
-        BEGIN
-            INSERT INTO TRIP_SCHEDULE (
-                TRIP_DAY_ID,
-                MEMBER_ID,
-                INDEX_SORT
-            ) VALUES (
-                #{tripDayId, jdbcType=VARCHAR},
-                #{memberId,  jdbcType=VARCHAR},
-                (
-                    SELECT NVL(MAX(INDEX_SORT), 0) + 1
-                    FROM TRIP_SCHEDULE
-                    WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
-                )
-            )
-            RETURNING TRIP_SCHEDULE_ID, INDEX_SORT
-            INTO #{tripScheduleId, mode=OUT, jdbcType=VARCHAR},
-                 #{indexSort,      mode=OUT, jdbcType=INTEGER};
-        END;
+    <insert id="createTripSchedule" parameterType="map">
+        <selectKey keyProperty="tripScheduleId,indexSort" resultType="map" order="BEFORE">
+            SELECT
+                GENERATE_PK('TS', 'SEQ_TRIP_SCHEDULE') AS "tripScheduleId",
+                CAST(COALESCE(MAX(INDEX_SORT), 0) + 1 AS INTEGER) AS "indexSort"
+            FROM TRIP_SCHEDULE
+            WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
+        </selectKey>
+        INSERT INTO TRIP_SCHEDULE (
+            TRIP_SCHEDULE_ID,
+            TRIP_DAY_ID,
+            MEMBER_ID,
+            INDEX_SORT
+        ) VALUES (
+            #{tripScheduleId, jdbcType=VARCHAR},
+            #{tripDayId,      jdbcType=VARCHAR},
+            #{memberId,       jdbcType=VARCHAR},
+            #{indexSort,      jdbcType=INTEGER}
+        )
     </insert>
 
-    <!--  여행 스케줄 전체(여행 일자 ID 기준) 조회  -->
+    <insert id="copyTripSchedule" parameterType="map">
+        <selectKey keyProperty="tripScheduleId" resultType="string" order="BEFORE">
+            SELECT GENERATE_PK('TS', 'SEQ_TRIP_SCHEDULE')
+        </selectKey>
+        INSERT INTO TRIP_SCHEDULE (
+            TRIP_SCHEDULE_ID,
+            TRIP_DAY_ID,
+            MEMBER_ID,
+            INDEX_SORT,
+            START_TIME,
+            END_TIME,
+            BOOKMARK_ID,
+            CONTEXT,
+            CATEGORY,
+            PRICE,
+            MEMO,
+            LINK
+        ) VALUES (
+            #{tripScheduleId, jdbcType=VARCHAR},
+            #{tripDayId,      jdbcType=VARCHAR},
+            #{memberId,       jdbcType=VARCHAR},
+            #{indexSort,      jdbcType=INTEGER},
+            #{startTime,      jdbcType=VARCHAR},
+            #{endTime,        jdbcType=VARCHAR},
+            #{bookmarkId,     jdbcType=VARCHAR},
+            #{context,        jdbcType=VARCHAR},
+            #{category,       jdbcType=VARCHAR},
+            #{price,          jdbcType=INTEGER},
+            #{memo,           jdbcType=VARCHAR},
+            #{link,           jdbcType=VARCHAR}
+        )
+    </insert>
+
     <select id="readTripSchedulesByTripDayId">
-        SELECT  TRIP_SCHEDULE_ID    as "tripScheduleId",
-                MEMBER_ID           as "memberId",
-                INDEX_SORT          as "indexSort",
-                START_TIME          as "startTime",
-                END_TIME            as "endTime",
-                BOOKMARK_ID         as "bookmarkId",
-                CONTEXT             as "context",
-                CATEGORY            as "category",
-                PRICE               as "price",
-                MEMO                as "memo",
-                LINK                as "link"
+        SELECT
+            TRIP_SCHEDULE_ID as "tripScheduleId",
+            MEMBER_ID        as "memberId",
+            INDEX_SORT       as "indexSort",
+            START_TIME       as "startTime",
+            END_TIME         as "endTime",
+            BOOKMARK_ID      as "bookmarkId",
+            CONTEXT          as "context",
+            CATEGORY         as "category",
+            PRICE            as "price",
+            MEMO             as "memo",
+            LINK             as "link"
         FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
         ORDER BY INDEX_SORT
     </select>
 
-    <!--  여행 스케줄 수정(갱신)  -->
     <update id="updateTripSchedule">
         UPDATE TRIP_SCHEDULE
         <set>
-            <if test="tripDayId != null">  TRIP_DAY_ID  = #{tripDayId,  jdbcType=VARCHAR},</if>
-            <if test="memberId != null">   MEMBER_ID    = #{memberId,   jdbcType=VARCHAR},</if>
-            <if test="startTime != null">  START_TIME   = #{startTime,  jdbcType=VARCHAR},</if>
-            <if test="endTime != null">    END_TIME     = #{endTime,    jdbcType=VARCHAR},</if>
-            <if test="bookmarkId != null"> BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
-            <if test="context != null">    CONTEXT      = #{context,    jdbcType=VARCHAR},</if>
-            <if test="category != null">   CATEGORY     = #{category,   jdbcType=VARCHAR},</if>
-            <if test="price != 0">      PRICE        = #{price,      jdbcType=INTEGER},</if>
-            <if test="memo != null">       MEMO         = #{memo,       jdbcType=VARCHAR},</if>
-            <if test="link != null">       LINK         = #{link,       jdbcType=VARCHAR}</if>
+            <if test="tripDayId != null">   TRIP_DAY_ID  = #{tripDayId,  jdbcType=VARCHAR},</if>
+            <if test="memberId != null">    MEMBER_ID    = #{memberId,   jdbcType=VARCHAR},</if>
+            <if test="startTime != null">   START_TIME   = #{startTime,  jdbcType=VARCHAR},</if>
+            <if test="endTime != null">     END_TIME     = #{endTime,    jdbcType=VARCHAR},</if>
+            <if test="bookmarkId != null">  BOOKMARK_ID  = #{bookmarkId, jdbcType=VARCHAR},</if>
+            <if test="context != null">     CONTEXT      = #{context,    jdbcType=VARCHAR},</if>
+            <if test="category != null">    CATEGORY     = #{category,   jdbcType=VARCHAR},</if>
+            <if test="price != 0">          PRICE        = #{price,      jdbcType=INTEGER},</if>
+            <if test="memo != null">        MEMO         = #{memo,       jdbcType=VARCHAR},</if>
+            <if test="link != null">        LINK         = #{link,       jdbcType=VARCHAR}</if>
         </set>
-        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId,       jdbcType=VARCHAR}
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </update>
 
-    <!--  여행 스케줄 단건 삭제  -->
     <delete id="deleteTripSchedule">
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </delete>
 
-    <!--  여행 스케줄 단건 삭제 이후 SORT ORDER 재정렬  -->
     <update id="updateTripSchedulesIndexSortAfterDelete">
         UPDATE TRIP_SCHEDULE
         SET INDEX_SORT = INDEX_SORT - 1
         WHERE TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR}
-            AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
+          AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
     </update>
 
-    <!--  여행 스케줄(단건) IndexSort 값 조회  -->
     <select id="readTripScheduleIndexSort" resultType="Integer">
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_SCHEDULE
-        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId,  jdbcType=VARCHAR}
+        WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </select>
 
-    <!--  여행 스케줄 SORT ORDER 재정렬 후 ID 및 IndexSort 조회 -->
     <select id="readTripSchedulesIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
-        SELECT TRIP_SCHEDULE_ID as "tripScheduleId",MEMBER_ID as "memberId", INDEX_SORT as "indexSort"
+        SELECT
+            TRIP_SCHEDULE_ID as "tripScheduleId",
+            MEMBER_ID        as "memberId",
+            INDEX_SORT       as "indexSort"
         FROM TRIP_SCHEDULE
-        WHERE TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR}
+        WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
         ORDER BY INDEX_SORT
     </select>
 
-    <!-- 스케줄 indexSort 직접 업데이트 -->
     <update id="updateTripScheduleIndexSort">
         UPDATE TRIP_SCHEDULE
         SET TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR},
-        INDEX_SORT  = #{indexSort,  jdbcType=INTEGER}
+            INDEX_SORT  = #{indexSort,  jdbcType=INTEGER}
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </update>
 
-    <!--  여행 내 모든 스케줄 상태 갱신  -->
     <update id="updateTripSchedulesStatus">
         UPDATE TRIP_SCHEDULE
         SET STATUS = #{status, jdbcType=VARCHAR}
@@ -282,7 +297,6 @@
         )
     </update>
 
-    <!--  여행의 스케줄 전체 삭제  -->
     <delete id="deleteTripSchedulesByTripId">
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID IN (
@@ -292,9 +306,9 @@
         )
     </delete>
 
-    <!--  여행 일자의 스케줄 전체 삭제  -->
     <delete id="deleteTripSchedulesByTripDayId">
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
+
 </mapper>

@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class EmailVerification {
 
     // PK
-    private Long id;
+    private String id;
 
     // 인증 대상 이메일
     private String email;
@@ -59,7 +59,7 @@ public class EmailVerification {
      * MyBatis 조회 결과를 수동 생성해야 할 때 사용할 수 있음
      */
     public EmailVerification(
-            Long id,
+            String id,
             String email,
             String authCode,
             String verified,
