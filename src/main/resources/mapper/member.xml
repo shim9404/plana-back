@@ -1,38 +1,58 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.example.plana.mapper.MemberMapper">
 
     <select id="existNickname" resultType="boolean">
         SELECT CASE
-        WHEN COUNT(*) > 0 THEN 1 ELSE 0
+            WHEN COUNT(*) > 0 THEN 1 ELSE 0
         END AS RESULT
         FROM MEMBER
         WHERE NICKNAME = #{nickname}
     </select>
 
     <select id="readMember" resultType="com.example.plana.dto.member.read.MemberReadResponse">
-        SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage
+        SELECT
+            MEMBER_ID     as "memberId",
+            EMAIL         as "email",
+            NAME          as "name",
+            NICKNAME      as "nickname",
+            PROFILE_IMAGE as "profileImage"
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}
     </select>
 
     <select id="readMemberByEmail" parameterType="string" resultType="com.example.plana.model.Member">
-        SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage, PASSWORD as password, ROLE as role
+        SELECT
+            MEMBER_ID     as "memberId",
+            EMAIL         as "email",
+            NAME          as "name",
+            NICKNAME      as "nickname",
+            PROFILE_IMAGE as "profileImage",
+            PASSWORD      as "password",
+            ROLE          as "role"
         FROM MEMBER
         WHERE EMAIL = #{email}
     </select>
+
     <select id="readMemberById" parameterType="string" resultType="com.example.plana.model.Member">
-        SELECT MEMBER_ID as memberId, EMAIL as email, NAME as name, NICKNAME as nickname, PROFILE_IMAGE as profileImage, PASSWORD as password, ROLE as role
+        SELECT
+            MEMBER_ID     as "memberId",
+            EMAIL         as "email",
+            NAME          as "name",
+            NICKNAME      as "nickname",
+            PROFILE_IMAGE as "profileImage",
+            PASSWORD      as "password",
+            ROLE          as "role"
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}
     </select>
+
     <update id="updateMember">
-        UPDATE member
+        UPDATE MEMBER
         <set>
-            <if test="data.nickname != null">NICKNAME = COALESCE(#{data.nickname}, NICKNAME),</if>
-            <if test="data.profileImage != null">PROFILE_IMAGE = COALESCE(#{data.profileImage}, PROFILE_IMAGE)</if>
+            <if test="data.nickname != null">    NICKNAME      = COALESCE(#{data.nickname}, NICKNAME),</if>
+            <if test="data.profileImage != null"> PROFILE_IMAGE = COALESCE(#{data.profileImage}, PROFILE_IMAGE)</if>
         </set>
         WHERE MEMBER_ID = #{memberId}
     </update>
@@ -50,133 +70,165 @@
     </update>
 
     <select id="checkMember" resultType="com.example.plana.model.MemberVerify">
-        SELECT EMAIL as email, NAME as name, PASSWORD as password
+        SELECT
+            EMAIL    as "email",
+            NAME     as "name",
+            PASSWORD as "password"
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}
     </select>
+
     <delete id="deleteOldMembers">
         DELETE FROM MEMBER
         WHERE STATUS = 'DELETED'
-        AND TO_TIMESTAMP(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; CURRENT_TIMESTAMP - INTERVAL '30 days'
+          AND TO_TIMESTAMP(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; CURRENT_TIMESTAMP - INTERVAL '30 days'
     </delete>
 
     <select id="readTripByMemberId" resultType="com.example.plana.dto.member.read.MemberTripResponse">
-        SELECT TRIP_ID as tripId, NAME as name, STATUS as status
+        SELECT
+            TRIP_ID as "tripId",
+            NAME    as "name",
+            STATUS  as "status"
         FROM TRIP
         WHERE MEMBER_ID = #{memberId}
-        ORDER BY TO_TIMESTAMP( COALESCE(LATEST_DATE, CREATE_DATE), 'YYYY-MM-DD HH24:MI:SS' ) DESC
+        ORDER BY TO_TIMESTAMP(COALESCE(LATEST_DATE, CREATE_DATE), 'YYYY-MM-DD HH24:MI:SS') DESC
     </select>
 
     <insert id="createMember" parameterType="com.example.plana.model.MemberSave">
         <selectKey keyProperty="member.memberId" resultType="string" order="BEFORE">
             SELECT GENERATE_PK('M', 'SEQ_MEMBER')
         </selectKey>
-        INSERT INTO MEMBER (member_id, email, password, name, nickname, role, social_type)
-        VALUES (#{member.memberId,jdbcType=VARCHAR}, #{member.email,jdbcType=VARCHAR}, #{member.password,jdbcType=VARCHAR}, #{member.name,jdbcType=VARCHAR}
-        , #{member.nickname, jdbcType=VARCHAR}, #{member.role,jdbcType=VARCHAR}, #{member.socialType,jdbcType=VARCHAR} )
+        INSERT INTO MEMBER (
+            MEMBER_ID,
+            EMAIL,
+            PASSWORD,
+            NAME,
+            NICKNAME,
+            ROLE,
+            SOCIAL_TYPE
+        ) VALUES (
+            #{member.memberId,   jdbcType=VARCHAR},
+            #{member.email,      jdbcType=VARCHAR},
+            #{member.password,   jdbcType=VARCHAR},
+            #{member.name,       jdbcType=VARCHAR},
+            #{member.nickname,   jdbcType=VARCHAR},
+            #{member.role,       jdbcType=VARCHAR},
+            #{member.socialType, jdbcType=VARCHAR}
+        )
     </insert>
 
-    <!-- 내 정보 · email 존재 여부) -->
     <select id="existsEmail" parameterType="string" resultType="boolean">
         SELECT COUNT(*) > 0
         FROM MEMBER
-        WHERE email = #{email}
+        WHERE EMAIL = #{email}
     </select>
 
     <select id="readTripTrash" resultType="com.example.plana.dto.member.read.MemberTripTrashResponse">
         SELECT
-        t.TRIP_ID as tripId, t.NAME as name, t.STATUS as status,
-        t.START_DATE as startDate, t.END_DATE as endDate, t.LATEST_DATE as latestDate,
-
-        CASE
-        WHEN t.STATUS = 'INACTIVE' THEN COUNT(DISTINCT ts.TRIP_SCHEDULE_ID)
-        ELSE 0
-        END as scheduleCount,
-
-        CASE
-        WHEN t.STATUS = 'INACTIVE' THEN COUNT(DISTINCT b.BOOKMARK_ID)
-        ELSE 0
-        END as bookmarkCount,
-
-        30 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(t.LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS'))) as remainDate
-
+            t.TRIP_ID      AS "tripId",
+            t.NAME         AS "name",
+            t.STATUS       AS "status",
+            t.START_DATE   AS "startDate",
+            t.END_DATE     AS "endDate",
+            t.LATEST_DATE  AS "latestDate",
+            CASE
+                WHEN t.STATUS = 'INACTIVE' THEN COUNT(DISTINCT ts.TRIP_SCHEDULE_ID)
+                ELSE 0
+            END            AS "scheduleCount",
+            CASE
+                WHEN t.STATUS = 'INACTIVE' THEN COUNT(DISTINCT b.BOOKMARK_ID)
+                ELSE 0
+            END            AS "bookmarkCount",
+            30 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(t.LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS'))) AS "remainDate"
         FROM TRIP t
-
         LEFT JOIN TRIP_DAY td
-        ON t.TRIP_ID = td.TRIP_ID
-
+            ON t.TRIP_ID = td.TRIP_ID
         LEFT JOIN TRIP_SCHEDULE ts
-        ON td.TRIP_DAY_ID = ts.TRIP_DAY_ID
-
-        LEFT JOIN bookmark b
-        ON t.TRIP_ID = b.TRIP_ID
-
-        WHERE t.Member_ID = #{memberId}
-        AND t.STATUS = 'INACTIVE'
-
-        GROUP BY t.TRIP_ID, t.NAME, t.STATUS, t.START_DATE, t.END_DATE, t.LATEST_DATE
+            ON td.TRIP_DAY_ID = ts.TRIP_DAY_ID
+        LEFT JOIN BOOKMARK b
+            ON t.TRIP_ID = b.TRIP_ID
+        WHERE t.MEMBER_ID = #{memberId}
+          AND t.STATUS = 'INACTIVE'
+        GROUP BY
+            t.TRIP_ID,
+            t.NAME,
+            t.STATUS,
+            t.START_DATE,
+            t.END_DATE,
+            t.LATEST_DATE
     </select>
 
     <delete id="deleteOldTrips">
         DELETE FROM TRIP
         WHERE STATUS = 'INACTIVE'
-        AND TO_TIMESTAMP(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; CURRENT_TIMESTAMP - INTERVAL '30 days'
+          AND TO_TIMESTAMP(LATEST_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; CURRENT_TIMESTAMP - INTERVAL '30 days'
     </delete>
 
-
     <select id="memberList" parameterType="map" resultType="map">
-        select member_id as "memberId", email as "email", password as "password", name as "name", nickname as "nickname"
-        , profile_image as "profileImage" , social_type as "socialType", role as "role", create_date as "createDate" , latest_date as "latestDate", status as "status"
-        from member
+        SELECT
+            MEMBER_ID     AS "memberId",
+            EMAIL         AS "email",
+            PASSWORD      AS "password",
+            NAME          AS "name",
+            NICKNAME      AS "nickname",
+            PROFILE_IMAGE AS "profileImage",
+            SOCIAL_TYPE   AS "socialType",
+            ROLE          AS "role",
+            CREATE_DATE   AS "createDate",
+            LATEST_DATE   AS "latestDate",
+            STATUS        AS "status"
+        FROM MEMBER
         <where>
             <if test="status != null and status != '' and status != 'all'">
-                and upper(trim(status)) = upper(trim(#{status}))
+                AND UPPER(TRIM(STATUS)) = UPPER(TRIM(#{status}))
             </if>
             <if test="role != null and role != '' and role != 'all'">
-                and role = #{role}
+                AND ROLE = #{role}
             </if>
             <if test="joinDateStart != null and joinDateStart != ''">
-                and create_date &gt;= #{joinDateStart}
+                AND CREATE_DATE &gt;= #{joinDateStart}
             </if>
             <if test="joinDateEnd != null and joinDateEnd != ''">
-                and create_date &lt;= #{joinDateEnd}
+                AND CREATE_DATE &lt;= #{joinDateEnd}
             </if>
             <if test="lastLoginStart != null and lastLoginStart != ''">
-                and latest_date is not null
-                and SUBSTR(latest_date, 1, 10) &gt;= #{lastLoginStart}
+                AND LATEST_DATE IS NOT NULL
+                AND SUBSTR(LATEST_DATE, 1, 10) &gt;= #{lastLoginStart}
             </if>
             <if test="lastLoginEnd != null and lastLoginEnd != ''">
-                and latest_date is not null
-                and SUBSTR(latest_date, 1, 10) &lt;= #{lastLoginEnd}
+                AND LATEST_DATE IS NOT NULL
+                AND SUBSTR(LATEST_DATE, 1, 10) &lt;= #{lastLoginEnd}
             </if>
             <if test="socialType != null and socialType != ''">
-                and upper(trim(social_type)) = upper(trim(#{socialType}))
+                AND UPPER(TRIM(SOCIAL_TYPE)) = UPPER(TRIM(#{socialType}))
             </if>
             <if test="keyword != null and keyword != '' and keywordField != null and keywordField != ''">
                 <choose>
                     <when test="keywordField == 'email'">
-                        and lower(email) like '%' || lower(#{keyword}) || '%'
+                        AND LOWER(EMAIL) LIKE '%' || LOWER(#{keyword}) || '%'
                     </when>
                     <when test="keywordField == 'name'">
-                        and lower(name) like '%' || lower(#{keyword}) || '%'
+                        AND LOWER(NAME) LIKE '%' || LOWER(#{keyword}) || '%'
                     </when>
                     <when test="keywordField == 'nickname'">
-                        and lower(nickname) like '%' || lower(#{keyword}) || '%'
+                        AND LOWER(NICKNAME) LIKE '%' || LOWER(#{keyword}) || '%'
                     </when>
                 </choose>
             </if>
         </where>
-        order by create_date desc nulls last
+        ORDER BY CREATE_DATE DESC NULLS LAST
     </select>
+
     <update id="updateMemberRole">
         UPDATE MEMBER
-        SET role = #{role}
-        WHERE member_id = #{memberId}
+        SET ROLE = #{role}
+        WHERE MEMBER_ID = #{memberId}
     </update>
 
     <update id="updateMemberStatus">
         UPDATE MEMBER
-        SET status = #{status}
-        WHERE member_id = #{memberId}
+        SET STATUS = #{status}
+        WHERE MEMBER_ID = #{memberId}
     </update>
+
 </mapper>
