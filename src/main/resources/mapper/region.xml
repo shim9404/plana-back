@@ -17,6 +17,9 @@
             STATUS      as "status"
         FROM REGION
         WHERE STATUS != 'DELETED'
+        ORDER BY
+            ZDO_NAME COLLATE &quot;ko-x-icu&quot; ASC,
+            CASE WHEN SIGU_NAME = '전체' THEN 0 ELSE 1 END ASC
     </select>
 
     <select id="checkRegionExists" resultType="int">

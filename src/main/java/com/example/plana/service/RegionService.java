@@ -11,10 +11,7 @@ import com.example.plana.model.Region;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -30,7 +27,7 @@ public class RegionService {
         // DB에서 지역 정보 불러오기
         List<Region> siguDatas = regionMapper.readRegion();
 
-        Map<Integer, ZdoResponse> regionMap = new HashMap<>();
+        Map<Integer, ZdoResponse> regionMap = new LinkedHashMap<>();
 
         for (Region siguData : siguDatas) {
             ZdoResponse zdo;
