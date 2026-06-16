@@ -2,6 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.plana.mapper.TripMapper">
 
+    <!-- === [ TRIP ]  ====================================================================================== -->
+    <!-- 여행 신규 생성 -->
     <insert id="createTrip" parameterType="map">
         <selectKey keyProperty="tripId" resultType="string" order="BEFORE">
             SELECT GENERATE_PK('T', 'SEQ_TRIP')
@@ -23,6 +25,7 @@
         )
     </insert>
 
+    <!--  여행 정보 조회  -->
     <select id="readTrip" resultType="com.example.plana.dto.trip.read.TripResponse">
         SELECT
             TRIP_ID     as "tripId",
@@ -36,18 +39,21 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 소유자 확인  -->
     <select id="readTripOwner" resultType="String">
         SELECT MEMBER_ID as "memberId"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 일자 존재 확인  -->
     <select id="existTripDay" resultType="boolean">
         SELECT COUNT(1)
         FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 정보 갱신 : 일부 변경 사항 반영  -->
     <update id="updateTrip">
         UPDATE TRIP
         <set>
@@ -60,17 +66,21 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 상태 갱신  -->
     <update id="updateTripStatus">
         UPDATE TRIP
         SET STATUS = #{status, jdbcType=VARCHAR}
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 삭제  -->
     <delete id="deleteTrip">
         DELETE FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
+    <!-- === [ TRIP DAY ]  ================================================================================= -->
+    <!-- 신규 생성용 : 여행 일자 단건 INSERT -->
     <insert id="createTripDay" parameterType="map">
         <selectKey keyProperty="tripDayId,indexSort" resultType="map" order="BEFORE">
             SELECT
@@ -92,6 +102,7 @@
         )
     </insert>
 
+    <!-- 여행 일자 전체 갱신용 : 정렬 순서 갱신 및 신규 추가 MERGE -->
     <insert id="updateTripDays">
         INSERT INTO TRIP_DAY (
             TRIP_DAY_ID,
@@ -111,6 +122,7 @@
         DO UPDATE SET INDEX_SORT = EXCLUDED.INDEX_SORT
     </insert>
 
+    <!--  여행 일자 전체(여행ID 기준) 조회  -->
     <select id="readTripDaysByTripId" resultType="com.example.plana.dto.trip.read.TripDayResponse">
         SELECT
             TRIP_DAY_ID as "tripDayId",
@@ -120,18 +132,21 @@
         ORDER BY INDEX_SORT
     </select>
 
+    <!--  여행 일자 index sort 조회  -->
     <select id="readTripDayIndexSort" resultType="Integer">
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </select>
 
+    <!-- 현재 TRIP_DAY 수 조회 -->
     <select id="countTripDays" resultType="int">
         SELECT COUNT(*)
         FROM TRIP_DAY
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 일자 정렬 순서 전체 갱신  -->
     <update id="updateTripDaysIndexSort">
         UPDATE TRIP_DAY
         SET INDEX_SORT = #{indexSort, jdbcType=INTEGER}
@@ -139,23 +154,27 @@
           AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 내 모든 일자 상태 갱신  -->
     <update id="updateTripDaysStatus">
         UPDATE TRIP_DAY
         SET STATUS = #{status, jdbcType=VARCHAR}
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행의 일자 전체 삭제  -->
     <delete id="deleteTripDaysByTripId">
         DELETE FROM TRIP_DAY
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
+    <!--  여행 일자 단건 삭제  -->
     <delete id="deleteTripDay">
         DELETE FROM TRIP_DAY
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
           AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
+    <!--  여행 일자 단건 삭제 이후 SORT ORDER 재정렬  -->
     <update id="updateTripDaysIndexSortAfterDelete">
         UPDATE TRIP_DAY
         SET INDEX_SORT = INDEX_SORT - 1
@@ -163,6 +182,8 @@
           AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
     </update>
 
+    <!-- === [ TRIP SCHEDULE ]  =========================================================================== -->
+    <!-- 신규 생성용 : 여행 스케줄 단건 INSERT -->
     <insert id="createTripSchedule" parameterType="map">
         <selectKey keyProperty="tripScheduleId,indexSort" resultType="map" order="BEFORE">
             SELECT
@@ -184,6 +205,7 @@
         )
     </insert>
 
+    <!-- 기존 데이터 복사용 : 여행 스케줄 단건 INSERT -->
     <insert id="copyTripSchedule" parameterType="map">
         <selectKey keyProperty="tripScheduleId" resultType="string" order="BEFORE">
             SELECT GENERATE_PK('TS', 'SEQ_TRIP_SCHEDULE')
@@ -217,6 +239,7 @@
         )
     </insert>
 
+    <!--  여행 스케줄 전체(여행 일자 ID 기준) 조회  -->
     <select id="readTripSchedulesByTripDayId">
         SELECT
             TRIP_SCHEDULE_ID as "tripScheduleId",
@@ -235,6 +258,7 @@
         ORDER BY INDEX_SORT
     </select>
 
+    <!--  여행 스케줄 수정(갱신)  -->
     <update id="updateTripSchedule">
         UPDATE TRIP_SCHEDULE
         <set>
@@ -252,11 +276,13 @@
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 스케줄 단건 삭제  -->
     <delete id="deleteTripSchedule">
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </delete>
 
+    <!--  여행 스케줄 단건 삭제 이후 SORT ORDER 재정렬  -->
     <update id="updateTripSchedulesIndexSortAfterDelete">
         UPDATE TRIP_SCHEDULE
         SET INDEX_SORT = INDEX_SORT - 1
@@ -264,12 +290,14 @@
           AND INDEX_SORT > #{indexSort,  jdbcType=INTEGER}
     </update>
 
+    <!--  여행 스케줄(단건) IndexSort 값 조회  -->
     <select id="readTripScheduleIndexSort" resultType="Integer">
         SELECT INDEX_SORT as "indexSort"
         FROM TRIP_SCHEDULE
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 스케줄 SORT ORDER 재정렬 후 ID 및 IndexSort 조회 -->
     <select id="readTripSchedulesIndexSort" resultType="com.example.plana.dto.trip.read.TripScheduleOrderResponse">
         SELECT
             TRIP_SCHEDULE_ID as "tripScheduleId",
@@ -280,6 +308,7 @@
         ORDER BY INDEX_SORT
     </select>
 
+    <!-- 스케줄 indexSort 직접 업데이트 -->
     <update id="updateTripScheduleIndexSort">
         UPDATE TRIP_SCHEDULE
         SET TRIP_DAY_ID = #{tripDayId,  jdbcType=VARCHAR},
@@ -287,6 +316,7 @@
         WHERE TRIP_SCHEDULE_ID = #{tripScheduleId, jdbcType=VARCHAR}
     </update>
 
+    <!--  여행 내 모든 스케줄 상태 갱신  -->
     <update id="updateTripSchedulesStatus">
         UPDATE TRIP_SCHEDULE
         SET STATUS = #{status, jdbcType=VARCHAR}
@@ -297,6 +327,7 @@
         )
     </update>
 
+    <!--  여행의 스케줄 전체 삭제  -->
     <delete id="deleteTripSchedulesByTripId">
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID IN (
@@ -306,9 +337,9 @@
         )
     </delete>
 
+    <!--  여행 일자의 스케줄 전체 삭제  -->
     <delete id="deleteTripSchedulesByTripDayId">
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
-
 </mapper>
