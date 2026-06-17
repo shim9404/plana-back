@@ -50,4 +50,8 @@ public interface TripMapper {
     int readTripScheduleIndexSort(String tripScheduleId);                       // 1. 삭제할 스케줄 INDEX_SORT 조회 SELECT
     int deleteTripSchedule(String tripScheduleId);                              // 2. 스케줄 단건 삭제 DELETE
     void updateTripSchedulesIndexSortAfterDelete(Map<String, Object> params);   // 3. tripDayId 기준 전체 INDEX_SORT 갱신 UPDATE
+
+    // ── ShareToken ──────────────────────
+    void updateShareToken(Map<String, Object> params);
+    void deleteShareToken(Map<String, Object> params);
 }

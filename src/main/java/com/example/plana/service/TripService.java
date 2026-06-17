@@ -682,6 +682,61 @@ public class TripService {
     }
 
     /**
+     * 여행 공유를 위한 토큰 갱신(신규 발급 포함)
+     * @param tripId 여행 ID
+     * @param memberId 사용자 ID
+     * @return TripShareTokenResponse
+     */
+    @Transactional
+    public TripShareTokenResponse createShareToken(String tripId, String memberId) {
+
+        // 소유자 검증
+        validateTripOwner(tripId, memberId);
+
+        // 토큰 생성
+        String shareToken = UUID.randomUUID().toString().replace("-", "");
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("tripId",     tripId);
+        params.put("memberId",   memberId);
+        params.put("shareToken", shareToken);
+
+        try {
+            tripMapper.updateShareToken(params);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SHARE_TOKEN_CREATE_FAILED);
+        }
+
+        return TripShareTokenResponse.builder()
+                .tripId(tripId)
+                .shareToken(shareToken)
+                .build();
+    }
+
+    /**
+     * 여행 공유 중단(공유 토큰 삭제)
+     * @param tripId 여행 ID
+     * @param memberId 사용자 ID
+     */
+    @Transactional
+    public void deleteShareToken(String tripId, String memberId) {
+
+        // 소유자 검증
+        validateTripOwner(tripId, memberId);
+
+        // 토큰 무효화
+        Map<String, Object> params = new HashMap<>();
+        params.put("tripId",   tripId);
+        params.put("memberId", memberId);
+
+        try {
+            tripMapper.deleteShareToken(params);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SHARE_TOKEN_DELETE_FAILED);
+        }
+    }
+
+    /**
      * 북마크 생성
      * - 유효성 검증을 위해 한 번 거치는 작업
      * @param tripId 여행일자ID
