@@ -757,4 +757,25 @@ public class TripService {
     private String checkName(String name, String defaultName) {
         return (name != null && !name.isBlank()) ? name : defaultName;
     }
+
+    /**
+     *  허브 공개 여부 갱신
+     * - 허브에 공개 시 true 비공개 전환 시 false
+     * - 현재는 false여도 공개한적 있는지 여부는 hub_plan에서 구분할 수 있음
+     * @param tripId 여행ID
+     * @param isPublic 허브에 공개여부
+     * @param memberId 사용자 ID
+     */
+    public void updateIsPublic(String tripId, Boolean isPublic, String memberId) {
+        validateTripOwner(tripId, memberId);
+
+        String value = isPublic ? "Y" : "N";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("tripId",      tripId);
+        params.put("isPublic",    value);
+        
+        tripMapper.updateIsPublic(params);
+    } 
+    
 }

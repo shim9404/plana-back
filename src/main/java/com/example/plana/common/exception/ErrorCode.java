@@ -80,6 +80,10 @@ public enum ErrorCode {
     EXPIRED_AUTH_CODE(400, "E003", "인증번호가 만료되었습니다."),
     EMAIL_SEND_FAILED(500, "E004", "이메일 발송에 실패했습니다."),
 
+
+    INVALID_HUB_PLAN_STATUS(400, "H001", "유효하지 않은 상태 값입니다."),
+    HUB_PLAN_NOT_FOUND(404, "H002", "허브 게시물을 찾을 수 없습니다."),
+    HUB_PLAN_CREATE_FAILED(500, "H003", "허브 게시물 생성에 실패했습니다."),
     ;
 
     @Getter
