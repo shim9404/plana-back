@@ -68,6 +68,8 @@ public enum ErrorCode {
     TRIP_BOOKMARK_READ_FAILED(404, "T020", "여행 북마크 조회 중 오류가 발생했습니다."),
     TRIP_BOOKMARK_UPDATE_FAILED(404, "T021", "여행 북마크 저장 중 오류가 발생했습니다."),
     TRIP_DAY_UPDATE_FAILED(500, "T022", "여행 일자 저장 중 오류가 발생했습니다."),
+    TRIP_SHARE_TOKEN_CREATE_FAILED(500, "T023", "여행 공유 토큰 발급 중 오류가 발생했습니다."),
+    TRIP_SHARE_TOKEN_DELETE_FAILED(500, "T024", "여행 공유 중단 중 오류가 발생했습니다."),
 
     // Region & Area
     AREA_CREATE_FAILED(500, "R001", "신규 장소 등록 중 오류가 발생했습니다."),
