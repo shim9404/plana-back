@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.HubPlanMapper">
+
+    <!--  커뮤니티 업로드  -->
+    <insert id="createHubPlan" parameterType="map">
+        <selectKey keyProperty="hubPlanId" resultType="String" order="BEFORE">
+            SELECT GENERATE_PK('HP', 'SEQ_HUB_PLAN')
+        </selectKey>
+        INSERT INTO HUB_PLAN (
+            HUB_PLAN_ID,
+            TRIP_ID,
+            MEMBER_ID,
+            LIKE_COUNT,
+            COPY_COUNT
+        ) VALUES (
+            #{hubPlanId,  jdbcType=VARCHAR},
+            #{tripId,     jdbcType=VARCHAR},
+            #{memberId,   jdbcType=VARCHAR},
+            0,
+            0
+        )
+    </insert>
+    <select id="checkHubPlanExists" resultType="int">
+        SELECT COUNT(*)
+        FROM HUB_PLAN
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+            AND STATUS != 'DELETED'
+    </select>
+
+    <update id="updateHubPlanStatus">
+        UPDATE HUB_PLAN
+        SET STATUS = #{status, jdbcType=VARCHAR}
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+
+    <select id="getTripIdByHubPlanId" resultType="String">
+        SELECT TRIP_ID
+        FROM HUB_PLAN
+        WHERE HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+    </select>
+</mapper>
