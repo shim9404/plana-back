@@ -342,4 +342,21 @@
         DELETE FROM TRIP_SCHEDULE
         WHERE TRIP_DAY_ID = #{tripDayId, jdbcType=VARCHAR}
     </delete>
+
+    <!-- === [ SHARE TOKEN ]  ================================================================================= -->
+    <!--  공유 작업용 토큰 갱신  -->
+    <update id="updateShareToken">
+        UPDATE TRIP
+        SET SHARE_TOKEN = #{shareToken, jdbcType=VARCHAR}
+        WHERE TRIP_ID   = #{tripId,     jdbcType=VARCHAR}
+          AND MEMBER_ID = #{memberId,   jdbcType=VARCHAR}
+    </update>
+
+    <!--  공유 작업용 토큰 삭제(공유 중단)  -->
+    <update id="deleteShareToken">
+        UPDATE TRIP
+        SET SHARE_TOKEN = NULL
+        WHERE TRIP_ID   = #{tripId,   jdbcType=VARCHAR}
+          AND MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+    </update>
 </mapper>

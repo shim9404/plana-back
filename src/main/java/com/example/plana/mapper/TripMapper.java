@@ -53,4 +53,8 @@ public interface TripMapper {
 
     // 커뮤니티 ──────────────────────
     void updateIsPublic(Map<String, Object> params); // 커뮤니티 공개 여부 갱신
+
+    // ── ShareToken ──────────────────────
+    void updateShareToken(Map<String, Object> params);
+    void deleteShareToken(Map<String, Object> params);
 }

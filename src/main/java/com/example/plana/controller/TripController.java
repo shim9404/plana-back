@@ -267,7 +267,7 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @DeleteMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
-    @Operation(summary = "여행 영구 삭제", description = "휴지통에 보관 중인 여행을 영구 삭제한다.")
+    @Operation(summary = "여행 스케줄 삭제", description = "단일 여행 스케줄을 삭제하고 동일 여행 일차 하위의 여행 스케줄들의 순번을 재정렬한다.")
     @Parameters({
             @Parameter(name = "tripId", description = "여행 ID", required = true),
             @Parameter(name = "tripDayId", description = "스케줄이 속한 일자 ID", required = true),
@@ -280,4 +280,31 @@ public class TripController {
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
     }
 
+    /**
+     * createShareToken 여행 공유를 위한 토큰 갱신
+     * @param tripId 여행 ID
+     * @return ResponseBody.data : TripShareTokenResponse
+     */
+    @PostMapping("/{tripId}/share-token")
+    @Operation(summary = "여행 공유 토큰 발급", description = "여행 공유를 위한 토큰을 발급하거나 재발급한다.")
+    @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
+    @ApiResponse(responseCode = "201", description = "[S002] 등록이 완료되었습니다.")
+    public ResponseEntity<ResponseBody<TripShareTokenResponse>> createShareToken(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripShareTokenResponse data = tripService.createShareToken(tripId, principal.getMemberId());
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    /**
+     * deleteShareToken 여행 공유 중단(공유 토큰 삭제)
+     * @param tripId 여행 ID
+     * @return ResponseBody.data : null
+     */
+    @DeleteMapping("/{tripId}/share-token")
+    @Operation(summary = "여행 공유 중단", description = "발급된 공유 토큰을 무효화한다.")
+    @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
+    @ApiResponse(responseCode = "200", description = "[S003] 삭제가 완료되었습니다.")
+    public ResponseEntity<ResponseBody<EmptyData>> deleteShareToken(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.deleteShareToken(tripId, principal.getMemberId());
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
+    }
 }
