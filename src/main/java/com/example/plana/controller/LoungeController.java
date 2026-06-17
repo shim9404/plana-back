@@ -5,6 +5,7 @@ import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
+import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
 import com.example.plana.dto.trip.update.TripPublicUpdateRequest;
 import com.example.plana.service.LoungeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,16 +29,16 @@ public class LoungeController {
     @Operation(summary = "허브 공개 여부 설정", description = "여행을 허브에 공개하거나 비공개로 전환합니다. 최초 공개 시 게시물이 생성됩니다.")
     @Parameter(name = "tripId", description = "공개 여부를 변경할 여행 ID", required = true)
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
-    public ResponseEntity<ResponseBody<EmptyData>> updateHubPlanVisibility(@PathVariable String tripId, @RequestBody TripPublicUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<ResponseBody<UpdateHubPlanPublicResponse>> updateHubPlanVisibility(@PathVariable String tripId, @RequestBody TripPublicUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
 
-        loungeService.updateHubPlanPublic(tripId, request.getIsPublic(), principal.getMemberId());
+        UpdateHubPlanPublicResponse data = loungeService.updateHubPlanPublic(tripId, request.getIsPublic(), principal.getMemberId());
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
     }
 
     @PatchMapping("/{hubPlanId}/status")
-    @Operation(summary = "허브 게시물 상태 변경", description = "허브 게시물의 상태를 변경합니다. (ACTIVE / INACTIVE / DELETED)")
+    @Operation(summary = "허브 게시물 상태 변경", description = "허브 게시물의 상태를 변경합니다. (INACTIVE / DELETED)")
     @Parameters({ @Parameter(name = "hubPlanId", description = "상태를 변경할 허브 게시물 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
     public ResponseEntity<ResponseBody<EmptyData>> updateHubPlanStatus(@PathVariable String hubPlanId, @RequestBody StatusUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {

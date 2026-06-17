@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "상태 수정 요청")
 public class StatusUpdateRequest {
-    @Schema(description = "상태 (ACTIVE/INACTIVE/DELETED)", example = "ACTIVE")
+    @Schema(description = "상태 (INACTIVE/DELETED)", example = "INACTIVE")
     private String status;
 }

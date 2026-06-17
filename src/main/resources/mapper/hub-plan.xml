@@ -28,11 +28,12 @@
             AND STATUS != 'DELETED'
     </select>
 
-    <update id="updateHubPlanStatus">
+    <select id="updateHubPlanStatus" resultType="String">
         UPDATE HUB_PLAN
         SET STATUS = #{status, jdbcType=VARCHAR}
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
-    </update>
+        RETURNING HUB_PLAN_ID
+    </select>
 
     <select id="getTripIdByHubPlanId" resultType="String">
         SELECT TRIP_ID

@@ -3,6 +3,7 @@ package com.example.plana.service;
 
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
 import com.example.plana.mapper.HubPlanMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -24,16 +25,17 @@ public class LoungeService {
      * @param tripId 갱신할 여행 ID
      * @param isPublic 공개 여부
      * @param memberId 사용자 ID
+     * return String tripPlanId
      */
     @Transactional
-    public void updateHubPlanPublic(String tripId, Boolean isPublic, String memberId) {
-
+    public UpdateHubPlanPublicResponse updateHubPlanPublic(String tripId, Boolean isPublic, String memberId) {
+        String hubPlanId = "";
         // public으로 변환
         tripService.updateIsPublic(tripId, isPublic, memberId);
 
         // 없을 때
         if (hubPlanMapper.checkHubPlanExists(tripId) == 0){
-            if (!isPublic) return;
+            if (!isPublic) throw new BusinessException(ErrorCode.INVALID_HUB_PLAN_STATUS);
 
             // 테이블에 업로드
             Map<String, Object> params = new HashMap<>();
@@ -42,15 +44,21 @@ public class LoungeService {
 
             try {
                 hubPlanMapper.createHubPlan(params);
+                hubPlanId = (String) params.get("hubPlanId");
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new BusinessException(ErrorCode.HUB_PLAN_CREATE_FAILED);
             }
         }
         else {
             // isPublic에 따라 status처리
             String status = isPublic ? "ACTIVE" : "INACTIVE";
-            hubPlanMapper.updateHubPlanStatus(tripId, status);
+            hubPlanId = hubPlanMapper.updateHubPlanStatus(tripId, status);
         }
+
+        return UpdateHubPlanPublicResponse.builder()
+                .hubPlanId(hubPlanId)
+                .build();
     }
 
     /**
