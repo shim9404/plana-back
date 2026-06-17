@@ -30,7 +30,7 @@ public class LoungeController {
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
     public ResponseEntity<ResponseBody<EmptyData>> updateHubPlanVisibility(@PathVariable String tripId, @RequestBody TripPublicUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
 
-        loungeService.updateHubPlanVisibility (tripId, request.getIsPublic(), principal.getMemberId());
+        loungeService.updateHubPlanPublic(tripId, request.getIsPublic(), principal.getMemberId());
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.UPDATE_SUCCESS));

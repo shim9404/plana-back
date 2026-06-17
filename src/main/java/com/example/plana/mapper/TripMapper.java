@@ -51,8 +51,8 @@ public interface TripMapper {
     int deleteTripSchedule(String tripScheduleId);                              // 2. 스케줄 단건 삭제 DELETE
     void updateTripSchedulesIndexSortAfterDelete(Map<String, Object> params);   // 3. tripDayId 기준 전체 INDEX_SORT 갱신 UPDATE
 
-    // 커뮤니티 ──────────────────────
-    void updateIsPublic(Map<String, Object> params); // 커뮤니티 공개 여부 갱신
+    // Lounge ──────────────────────
+    void updateIsPublic(Map<String, Object> params); // Lounge 공개 여부 갱신
 
     // ── ShareToken ──────────────────────
     void updateShareToken(Map<String, Object> params);

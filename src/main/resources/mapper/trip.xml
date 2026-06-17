@@ -359,4 +359,12 @@
         WHERE TRIP_ID   = #{tripId,   jdbcType=VARCHAR}
           AND MEMBER_ID = #{memberId, jdbcType=VARCHAR}
     </update>
+
+    <!-- === [ Lounge ]  ================================================================================= -->
+    <!--  허브 공개 여부 갱신  -->
+    <update id="updateIsPublic" parameterType="map">
+        UPDATE TRIP
+        SET IS_PUBLIC = #{isPublic, jdbcType=VARCHAR}
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
 </mapper>
