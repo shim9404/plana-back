@@ -57,6 +57,7 @@ public class SecurityConfig {
                                "/api/redis/**",
                                "/pds/**",
                                "/api/members", // 회원가입
+                               "/api/lounge/hubs", // 허브 목록 조회
                                "/error",
                                // swagger
                                "/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**"

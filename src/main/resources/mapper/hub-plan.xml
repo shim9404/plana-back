@@ -40,4 +40,44 @@
         FROM HUB_PLAN
         WHERE HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
     </select>
+
+    <!-- 목록 조회 -->
+    <select id="readHubPlanList" parameterType="com.example.plana.dto.lounge.HubPlanSearchRequest"
+            resultType="com.example.plana.dto.lounge.HubPlanReadResponse">
+        SELECT
+        HUB_PLAN_ID  as "hubPlanId",
+        TRIP_ID      as "tripId",
+        MEMBER_ID    as "memberId",
+        LIKE_COUNT   as "likeCount",
+        COPY_COUNT   as "copyCount",
+        CREATE_DATE  as "createdDate"
+        FROM HUB_PLAN
+        WHERE STATUS = 'ACTIVE'
+        <if test="memberId != null and memberId != ''">
+            AND MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+        </if>
+        <choose>
+            <when test="sortBy == 'LIKE'">
+                ORDER BY LIKE_COUNT DESC
+            </when>
+            <when test="sortBy == 'COPY'">
+                ORDER BY COPY_COUNT DESC
+            </when>
+            <otherwise>
+                ORDER BY CREATE_DATE DESC
+            </otherwise>
+        </choose>
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 전체 개수 조회 -->
+    <select id="countHubPlanList" parameterType="com.example.plana.dto.lounge.HubPlanSearchRequest"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM HUB_PLAN
+        WHERE STATUS = 'ACTIVE'
+        <if test="memberId != null and memberId != ''">
+            AND MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+        </if>
+    </select>
 </mapper>

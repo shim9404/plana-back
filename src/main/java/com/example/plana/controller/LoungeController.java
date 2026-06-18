@@ -5,6 +5,9 @@ import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
+import com.example.plana.dto.lounge.HubPlanReadListResponse;
+import com.example.plana.dto.lounge.HubPlanReadResponse;
+import com.example.plana.dto.lounge.HubPlanSearchRequest;
 import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
 import com.example.plana.dto.trip.update.TripPublicUpdateRequest;
 import com.example.plana.service.LoungeService;
@@ -46,5 +49,18 @@ public class LoungeController {
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
+    }
+
+
+    @GetMapping("/hubs")
+    @Operation(summary = "허브플랜 목록 조회", description = "라운지에 공개된 허브플랜 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<HubPlanReadListResponse>> readHubPlanList(
+            @ModelAttribute HubPlanSearchRequest request) {
+
+        HubPlanReadListResponse data = loungeService.readHubPlanList(request);
+
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 }

@@ -3,6 +3,9 @@ package com.example.plana.service;
 
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.dto.lounge.HubPlanReadListResponse;
+import com.example.plana.dto.lounge.HubPlanReadResponse;
+import com.example.plana.dto.lounge.HubPlanSearchRequest;
 import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
 import com.example.plana.mapper.HubPlanMapper;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -82,5 +86,30 @@ public class LoungeService {
         if ("INACTIVE".equals(status) || "DELETED".equals(status)) {
             tripService.updateIsPublic(tripId, false, memberId);
         }
+    }
+
+
+    /**
+     * 허브플랜 목록 조회 (검색, 정렬, 페이징 포함)
+     * @param request 검색 조건 (memberId, sortBy, page, size)
+     * @return HubPlanReadListResponse 허브플랜 목록 및 페이징 정보
+     */
+    public HubPlanReadListResponse readHubPlanList(HubPlanSearchRequest request) {
+        // 1. 목록 조회
+        List<HubPlanReadResponse> plans = hubPlanMapper.readHubPlanList(request);
+
+        // 2. 전체 개수 조회
+        int totalCount = hubPlanMapper.countHubPlanList(request);
+
+        // 3. 전체 페이지 수 계산
+        int totalPages = (int) Math.ceil((double) totalCount / request.getSize());
+
+        return HubPlanReadListResponse.builder()
+                .plans(plans)
+                .totalCount(totalCount)
+                .totalPages(totalPages)
+                .currentPage(request.getPage())
+                .size(request.getSize())
+                .build();
     }
 }
