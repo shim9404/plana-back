@@ -5,6 +5,7 @@ import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.area.read.AreaReadResponse;
 import com.example.plana.dto.area.read.AreaTypePageResponse;
 import com.example.plana.dto.area.read.PlaceReadPageResponse;
+import com.example.plana.dto.area.read.ThemeReadPageResponse;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.service.AreaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 
 @Slf4j
@@ -98,6 +101,39 @@ public class AreaController {
             @RequestParam(defaultValue = "15") int size) {
 
         PlaceReadPageResponse data = areaService.readPlace(keyword, mapX, mapY, page, size);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+    /**
+     *  getTheme(): 맞춤 테마의 여행지 검색(관광포털 API)
+     *   -> readTheme(): 여행지 검색(반려동물, 무장애, 고캠핑)
+     * @param theme // 테마(반려동물, 무장애, 고캠핑)
+     * @param keyword // 검색 키워드
+     * @param mapX   // 좌표(X)
+     * @param mapY,  // 좌표(Y)
+     * @param regionId, // 행정구역 ID
+     * @return ResponseBody.data : List<ThemeReadResponse>
+     */
+    @GetMapping("/theme")
+    @Operation(summary = "맞춤 테마의 여행지 검색(관광포털 API)", description = "검색 API로 테마(반려동물, 무장애, 고캠핑(중복 가능)), 키워드, 위도, 경도, 시군구코드를 받아서 정보를 반환한다.")
+    @Parameters({
+            @Parameter(name = "theme", description = "테마(반려동물, 무장애, 고캠핑)", required = true),
+            @Parameter(name = "keyword", description = "키워드", required = true),
+            @Parameter(name = "mapX", description = "경도", required = true),
+            @Parameter(name = "mapY", description = "위도", required = true),
+            @Parameter(name = "regionId", description = "행정구역 ID", required = true),
+            @Parameter(name = "page", description = "불러올 페이지 번호 (기본값 = 1)", required = true),
+            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 15)", required = true)
+    })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<ThemeReadPageResponse>> getTheme(
+            @RequestParam List<String> theme,
+            @RequestParam String keyword,
+            @RequestParam double mapX,
+            @RequestParam double mapY,
+            @RequestParam String regionId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        ThemeReadPageResponse data = areaService.readTheme(theme, keyword, mapX, mapY, regionId, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 }
