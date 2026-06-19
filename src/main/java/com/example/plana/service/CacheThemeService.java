@@ -70,7 +70,6 @@ public class CacheThemeService {
 
         // 반려동물(PET) api 응답 결과 저장
         List<ThemeReadResponse> list = readPetLists(itemList);
-        System.out.println("api 시작");
 
         return list;
     }
