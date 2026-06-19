@@ -103,6 +103,7 @@ public class AreaController {
         PlaceReadPageResponse data = areaService.readPlace(keyword, mapX, mapY, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
+
     /**
      *  getTheme(): 맞춤 테마의 여행지 검색(관광포털 API)
      *   -> readTheme(): 여행지 검색(반려동물, 무장애, 고캠핑)
@@ -116,8 +117,8 @@ public class AreaController {
     @GetMapping("/theme")
     @Operation(summary = "맞춤 테마의 여행지 검색(관광포털 API)", description = "검색 API로 테마(반려동물, 무장애, 고캠핑(중복 가능)), 키워드, 위도, 경도, 시군구코드를 받아서 정보를 반환한다.")
     @Parameters({
-            @Parameter(name = "theme", description = "테마(반려동물, 무장애, 고캠핑)", required = true),
-            @Parameter(name = "keyword", description = "키워드", required = true),
+            @Parameter(name = "theme", description = "테마(PET/BF/CAMP)", required = true),
+            @Parameter(name = "keyword", description = "키워드", required = false),
             @Parameter(name = "mapX", description = "경도", required = true),
             @Parameter(name = "mapY", description = "위도", required = true),
             @Parameter(name = "regionId", description = "행정구역 ID", required = true),
@@ -127,7 +128,7 @@ public class AreaController {
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
     public ResponseEntity<ResponseBody<ThemeReadPageResponse>> getTheme(
             @RequestParam List<String> theme,
-            @RequestParam String keyword,
+            @RequestParam (required = false) String keyword,
             @RequestParam double mapX,
             @RequestParam double mapY,
             @RequestParam String regionId,
