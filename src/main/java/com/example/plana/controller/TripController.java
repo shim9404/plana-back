@@ -307,4 +307,18 @@ public class TripController {
         tripService.deleteShareToken(tripId, principal.getMemberId());
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
     }
+
+    /**
+     * getSharedTrip 공유된 여행 정보 조회(단건/상세)
+     * @param shareToken 공유 토큰
+     * @return ResponseBody.data : TripResponse
+     */
+    @GetMapping("/share/{shareToken}")
+    @Operation(summary = "공유 링크로 여행 정보 호출", description = "공유 여행의 상세 정보를 요청한다.")
+    @Parameters({ @Parameter(name = "shareToken", description = "공유 토큰", required = true) })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<TripResponse>> getSharedTrip(@PathVariable String shareToken) {
+        TripResponse data = tripService.readSharedTrip(shareToken);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
 }

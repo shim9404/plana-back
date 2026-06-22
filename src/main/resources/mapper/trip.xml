@@ -39,6 +39,20 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
 
+    <!--  여행 정보 조회(공유링크)  -->
+    <select id="readSharedTrip" resultType="com.example.plana.dto.trip.read.TripResponse">
+        SELECT
+            TRIP_ID     as "tripId",
+            MEMBER_ID   as "memberId",
+            NAME        as "name",
+            START_DATE  as "startDate",
+            END_DATE    as "endDate",
+            REGION_ID   as "regionId",
+            ENTRY_COUNT as "entryCount"
+        FROM TRIP
+        WHERE SHARE_TOKEN = #{shareToken, jdbcType=VARCHAR}
+    </select>
+
     <!--  여행 소유자 확인  -->
     <select id="readTripOwner" resultType="String">
         SELECT MEMBER_ID as "memberId"
