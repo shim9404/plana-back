@@ -115,7 +115,7 @@ public class AreaController {
      * @return ResponseBody.data : List<ThemeReadResponse>
      */
     @GetMapping("/theme")
-    @Operation(summary = "맞춤 테마의 여행지 검색(관광포털 API)", description = "검색 API로 테마(반려동물, 무장애, 고캠핑(중복 가능)), 키워드, 위도, 경도, 시군구코드를 받아서 정보를 반환한다.")
+    @Operation(summary = "맞춤 테마의 여행지 검색(관광포털 API)", description = "검색 API로 테마(반려동물, 무장애(중복 가능)), 키워드, 위도, 경도, 시군구코드를 받아서 정보를 반환한다.")
     @Parameters({
             @Parameter(name = "theme", description = "테마(PET/BF/CAMP)", required = true),
             @Parameter(name = "keyword", description = "키워드", required = false),

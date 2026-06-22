@@ -39,7 +39,7 @@ public class CacheThemeService {
             // 무장애
             if (theme.contains("BF")) { themeTravels.addAll(readBFTravelsbyLocation(mapX, mapY, 1, dataSize));}
             // 고캠핑
-            if (theme.contains("CAMP")) { themeTravels.addAll(readCampTravelsbyLocation(mapX, mapY, 1, dataSize));}
+            // if (theme.contains("CAMP")) { themeTravels.addAll(readCampTravelsbyLocation(mapX, mapY, 1, dataSize));}
         }
         else{ // 키워드 기반 api
             // 반려동물
@@ -47,7 +47,7 @@ public class CacheThemeService {
             // 무장애
             if (theme.contains("BF")) { themeTravels.addAll(readBFTravelsbyKeyword(keyword, regionId, 1, dataSize));}
             // 고캠핑
-            if (theme.contains("CAMP")) { themeTravels.addAll(readCampTravelsbyKeyword(keyword, mapX, mapY, 1, dataSize));}
+            // if (theme.contains("CAMP")) { themeTravels.addAll(readCampTravelsbyKeyword(keyword, mapX, mapY, 1, dataSize));}
         }
 
         return themeTravels;
@@ -191,6 +191,7 @@ public class CacheThemeService {
         Map<String, Object> responseMap = (Map<String, Object>) result.get("response");
         Map<String, Object> body = (Map<String, Object>) responseMap.get("body");
 
+        // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(body.get("totalCount").toString());
 
         if (totalCount == 0) { return allItems; } // 결과 데이터가 0개 일 경우, 빠져나오기
@@ -361,30 +362,10 @@ public class CacheThemeService {
             // 설명
             themeReadResponse.setDescription("관광포털 여행지 검색(CAMP)");
 
-            // 거리 계산 및 저장 여부 결정(고캠핑 경우, 키워드 검색 api는 거리 기준이 없음)
-            double campX = Double.parseDouble(item.get("mapX").toString());
-            double campY = Double.parseDouble(item.get("mapY").toString());
-
-            double distance = calculateDistance(mapY, mapX, campY, campX);
-
-            if (distance <= 20000) { // 지정 거리보다 가까울 경우에만 저장
-                list.add(themeReadResponse);
-            }
+            list.add(themeReadResponse);
         }
 
         return list;
     }
 
-    // Haversine 공식(거리 계산- MAP X, MAP Y, Radius)
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        final int EARTH_RADIUS = 6371000; // m
-
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return EARTH_RADIUS * c;
-    }
 }
