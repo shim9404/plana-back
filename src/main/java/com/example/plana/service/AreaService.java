@@ -3,16 +3,21 @@ package com.example.plana.service;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.config.KakaoConfig;
+import com.example.plana.config.VisitKoreaConfig;
 import com.example.plana.dto.area.create.AreaPlaceCreateRequest;
 import com.example.plana.dto.area.read.*;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
 import com.example.plana.mapper.AreaMapper;
 import com.example.plana.mapper.RegionMapper;
 import com.example.plana.model.Area;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,10 +33,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@EnableCaching
+@SpringBootApplication
 public class AreaService {
     private final AreaMapper areaMapper;
     private final KakaoConfig kakaoConfig; // kakao apiKey
+    private final VisitKoreaConfig visitKoreaConfig; // visitKorea apiKey
     private final RegionMapper regionMapper;
+    private final CacheThemeService cacheThemeService;
 
     private static final int DEFAULT_PAGE_SIZE = 20;
 
@@ -285,4 +294,27 @@ public class AreaService {
         // 없으면 새로 INSERT
         return createNewPlaceAreaBeforeBookmark(areaRequest);
     }
+
+
+    // 맞춤 테마의 여행지 검색(관광포털 API)
+    public ThemeReadPageResponse readTheme(List<String> theme, String keyword, double mapX, double mapY, String regionId, int page, int size) {
+        // 관광포털 API는 size 파라미터 지원 (1~10 기본값 10)
+        // size 최대 10 제한이 있으므로 초과 시 10로 고정
+        int dataSize = Math.min(size, 10);
+
+        List<ThemeReadResponse> themeTravels = cacheThemeService.readThemeTravels(theme, keyword, mapX, mapY, regionId, dataSize);
+
+        // 페이징 메타 정보
+        int totalCount = themeTravels.size();
+        int totalPages = (int) Math.ceil((double) themeTravels.size() / 15);
+        // page에 따라 themeTravels 데이터 자르기
+        int startIndex = (page - 1) * 15;
+        int endIndex = Math.min(startIndex + 15, totalCount);
+        List<ThemeReadResponse> pageThemeTravels = themeTravels.subList(startIndex, endIndex);
+
+        return new ThemeReadPageResponse(totalCount, totalPages, page, 15, pageThemeTravels);
+    }
+
 }
+
+
