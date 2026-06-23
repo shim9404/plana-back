@@ -73,4 +73,5 @@ public class RegionService {
     public RegionReadResponse readRegionById(String regionId) {
         return regionMapper.readRegionById(regionId);
     }
+
 }

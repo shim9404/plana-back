@@ -12,9 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "허브플랜 목록 응답")
+@Schema(description = "허브 목록 응답")
 public class HubPlanReadListResponse {
-    @Schema(description = "허브플랜 목록")
+    @Schema(description = "허브 목록")
     private List<HubPlanReadResponse> plans;
 
     @Schema(description = "전체 항목 수", example = "100")

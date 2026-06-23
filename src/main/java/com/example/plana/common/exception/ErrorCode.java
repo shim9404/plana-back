@@ -84,6 +84,7 @@ public enum ErrorCode {
     INVALID_HUB_PLAN_STATUS(400, "H001", "유효하지 않은 상태 값입니다."),
     HUB_PLAN_NOT_FOUND(404, "H002", "허브 게시물을 찾을 수 없습니다."),
     HUB_PLAN_CREATE_FAILED(500, "H003", "허브 게시물 생성에 실패했습니다."),
+    HUB_PLAN_READ_FAILED(500, "H004", "허브 목록 조회에 실패했습니다."),
     ;
 
     @Getter
