@@ -14,7 +14,7 @@ public class ThemeReadResponse {
     private String themeId;
     @Schema(description = "Area Table에 등록된 id (없으면 null)", example = "null")
     private String areaId;
-    @Schema(description = "분류", example = "Theme")
+    @Schema(description = "분류", example = "THEME")
     private String searchType;
     @Schema(description = "맞춤 테마 종류", example = "PET")
     private String searchTheme;

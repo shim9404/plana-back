@@ -2,10 +2,7 @@ package com.example.plana.controller;
 
 
 import com.example.plana.common.response.SuccessCode;
-import com.example.plana.dto.area.read.AreaReadResponse;
-import com.example.plana.dto.area.read.AreaTypePageResponse;
-import com.example.plana.dto.area.read.PlaceReadPageResponse;
-import com.example.plana.dto.area.read.ThemeReadPageResponse;
+import com.example.plana.dto.area.read.*;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.service.AreaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -106,8 +103,8 @@ public class AreaController {
 
     /**
      *  getTheme(): 맞춤 테마의 여행지 검색(관광포털 API)
-     *   -> readTheme(): 여행지 검색(반려동물, 무장애, 고캠핑)
-     * @param theme // 테마(반려동물, 무장애, 고캠핑)
+     *   -> readTheme(): 여행지 검색(반려동물, 무장애)
+     * @param theme // 테마(반려동물, 무장애)
      * @param keyword // 검색 키워드
      * @param mapX   // 좌표(X)
      * @param mapY,  // 좌표(Y)
@@ -117,7 +114,7 @@ public class AreaController {
     @GetMapping("/theme")
     @Operation(summary = "맞춤 테마의 여행지 검색(관광포털 API)", description = "검색 API로 테마(반려동물, 무장애(중복 가능)), 키워드, 위도, 경도, 시군구코드를 받아서 정보를 반환한다.")
     @Parameters({
-            @Parameter(name = "theme", description = "테마(PET/BF/CAMP)", required = true),
+            @Parameter(name = "theme", description = "테마(PET/BF)", required = true),
             @Parameter(name = "keyword", description = "키워드", required = false),
             @Parameter(name = "mapX", description = "경도", required = true),
             @Parameter(name = "mapY", description = "위도", required = true),
@@ -135,6 +132,34 @@ public class AreaController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         ThemeReadPageResponse data = areaService.readTheme(theme, keyword, mapX, mapY, regionId, page, size);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
+    /**
+     *  getAround(): 여행지 필터 검색(관광포털 API)
+     *   -> readAround(): 여행지 검색(고캠핑, 웰니스)
+     * @param filter // 필터(고캠핑, 웰니스)
+     * @param mapX   // 좌표(X)
+     * @param mapY,  // 좌표(Y)
+     * @return ResponseBody.data : List<ThemeReadPageResponse>
+     */
+    @GetMapping("/around")
+    @Operation(summary = "여행지 필터 검색(관광포털 API)", description = "검색 API로 필터(고캠핑, 웰니스(중복 불가능)), 위도, 경도를 받아서 정보를 반환한다.")
+    @Parameters({
+            @Parameter(name = "filter", description = "필터(CAMP/WELLNESS)", required = true),
+            @Parameter(name = "mapX", description = "경도", required = true),
+            @Parameter(name = "mapY", description = "위도", required = true),
+            @Parameter(name = "page", description = "불러올 페이지 번호 (기본값 = 1)", required = true),
+            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 15)", required = true)
+    })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<ThemeReadPageResponse>> getAround(
+            @RequestParam String filter,
+            @RequestParam double mapX,
+            @RequestParam double mapY,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        ThemeReadPageResponse data = areaService.readAround(filter, mapX, mapY, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 }
