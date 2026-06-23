@@ -1,6 +1,7 @@
 package com.example.plana.dto.lounge;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ public class HubPlanSearchRequest {
     @Schema(description = "여행 제목(name) 키워드 검색", example = "대전")
     private String name;
 
-    @Schema(description = "지역 ID 목록(합집합)", example = "41000")
+    @Schema(description = "지역 ID 목록(합집합)", example = "[\"30000\"]")
     private List<String> regionIds;
 
     @Schema(description = "최소 박 수(1박 2일 → 1)", example = "1")
@@ -29,7 +30,7 @@ public class HubPlanSearchRequest {
     @Schema(description = "최대 박 수(1박 2일 → 1)", example = "5")
     private Integer maxNights;
 
-    @Schema(description = "태그 키워드 ID 목록(현재 사용 불가)", example = "K2")
+    @Schema(description = "태그 키워드 ID 목록(현재 사용 불가)")
     private List<String> keywordIds;
 
     @Schema(description = "정렬 기준 (LATEST, LIKE, COPY)", example = "LATEST")
