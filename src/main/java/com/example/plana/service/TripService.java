@@ -737,6 +737,60 @@ public class TripService {
     }
 
     /**
+     * 공유된 여행 단건 상세 조회
+     * @param shareToken 공유 토큰
+     * @return TripResponse
+     */
+    @Transactional
+    public TripResponse readSharedTrip(String shareToken) {
+        // shareToken으로 trip 찾기
+
+        // 1. SELECT TRIP
+        TripResponse trip = null;
+        try {
+            trip = tripMapper.readSharedTrip(shareToken);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
+        }
+        if (trip == null) {
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
+
+        String tripId = trip.getTripId();
+
+        // 2. SELECT TRIP DAYS
+        try {
+            // TRIP_ID에 해당하는 모든 TRIP_DAY 리스트에 담기
+            List<TripDayResponse> days = tripMapper.readTripDaysByTripId(tripId);
+
+            for (TripDayResponse day : days) {
+                log.info(day.getTripDayId());
+                // 3. SELECT TRIP SCHEDULES
+                try {
+                    // 각 TRIP_DAY_ID에 해당하는 모든 TRIP_SCHEDULE 리스트에 담기
+                    List<TripScheduleResponse> schedules = tripMapper.readTripSchedulesByTripDayId(day.getTripDayId());
+                    day.setSchedules(schedules);
+                } catch (Exception e) {
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_READ_FAILED);
+                }
+            }
+            trip.setDays(days);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_READ_FAILED);
+        }
+
+        // 4. SELECT BOOKMARKS
+        trip.setBookmarks(bookmarkService.readBookmarksByTripId(tripId));
+
+        // 5. activeDayCount (활성화 시킬 일자 수)
+        int diffDay = DateUtils.getDiffDay(trip.getStartDate(),trip.getEndDate());
+        trip.setActiveDayCount(diffDay);
+
+        return trip;
+    }
+
+
+    /**
      * 북마크 생성
      * - 유효성 검증을 위해 한 번 거치는 작업
      * @param tripId 여행일자ID

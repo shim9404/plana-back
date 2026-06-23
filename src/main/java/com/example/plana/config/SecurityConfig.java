@@ -58,6 +58,7 @@ public class SecurityConfig {
                                "/pds/**",
                                "/api/members", // 회원가입
                                "/api/lounge/hubs", // 허브 목록 조회
+                               "/api/trips/share/**", // 공유 링크 접근
                                "/error",
                                // swagger
                                "/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**"

@@ -57,4 +57,5 @@ public interface TripMapper {
     // ── ShareToken ──────────────────────
     void updateShareToken(Map<String, Object> params);
     void deleteShareToken(Map<String, Object> params);
+    TripResponse readSharedTrip(String shareToken);
 }
