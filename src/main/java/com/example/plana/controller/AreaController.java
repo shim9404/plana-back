@@ -130,7 +130,7 @@ public class AreaController {
             @RequestParam double mapY,
             @RequestParam String regionId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "15") int size) {
         ThemeReadPageResponse data = areaService.readTheme(theme, keyword, mapX, mapY, regionId, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
@@ -158,8 +158,34 @@ public class AreaController {
             @RequestParam double mapX,
             @RequestParam double mapY,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "15") int size) {
         ThemeReadPageResponse data = areaService.readAround(filter, mapX, mapY, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
+
+    /**
+     *  getRelatedPlace(): 여행지 연관 검색(관광포털 API)
+     *   -> readRelatedTravels(): 여행지 연관 검색(키워드)
+     * @param keyword // 여행지명
+     * @param regionId, // 행정구역 ID
+     * @return ResponseBody.data : List<RelatePlaceReadPageResponse>
+     */
+    @GetMapping("/related-places")
+    @Operation(summary = "여행지 연관 검색(관광포털 API)", description = "검색 API로 여행지명, 행정구역 ID를 받아서 정보를 반환한다.")
+    @Parameters({
+            @Parameter(name = "keyword", description = "여행지명", required = true),
+            @Parameter(name = "regionId", description = "행정구역 ID", required = true),
+            @Parameter(name = "page", description = "불러올 페이지 번호 (기본값 = 1)", required = true),
+            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 10)", required = true)
+    })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<RelatePlaceReadPageResponse>> getRelatedPlace(
+            @RequestParam String keyword,
+            @RequestParam String regionId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        RelatePlaceReadPageResponse data = areaService.readRelatedTravels(keyword, regionId, page, size);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
 }
