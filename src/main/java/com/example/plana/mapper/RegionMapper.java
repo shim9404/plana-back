@@ -1,5 +1,6 @@
 package com.example.plana.mapper;
 
+import com.example.plana.dto.region.read.RegionCodeResponse;
 import com.example.plana.dto.region.read.RegionReadResponse;
 import com.example.plana.model.Region;
 import org.apache.ibatis.annotations.Mapper;
@@ -15,4 +16,7 @@ public interface RegionMapper {
 
     // 지역 간단 정보(좌표 + 이름) 호출
     RegionReadResponse readRegionById(@Param("regionId") String regionId);
+
+    // region code 반환
+    RegionCodeResponse readRegionCodes(String regionId);
 }

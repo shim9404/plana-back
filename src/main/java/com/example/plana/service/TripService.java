@@ -31,10 +31,10 @@ public class TripService {
 
 
     /**
-     * 권한 체크
-     * CRUD를 요청한 TripId에서 memberId를 추출하고 현재 로그인한 id를 비교하는 함수
-     * @param tripId 여행 ID
-     * @param memberId 사용자 ID
+     *      * 권한 체크
+     *      * CRUD를 요청한 TripId에서 memberId를 추출하고 현재 로그인한 id를 비교하는 함수
+     *      * @param tripId 여행 ID
+     *      * @param memberId 사용자 ID
      */
     public void validateTripOwner(String tripId, String memberId) {
         String tripOwner = tripMapper.readTripOwner(tripId);

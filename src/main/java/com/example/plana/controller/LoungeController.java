@@ -5,6 +5,8 @@ import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
+import com.example.plana.dto.lounge.HubPlanReadListResponse;
+import com.example.plana.dto.lounge.HubPlanSearchRequest;
 import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
 import com.example.plana.dto.trip.update.TripPublicUpdateRequest;
 import com.example.plana.service.LoungeService;
@@ -14,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -46,5 +49,17 @@ public class LoungeController {
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
+    }
+
+
+    @GetMapping("/hubs")
+    @Operation(summary = "허브 목록 조회", description = "라운지에 공개된 허브 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<HubPlanReadListResponse>> readHubPlanList(@ParameterObject HubPlanSearchRequest request) {
+
+        HubPlanReadListResponse data = loungeService.readHubPlanList(request);
+
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 }

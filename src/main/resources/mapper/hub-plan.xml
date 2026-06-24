@@ -40,4 +40,232 @@
         FROM HUB_PLAN
         WHERE HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
     </select>
+
+    <!-- 목록 조회 -->
+    <select id="readHubPlanStatsList" resultType="com.example.plana.dto.lounge.HubPlanStatResponse">
+        SELECT
+            T.TRIP_ID as "tripId",
+            <!-- 카테고리 비율 :
+                 TRIP_SCHEDULE → BOOKMARK → AREA.CATEGORY 순으로 접근
+                 CATEGORY가 NULL인 경우 'ETC'로 처리
+                 카테고리별 스케줄 수를 전체 대비 비율(%)로 계산 후 JSON 배열로 반환
+                 반환 예시 : [{"category": "FD6", "ratio": 45}, {"category": "AT4", "ratio": 40}] -->
+             (
+                SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                        'category', category,
+                        'ratio',    ratio
+                    )
+                )
+                FROM (
+                    SELECT
+                        category,
+                        ROUND(cnt * 100.0 / SUM(cnt) OVER(), 0) as ratio
+                    FROM (
+                        SELECT
+                            COALESCE(A.CATEGORY, 'ETC') as category,
+                            COUNT(*)                     as cnt
+                        FROM   TRIP_SCHEDULE TS
+                        LEFT JOIN BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                        LEFT JOIN AREA A     ON B.AREA_ID      = A.AREA_ID
+                        WHERE  TS.TRIP_DAY_ID IN (
+                            SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = T.TRIP_ID
+                        )
+                        GROUP BY COALESCE(A.CATEGORY, 'ETC')
+                    ) CATEGORY_CNT
+                ) CATEGORY_RATIO
+            )                  as "categoryStats",
+            <!-- 지역 비율 :
+                 북마크가 있으면 TRIP_SCHEDULE → BOOKMARK → AREA → REGION 순으로 지역별 비율 계산
+                 북마크가 없으면 TRIP.REGION_ID의 ZDO_NAME을 100%로 반환
+                 반환 예시 : [{"region": "경기도", "ratio": 60}, {"region": "서울특별시", "ratio": 40}] -->
+            (
+                SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                        'region', ZDO_NAME,
+                        'ratio',  ratio
+                    )
+                )
+                FROM (
+                    SELECT
+                        ZDO_NAME,
+                        ROUND(cnt * 100.0 / SUM(cnt) OVER(), 0) as ratio
+                    FROM (
+                        <!-- 북마크가 있는 경우 -->
+                        SELECT
+                            R2.ZDO_NAME as ZDO_NAME,
+                            COUNT(*)    as cnt
+                        FROM   TRIP_SCHEDULE TS
+                        JOIN   BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                        JOIN   AREA A     ON B.AREA_ID      = A.AREA_ID
+                        JOIN   REGION R2  ON A.REGION_ID    = R2.REGION_ID
+                        WHERE  TS.TRIP_DAY_ID IN (
+                            SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = T.TRIP_ID
+                        )
+                        GROUP BY R2.ZDO_NAME
+
+                        UNION ALL
+
+                        <!-- 북마크가 없는 경우 : TRIP.REGION_ID로 폴백 (100% 처리) -->
+                        SELECT
+                            R3.ZDO_NAME as ZDO_NAME,
+                            1           as cnt
+                        FROM   REGION R3
+                        WHERE  R3.REGION_ID = T.REGION_ID
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM   TRIP_SCHEDULE TS
+                            JOIN   BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                            WHERE  TS.TRIP_DAY_ID IN (
+                                SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = T.TRIP_ID
+                            )
+                        )
+                    ) REGION_CNT
+                ) REGION_RATIO
+            )                  as "regionStats"
+        FROM TRIP T
+        WHERE T.TRIP_ID IN
+        <foreach item="tripId" collection="list" open="(" separator="," close=")">
+            #{tripId}
+        </foreach>
+    </select>
+
+    <!-- 통계 조회  -->
+    <select id="readHubPlanList" parameterType="com.example.plana.dto.lounge.HubPlanSearchRequest"
+            resultType="com.example.plana.dto.lounge.HubPlanReadResponse">
+        SELECT
+            HP.HUB_PLAN_ID                                          as "hubPlanId",
+            HP.TRIP_ID                                              as "tripId",
+            T.NAME                                                  as "tripName",
+            HP.MEMBER_ID                                            as "memberId",
+            M.NICKNAME                                              as "nickname",
+            HP.LIKE_COUNT                                           as "likeCount",
+            HP.COPY_COUNT                                           as "copyCount",
+            HP.CREATE_DATE                                          as "createdDate",
+            <!-- 여행 기간 (박 수) : END_DATE - START_DATE (VARCHAR → DATE 캐스팅 후 계산) -->
+            (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) as "nights"
+        FROM HUB_PLAN HP
+            JOIN TRIP   T ON HP.TRIP_ID   = T.TRIP_ID
+            JOIN MEMBER M ON HP.MEMBER_ID = M.MEMBER_ID
+            JOIN REGION R ON T.REGION_ID  = R.REGION_ID
+        WHERE HP.STATUS = 'ACTIVE'
+        <!-- 작성자 닉네임 검색 (부분 일치) -->
+        <if test="nickname != null and nickname != ''">
+            AND M.NICKNAME LIKE '%' || #{nickname, jdbcType=VARCHAR} || '%'
+        </if>
+        <!-- 여행 제목 검색 (부분 일치) -->
+        <if test="name != null and name != ''">
+            AND T.NAME LIKE '%' || #{name, jdbcType=VARCHAR} || '%'
+        </if>
+        <!-- 지역 필터 :
+             exactRegionIds → 특정 시군구 REGION_ID 정확 일치
+             zdoCodes       → 시/도 전체 ZDO_CODE 일치
+             둘 다 있을 경우 OR 조건으로 처리 -->
+        <if test="(exactRegionIds != null and exactRegionIds.size() > 0) or (zdoCodes != null and zdoCodes.size() > 0)">
+            AND (
+                <trim prefixOverrides="OR">
+                    <if test="exactRegionIds != null and exactRegionIds.size() > 0">
+                        OR T.REGION_ID IN
+                        <foreach item="rid" collection="exactRegionIds" open="(" separator="," close=")">
+                            #{rid}
+                        </foreach>
+                    </if>
+                    <if test="zdoCodes != null and zdoCodes.size() > 0">
+                        OR R.ZDO_CODE IN
+                        <foreach item="zdo" collection="zdoCodes" open="(" separator="," close=")">
+                            #{zdo, jdbcType=INTEGER}
+                        </foreach>
+                    </if>
+                </trim>
+            )
+        </if>
+        <!-- 여행 기간 필터 : 박 수 범위 (minNights 이상 / maxNights 이하) -->
+        <if test="minNights != null">
+            AND (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) &gt;= #{minNights}
+        </if>
+        <if test="maxNights != null">
+            AND (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) &lt;= #{maxNights}
+        </if>
+        <!-- 키워드 태그 필터 :
+             선택한 키워드를 모두 포함하는 허브플랜만 조회 (AND 조건)
+             HAVING COUNT = keywordIds.size() 로 전체 키워드가 모두 매칭된 경우만 포함 -->
+        <if test="keywordIds != null and keywordIds.size() > 0">
+            AND HP.HUB_PLAN_ID IN (
+                SELECT HUB_PLAN_ID
+                FROM   HUB_PLAN_KEYWORD
+                WHERE  KEYWORD_ID IN
+                <foreach item="kid" collection="keywordIds" open="(" separator="," close=")">
+                    #{kid}
+                </foreach>
+                GROUP BY HUB_PLAN_ID
+                HAVING COUNT(DISTINCT KEYWORD_ID) = #{keywordIds.size()}
+            )
+        </if>
+        <!-- 정렬 : LIKE(좋아요순) / COPY(복사순) / 기본(최신순) -->
+        <choose>
+            <when test="sortBy == 'LIKE'">ORDER BY HP.LIKE_COUNT  DESC</when>
+            <when test="sortBy == 'COPY'">ORDER BY HP.COPY_COUNT  DESC</when>
+            <otherwise>                   ORDER BY HP.CREATE_DATE  DESC</otherwise>
+        </choose>
+        LIMIT  #{size}
+        OFFSET #{offset}
+    </select>
+
+    <!-- 전체 개수 조회 -->
+    <select id="countHubPlanList" parameterType="com.example.plana.dto.lounge.HubPlanSearchRequest"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM HUB_PLAN HP
+            JOIN TRIP   T ON HP.TRIP_ID   = T.TRIP_ID
+            JOIN MEMBER M ON HP.MEMBER_ID = M.MEMBER_ID
+            JOIN REGION R ON T.REGION_ID  = R.REGION_ID
+        WHERE HP.STATUS = 'ACTIVE'
+        <!-- 작성자 닉네임 검색 (부분 일치) -->
+        <if test="nickname != null and nickname != ''">
+            AND M.NICKNAME LIKE '%' || #{nickname, jdbcType=VARCHAR} || '%'
+        </if>
+        <!-- 여행 제목 검색 (부분 일치) -->
+        <if test="name != null and name != ''">
+            AND T.NAME LIKE '%' || #{name, jdbcType=VARCHAR} || '%'
+        </if>
+        <!-- 지역 필터 -->
+        <if test="(exactRegionIds != null and exactRegionIds.size() > 0) or (zdoCodes != null and zdoCodes.size() > 0)">
+            AND (
+                <trim prefixOverrides="OR">
+                    <if test="exactRegionIds != null and exactRegionIds.size() > 0">
+                        OR T.REGION_ID IN
+                        <foreach item="rid" collection="exactRegionIds" open="(" separator="," close=")">
+                            #{rid}
+                        </foreach>
+                    </if>
+                    <if test="zdoCodes != null and zdoCodes.size() > 0">
+                        OR R.ZDO_CODE IN
+                        <foreach item="zdo" collection="zdoCodes" open="(" separator="," close=")">
+                            #{zdo, jdbcType=INTEGER}
+                        </foreach>
+                    </if>
+                </trim>
+            )
+        </if>
+        <!-- 여행 기간 필터 -->
+        <if test="minNights != null">
+            AND (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) &gt;= #{minNights}
+        </if>
+        <if test="maxNights != null">
+            AND (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) &lt;= #{maxNights}
+        </if>
+        <!-- 키워드 태그 필터 -->
+        <if test="keywordIds != null and keywordIds.size() > 0">
+            AND HP.HUB_PLAN_ID IN (
+                SELECT HUB_PLAN_ID
+                FROM   HUB_PLAN_KEYWORD
+                WHERE  KEYWORD_ID IN
+                <foreach item="kid" collection="keywordIds" open="(" separator="," close=")">
+                    #{kid}
+                </foreach>
+                GROUP BY HUB_PLAN_ID
+                HAVING COUNT(DISTINCT KEYWORD_ID) = #{keywordIds.size()}
+            )
+        </if>
+    </select>
 </mapper>

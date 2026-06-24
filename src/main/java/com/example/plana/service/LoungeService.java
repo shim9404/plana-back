@@ -3,22 +3,28 @@ package com.example.plana.service;
 
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
-import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
+import com.example.plana.dto.lounge.*;
+import com.example.plana.dto.region.read.RegionCodeResponse;
 import com.example.plana.mapper.HubPlanMapper;
+import com.example.plana.mapper.RegionMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 @Log4j2
 public class LoungeService {
     private final HubPlanMapper hubPlanMapper;
+    private final RegionMapper regionMapper;
     private final TripService tripService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 허브 공개 여부 갱신 (신규 생성 포함)
@@ -81,6 +87,120 @@ public class LoungeService {
 
         if ("INACTIVE".equals(status) || "DELETED".equals(status)) {
             tripService.updateIsPublic(tripId, false, memberId);
+        }
+    }
+
+
+    /**
+     * 허브플랜 목록 조회 (검색, 정렬, 페이징 포함)
+     * @param request 검색 조건
+     * @return HubPlanReadListResponse 허브플랜 목록 및 페이징 정보
+     */
+    public HubPlanReadListResponse readHubPlanList(HubPlanSearchRequest request) {
+
+        // 1. regionIds 분리 처리
+        resolveRegionIds(request);
+
+        // 2. 기본 목록 조회
+        List<HubPlanReadResponse> plans = hubPlanMapper.readHubPlanList(request);
+
+        // 3. 통계 조회 후 매핑
+        if (!plans.isEmpty()) {
+            mapStats(plans);
+        }
+
+        // 4. 페이징
+        int totalCount = hubPlanMapper.countHubPlanList(request);
+        int totalPages = (int) Math.ceil((double) totalCount / request.getSize());
+
+        return HubPlanReadListResponse.builder()
+                .plans(plans)
+                .totalCount(totalCount)
+                .totalPages(totalPages)
+                .currentPage(request.getPage())
+                .size(request.getSize())
+                .build();
+    }
+
+    /**
+     * regionIds를 REGION 테이블 조회 후 zdoCodes / exactRegionIds 로 분리
+     * SIGU_CODE == 0 이면 시/도 전체 선택 → zdoCodes에 ZDO_CODE 추가
+     * 그 외에는 시군구 단위 정확 일치 → exactRegionIds에 추가
+     * @param request 검색 조건 (regionIds 포함)
+     */
+    private void resolveRegionIds(HubPlanSearchRequest request) {
+        if (request.getRegionIds() == null || request.getRegionIds().isEmpty()) return;
+
+        List<String> exactRegionIds = new ArrayList<>();
+        List<Integer> zdoCodes = new ArrayList<>();
+
+        for (String regionId : request.getRegionIds()) {
+            RegionCodeResponse regionCode = regionMapper.readRegionCodes(regionId);
+            if (regionCode.getSiguCode() == 0) {
+                zdoCodes.add(regionCode.getZdoCode());
+            } else {
+                exactRegionIds.add(regionId);
+            }
+        }
+
+        request.setExactRegionIds(exactRegionIds);
+        request.setZdoCodes(zdoCodes);
+    }
+
+    /**
+     * tripId 목록으로 통계 일괄 조회 후 plans에 매핑
+     * @param plans 기본 정보 목록
+     */
+    private void mapStats(List<HubPlanReadResponse> plans) {
+        List<String> tripIds = plans.stream()
+                .map(HubPlanReadResponse::getTripId)
+                .collect(Collectors.toList());
+
+        List<HubPlanStatResponse> statsList = hubPlanMapper.readHubPlanStatsList(tripIds);
+
+        Map<String, HubPlanStatResponse> statsMap = statsList.stream()
+                .collect(Collectors.toMap(HubPlanStatResponse::getTripId, s -> s));
+
+        plans.forEach(plan -> {
+            HubPlanStatResponse stat = statsMap.get(plan.getTripId());
+            if (stat != null) {
+                plan.setCategoryStatList(parseStats(stat));
+                plan.setRegionStatList(parseRegionStats(stat));
+            }
+        });
+    }
+
+    /**
+     * categoryStats JSON string → List<CategoryStatResponse> 파싱
+     * @param stat 통계 응답
+     * @return 카테고리 비율 목록
+     */
+    private List<CategoryStatResponse> parseStats(HubPlanStatResponse stat) {
+        if (stat.getCategoryStats() == null) return Collections.emptyList();
+        try {
+            return objectMapper.readValue(
+                    stat.getCategoryStats(),
+                    new TypeReference<List<CategoryStatResponse>>() {}
+            );
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.HUB_PLAN_READ_FAILED);
+        }
+    }
+
+    /**
+     * regionStats JSON string → List<RegionStatResponse> 파싱
+     * @param stat 통계 응답
+     * @return 지역 비율 목록
+     */
+    private List<RegionStatResponse> parseRegionStats(HubPlanStatResponse stat) {
+        if (stat.getRegionStats() == null) return Collections.emptyList();
+        try {
+            return objectMapper.readValue(
+                    stat.getRegionStats(),
+                    new TypeReference<List<RegionStatResponse>>() {}
+            );
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.HUB_PLAN_READ_FAILED);
         }
     }
 }
