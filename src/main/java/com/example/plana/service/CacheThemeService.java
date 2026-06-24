@@ -4,6 +4,7 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.config.VisitKoreaConfig;
 import com.example.plana.dto.area.read.MapPos;
+import com.example.plana.dto.area.read.RelatePlaceReadResponse;
 import com.example.plana.dto.area.read.ThemeReadPageResponse;
 import com.example.plana.dto.area.read.ThemeReadResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,16 +53,32 @@ public class CacheThemeService {
 
     // 여행지 필터 검색 전체 조회 및 저장(캐싱)
     @Cacheable(
-            value = "themeTravels",
+            value = "aroundTravels",
             key = "#filter + '-' + #mapX + '-' + #mapY"
-    ) // 위치 좌표 변경 시, 새 API 호출
+    ) // 필터, 위치 좌표 변경 시, 새 API 호출
     public List<ThemeReadResponse> readAroundTravels(String filter, double mapX, double mapY, int dataSize) {
-        List<ThemeReadResponse> themeTravels = new ArrayList<>();
+        List<ThemeReadResponse> aroundTravels = new ArrayList<>();
 
-        if (filter.equals("CAMP")) { themeTravels = readCampTravelsbyLocation(mapX, mapY, 1, dataSize); }
-        else if (filter.equals("WELLNESS")) { themeTravels = readWellnessTravelsbyLocation(mapX, mapY, 1, dataSize); }
+        // 캠프
+        if (filter.equals("CAMP")) { aroundTravels = readCampTravelsbyLocation(mapX, mapY, 1, dataSize); }
+        // 웰니스
+        else if (filter.equals("WELLNESS")) { aroundTravels = readWellnessTravelsbyLocation(mapX, mapY, 1, dataSize); }
 
-        return themeTravels;
+        return aroundTravels;
+    }
+
+    // 여행지 연관 검색(관광포털 API)
+    @Cacheable(
+            value = "relatedTravels",
+            key = "#keyword + '-' + #regionId"
+    ) // 키워드, 행정구역 ID 변경 시, 새 API 호출
+    public List<RelatePlaceReadResponse> readRelatedTravels(String keyword, String regionId, int dataSize) {
+        List<RelatePlaceReadResponse> relatedTravels = new ArrayList<>();
+
+        // 연관 여행지
+        relatedTravels = readRelatedTravelsbyKeyword(keyword, regionId, 1, dataSize);
+
+        return relatedTravels;
     }
 
     // 반려동물 관련 여행지 - 지역 기반
@@ -179,8 +196,49 @@ public class CacheThemeService {
         // api 결과 데이터 모두 조회
         List<Map<String,Object>> itemList = readAllItems(urlLocation, page, dataSize);
 
-        // 고캠핑(CAMP) api 응답 결과 저장
+        // 웰니스(WELLNESS) api 응답 결과 저장
         List<ThemeReadResponse> list = readWellnessLists(itemList);
+
+        return list;
+    }
+
+    // 연관 여행지 - 키워드 기반
+    private List<RelatePlaceReadResponse> readRelatedTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
+        String urlKeyword = "https://apis.data.go.kr/B551011/TarRlteTarService1/searchKeyword1"
+                + "?serviceKey=" + visitKoreaConfig.getServiceKey()
+                + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
+                + "&areaCd=" + regionId.substring(0, 2)
+                + "&signguCd=" + regionId
+                + "&keyword=" + keyword
+                + "&baseYm=" + "202604"
+                + "&pageNo=" + page
+                + "&numOfRows=" + dataSize;
+
+        // api 결과 데이터 조회(최대 10개)
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ResponseEntity<String> response = restTemplate.getForEntity(urlKeyword, String.class);
+        Map<String, Object> result;
+        try {
+            result = objectMapper.readValue(response.getBody(), Map.class);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        List<RelatePlaceReadResponse> list = new ArrayList<>();
+
+        Map<String, Object> pageResponseMap = (Map<String, Object>) result.get("response");
+        Map<String, Object> pageBody = (Map<String, Object>) pageResponseMap.get("body");
+        // 데이터 총 개수 조회
+        int totalCount = Integer.parseInt(pageBody.get("totalCount").toString());
+        if (totalCount == 0) { return list; }
+        Map<String, Object> items = (Map<String, Object>) pageBody.get("items");
+
+        List<Map<String,Object>> itemList = (List<Map<String,Object>>) items.get("item");
+
+        // 연관 여행지 api 응답 결과 저장
+        list = readRelatedLists(itemList);
 
         return list;
     }
@@ -206,7 +264,6 @@ public class CacheThemeService {
 
         // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(body.get("totalCount").toString());
-
         if (totalCount == 0) { return allItems; } // 결과 데이터가 0개 일 경우, 빠져나오기
         // 총 결과 데이터 수 통해 총 페이지 수량 조회
         int totalPages = (int)Math.ceil((double) totalCount / dataSize);
@@ -403,7 +460,7 @@ public class CacheThemeService {
             mapPos.setY(Double.parseDouble((String) item.get("mapY")));
             themeReadResponse.setMapPos(mapPos);
             // 장소 분류 코드
-            themeReadResponse.setCategory("AD5"); // 숙박
+            themeReadResponse.setCategory("CT1"); // 문화시설
             // 도로명 주소 (지번 주소 X)
             themeReadResponse.setRoadAddress((String) item.get("baseAddr"));
             // 링크 (X)
@@ -416,5 +473,65 @@ public class CacheThemeService {
         }
 
         return list;
+    }
+
+    // 연관 여행지 api 응답 결과 저장
+    private List<RelatePlaceReadResponse> readRelatedLists(List<Map<String,Object>> itemList){
+        List<RelatePlaceReadResponse> list = new ArrayList<>();
+        for (Map<String, Object> item : itemList) {
+            RelatePlaceReadResponse relatePlaceReadResponse = new RelatePlaceReadResponse();
+            // 분류
+            relatePlaceReadResponse.setSearchType("THEME");
+            // 맞춤 테마 종류
+            relatePlaceReadResponse.setSearchTheme("RELATION");
+            // 이름
+            relatePlaceReadResponse.setName((String) item.get("rlteTatsNm"));
+            // 장소 분류 코드
+            String ContentM = (String) item.get("rlteCtgryMclsNm");
+            String searchTheme = sortContentM(ContentM);
+            relatePlaceReadResponse.setCategory(searchTheme);
+            // 도 이름
+            relatePlaceReadResponse.setZdoName((String) item.get("rlteRegnNm"));
+            //시군구 이름
+            relatePlaceReadResponse.setSiguName((String) item.get("rlteSignguNm"));
+            // 설명
+            relatePlaceReadResponse.setDescription("관광포털 여행지 검색(RELATION)");
+
+            list.add(relatePlaceReadResponse);
+        }
+
+        return list;
+    }
+
+    // 카테고리중분류명 -> 장소 분류 코드로 변경
+    private String sortContentM(String ContentM){
+        String searchTheme = "";
+        switch (ContentM) {
+            // 관광지
+            case "역사관광":
+                searchTheme = "AT4";
+                break;
+            case "문화관광":
+                searchTheme = "CT1";
+                break;
+            case "기타관광":
+                searchTheme = "AT4";
+                break;
+            case "쇼핑":
+                searchTheme = "MT1";
+                break;
+            case "자연관광":
+                searchTheme = "AT4";
+                break;
+            case "음식":
+                searchTheme = "FD6";
+                break;
+            case "숙박":
+                searchTheme = "AD5";
+                break;
+            default:
+                searchTheme = "ETC";
+        }
+        return searchTheme;
     }
 }

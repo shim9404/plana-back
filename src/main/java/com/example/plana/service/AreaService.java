@@ -306,31 +306,51 @@ public class AreaService {
 
         // 페이징 메타 정보
         int totalCount = themeTravels.size();
-        int totalPages = (int) Math.ceil((double) themeTravels.size() / 15);
+        int totalPages = (int) Math.ceil((double) themeTravels.size() / size);
         // page에 따라 themeTravels 데이터 자르기
-        int startIndex = (page - 1) * 15;
-        int endIndex = Math.min(startIndex + 15, totalCount);
+        int startIndex = (page - 1) * size;
+        int endIndex = Math.min(startIndex + size, totalCount);
         List<ThemeReadResponse> pageThemeTravels = themeTravels.subList(startIndex, endIndex);
 
-        return new ThemeReadPageResponse(totalCount, totalPages, page, 15, pageThemeTravels);
+        return new ThemeReadPageResponse(totalCount, totalPages, page, size, pageThemeTravels);
     }
 
+    // 여행지 필터 검색(관광포털 API)
     public ThemeReadPageResponse readAround(String filter, double mapX, double mapY, int page, int size) {
         // 관광포털 API는 size 파라미터 지원 (1~10 기본값 10)
         // size 최대 10 제한이 있으므로 초과 시 10로 고정
         int dataSize = Math.min(size, 10);
 
-        List<ThemeReadResponse> themeTravels = cacheThemeService.readAroundTravels(filter, mapX, mapY, dataSize);
+        List<ThemeReadResponse> aroundTravels = cacheThemeService.readAroundTravels(filter, mapX, mapY, dataSize);
 
         // 페이징 메타 정보
-        int totalCount = themeTravels.size();
-        int totalPages = (int) Math.ceil((double) themeTravels.size() / 15);
-        // page에 따라 themeTravels 데이터 자르기
-        int startIndex = (page - 1) * 15;
-        int endIndex = Math.min(startIndex + 15, totalCount);
-        List<ThemeReadResponse> pageThemeTravels = themeTravels.subList(startIndex, endIndex);
+        int totalCount = aroundTravels.size();
+        int totalPages = (int) Math.ceil((double) aroundTravels.size() / size);
+        // page에 따라 aroundTravels 데이터 자르기
+        int startIndex = (page - 1) * size;
+        int endIndex = Math.min(startIndex + size, totalCount);
+        List<ThemeReadResponse> pageAroundTravels = aroundTravels.subList(startIndex, endIndex);
 
-        return new ThemeReadPageResponse(totalCount, totalPages, page, 15, pageThemeTravels);
+        return new ThemeReadPageResponse(totalCount, totalPages, page, size, pageAroundTravels);
+    }
+
+    // 여행지 연관 검색(관광포털 API)
+    public RelatePlaceReadPageResponse readRelatedTravels(String keyword, String regionId, int page, int size) {
+        // 관광포털 API는 size 파라미터 지원 (1~10 기본값 10)
+        // size 최대 10 제한이 있으므로 초과 시 10로 고정
+        int dataSize = Math.min(size, 10);
+
+        List<RelatePlaceReadResponse> relatedTravels = cacheThemeService.readRelatedTravels(keyword, regionId, dataSize);
+
+        // 페이징 메타 정보
+        int totalCount = relatedTravels.size();
+        int totalPages = (int) Math.ceil((double) relatedTravels.size() / size);
+        // page에 따라 relatedTravels 데이터 자르기
+        int startIndex = (page - 1) * size;
+        int endIndex = Math.min(startIndex + size, totalCount);
+        List<RelatePlaceReadResponse> pageRelatedTravels = relatedTravels.subList(startIndex, endIndex);
+
+        return new RelatePlaceReadPageResponse(totalCount, totalPages, page, size, pageRelatedTravels);
     }
 }
 
