@@ -53,13 +53,12 @@
         WHERE SHARE_TOKEN = #{shareToken, jdbcType=VARCHAR}
     </select>
 
-    <!--  여행 소유자 확인  -->
-    <select id="readTripOwner" resultType="String">
-        SELECT MEMBER_ID as "memberId"
+    <!--  여행ID로 여행명 조회  -->
+    <select id="readNameByTripId" resultType="String">
+        SELECT NAME        as "name"
         FROM TRIP
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </select>
-
     <!--  여행 일자 존재 확인  -->
     <select id="existTripDay" resultType="boolean">
         SELECT COUNT(1)

@@ -8,8 +8,6 @@ import java.util.Map;
 
 @Mapper
 public interface TripMapper {
-    // ── 소유자 확인 ─────────────────────────
-    String readTripOwner(String tripId);
 
     // ── 존재 여부 파악 ─────────────────────────
     boolean existTripDay(String tripDayId);
@@ -18,6 +16,9 @@ public interface TripMapper {
     TripResponse readTrip(String tripId);
     List<TripDayResponse> readTripDaysByTripId(String tripId);
     List<TripScheduleResponse> readTripSchedulesByTripDayId(String tripDayId);
+
+    // ── 조회 ───────────────────────────────
+    String readNameByTripId(String tripId);
 
     // ── 상태(STATUS) 갱신 ───────────────────
     int updateTripStatus(Map<String, Object> params);

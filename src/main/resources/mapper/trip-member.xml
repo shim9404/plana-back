@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.TripMemberMapper">
+
+    <!-- === [ CHECK ]  ================================================================================= -->
+    <!-- 동일 여행에 동일 이메일 초대 여부 확인 -->
+    <select id="checkInvitationExists" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+        FROM TRIP_MEMBER
+        WHERE TRIP_ID      = #{tripId,       jdbcType=VARCHAR}
+          AND INVITED_EMAIL = #{invitedEmail, jdbcType=VARCHAR}
+          AND JOINED_AT  IS NULL
+    </select>
+
+    <!-- === [ INVITE ]  ================================================================================= -->
+    <!-- 초대 INSERT -->
+    <insert id="createInvitation">
+        INSERT INTO TRIP_MEMBER (
+            TRIP_ID,
+            MEMBER_ID,
+            INVITED_EMAIL,
+            INVITE_TOKEN,
+            ROLE,
+            INVITED_AT
+        ) VALUES (
+            #{tripId,        jdbcType=VARCHAR},
+            #{memberId,      jdbcType=VARCHAR},
+            #{invitedEmail,  jdbcType=VARCHAR},
+            #{inviteToken,   jdbcType=VARCHAR},
+            #{role,          jdbcType=VARCHAR},
+            TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS')
+        )
+    </insert>
+
+    <!-- 토큰으로 초대 정보 조회 -->
+    <select id="readInvitationByToken" resultType="map">
+        SELECT TRIP_ID          as "tripId",
+               MEMBER_ID        as "memberId",
+               INVITED_EMAIL    as "invitedEmail",
+               ROLE             as "role",
+               INVITED_AT       as "invitedAt",
+               JOINED_AT        as "joinedAt"
+        FROM TRIP_MEMBER
+        WHERE INVITE_TOKEN = #{inviteToken, jdbcType=VARCHAR}
+    </select>
+    
+    <!-- 초대 수락 처리 -->
+    <update id="updateInvitationAccept">
+        UPDATE TRIP_MEMBER
+        SET MEMBER_ID   = #{memberId,      jdbcType=VARCHAR},
+            JOINED_AT = TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS'),
+            INVITE_TOKEN = NULL
+        WHERE INVITE_TOKEN = #{inviteToken, jdbcType=VARCHAR}
+    </update>
+</mapper>

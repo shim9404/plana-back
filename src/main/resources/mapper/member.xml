@@ -22,6 +22,7 @@
         WHERE MEMBER_ID = #{memberId}
     </select>
 
+    <!--  이메일로 회원 정보 조회  -->
     <select id="readMemberByEmail" parameterType="string" resultType="com.example.plana.model.Member">
         SELECT
             MEMBER_ID     as "memberId",
@@ -35,6 +36,7 @@
         WHERE EMAIL = #{email}
     </select>
 
+    <!--  멤버ID로 회원 정보 조회  -->
     <select id="readMemberById" parameterType="string" resultType="com.example.plana.model.Member">
         SELECT
             MEMBER_ID     as "memberId",
@@ -46,6 +48,20 @@
             ROLE          as "role"
         FROM MEMBER
         WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <!-- 이메일로 회원 멤버ID 조회 -->
+    <select id="readMemberIdByEmail" resultType="string">
+        SELECT MEMBER_ID as "memberId"
+        FROM MEMBER
+        WHERE EMAIL = #{email, jdbcType=VARCHAR}
+    </select>
+
+    <!-- 멤버ID 회원 닉네임 조회 -->
+    <select id="readNicknameByMemberId" resultType="string">
+        SELECT NICKNAME as "nickname"
+        FROM MEMBER
+        WHERE MEMBER_ID = #{memberId, jdbcType=VARCHAR}
     </select>
 
     <update id="updateMember">
