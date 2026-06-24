@@ -232,9 +232,7 @@ public class CacheThemeService {
         Map<String, Object> pageBody = (Map<String, Object>) pageResponseMap.get("body");
         // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(pageBody.get("totalCount").toString());
-        if (totalCount == 0) {
-            return list;
-        }
+        if (totalCount == 0) { return list; }
         Map<String, Object> items = (Map<String, Object>) pageBody.get("items");
 
         List<Map<String,Object>> itemList = (List<Map<String,Object>>) items.get("item");
@@ -266,10 +264,6 @@ public class CacheThemeService {
 
         // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(body.get("totalCount").toString());
-        if (totalCount == 0) {
-            return allItems;
-        }
-
         if (totalCount == 0) { return allItems; } // 결과 데이터가 0개 일 경우, 빠져나오기
         // 총 결과 데이터 수 통해 총 페이지 수량 조회
         int totalPages = (int)Math.ceil((double) totalCount / dataSize);
