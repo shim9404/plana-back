@@ -226,19 +226,21 @@ public class CacheThemeService {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
+        List<RelatePlaceReadResponse> list = new ArrayList<>();
+
         Map<String, Object> pageResponseMap = (Map<String, Object>) result.get("response");
         Map<String, Object> pageBody = (Map<String, Object>) pageResponseMap.get("body");
         // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(pageBody.get("totalCount").toString());
         if (totalCount == 0) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+            return list;
         }
         Map<String, Object> items = (Map<String, Object>) pageBody.get("items");
 
         List<Map<String,Object>> itemList = (List<Map<String,Object>>) items.get("item");
 
         // 연관 여행지 api 응답 결과 저장
-        List<RelatePlaceReadResponse> list = readRelatedLists(itemList);
+        list = readRelatedLists(itemList);
 
         return list;
     }
@@ -265,7 +267,7 @@ public class CacheThemeService {
         // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(body.get("totalCount").toString());
         if (totalCount == 0) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+            return allItems;
         }
 
         if (totalCount == 0) { return allItems; } // 결과 데이터가 0개 일 경우, 빠져나오기

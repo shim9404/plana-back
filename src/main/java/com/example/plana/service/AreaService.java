@@ -306,9 +306,6 @@ public class AreaService {
 
         // 페이징 메타 정보
         int totalCount = themeTravels.size();
-        if (totalCount == 0) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
         int totalPages = (int) Math.ceil((double) themeTravels.size() / size);
         // page에 따라 themeTravels 데이터 자르기
         int startIndex = (page - 1) * size;
@@ -328,9 +325,6 @@ public class AreaService {
 
         // 페이징 메타 정보
         int totalCount = aroundTravels.size();
-        if (totalCount == 0) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
         int totalPages = (int) Math.ceil((double) aroundTravels.size() / size);
         // page에 따라 aroundTravels 데이터 자르기
         int startIndex = (page - 1) * size;
@@ -350,9 +344,6 @@ public class AreaService {
 
         // 페이징 메타 정보
         int totalCount = relatedTravels.size();
-        if (totalCount == 0) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
         int totalPages = (int) Math.ceil((double) relatedTravels.size() / size);
         // page에 따라 relatedTravels 데이터 자르기
         int startIndex = (page - 1) * size;
