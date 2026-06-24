@@ -8,9 +8,14 @@ import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.invite.TripInviteAcceptRequest;
+import com.example.plana.dto.trip.invite.TripInviteAcceptResponse;
+import com.example.plana.dto.trip.invite.TripInviteRequest;
+import com.example.plana.dto.trip.invite.TripInviteResponse;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.service.BookmarkService;
+import com.example.plana.service.TripInviteService;
 import com.example.plana.service.TripService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 public class TripController {
 
     private final TripService tripService;
+    private final TripInviteService tripInviteService;
     private final BookmarkService bookmarkService;
 
     /**
@@ -320,5 +326,29 @@ public class TripController {
     public ResponseEntity<ResponseBody<TripResponse>> getSharedTrip(@PathVariable String shareToken) {
         TripResponse data = tripService.readSharedTrip(shareToken);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
+
+    @PostMapping("/{tripId}/invite")
+    @Operation(summary = "여행 멤버 초대", description = "이메일로 여행 계획에 멤버를 초대한다.")
+    @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
+    @ApiResponse(responseCode = "201", description = "[S002] 등록이 완료되었습니다.")
+    public ResponseEntity<ResponseBody<TripInviteResponse>> inviteMember(
+            @PathVariable String tripId, @RequestBody TripInviteRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+
+        TripInviteResponse data = tripInviteService.inviteMember(tripId, principal.getMemberId(), request);
+
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    @PostMapping("/invite/accept")
+    @Operation(summary = "여행 초대 수락", description = "초대 토큰을 검증하고 여행 멤버로 등록한다.")
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<TripInviteAcceptResponse>> acceptInvitation(
+            @RequestBody TripInviteAcceptRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+
+        TripInviteAcceptResponse data = tripInviteService.acceptInvitation(principal.getMemberId(), request);
+
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
     }
 }

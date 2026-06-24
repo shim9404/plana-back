@@ -71,6 +71,15 @@ public enum ErrorCode {
     TRIP_SHARE_TOKEN_CREATE_FAILED(500, "T023", "여행 공유 토큰 발급 중 오류가 발생했습니다."),
     TRIP_SHARE_TOKEN_DELETE_FAILED(500, "T024", "여행 공유 중단 중 오류가 발생했습니다."),
 
+    // Invite
+    INVITE_ALREADY_SENT(409, "I001", "이미 초대가 발송된 이메일입니다."),
+    INVITE_TOKEN_NOT_FOUND(404, "I002", "유효하지 않은 초대 링크입니다."),
+    INVITE_TOKEN_EXPIRED(410, "I003", "만료된 초대 링크입니다."),
+    INVITE_EMAIL_MISMATCH(403, "I004", "초대받은 이메일과 로그인 계정이 일치하지 않습니다."),
+    INVITE_ALREADY_ACCEPTED(409, "I005", "이미 수락된 초대입니다."),
+    INVITE_SEND_FAILED(500, "I006", "초대 메일 발송 중 오류가 발생했습니다."),
+    INVITE_NOT_MEMBER(403, "I007", "초대받은 이메일로 가입된 계정이 없습니다."),
+    
     // Region & Area
     AREA_CREATE_FAILED(500, "R001", "신규 장소 등록 중 오류가 발생했습니다."),
     AREA_READ_FAILED(500, "R002", "장소 정보 조회 중 오류가 발생했습니다."),

@@ -27,6 +27,12 @@ public interface MemberMapper {
     // 회원 정보 호출
     Member readMemberById(@Param("memberId") String memberId);
 
+    // 이메일로 멤버ID 조회
+    String readMemberIdByEmail(@Param("email") String email);
+
+    // 멤버ID로 닉네임 조회
+    String readNicknameByMemberId(@Param("memberId") String memberId);
+
     // 회원 정보 수정
     void updateMember(@Param("memberId") String memberId, @Param("data") MemberUpdateRequest memberUpdateRequest);
 
