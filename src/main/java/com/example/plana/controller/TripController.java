@@ -343,7 +343,7 @@ public class TripController {
 
     @PostMapping("/invite/accept")
     @Operation(summary = "여행 초대 수락", description = "초대 토큰을 검증하고 여행 멤버로 등록한다.")
-    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
     public ResponseEntity<ResponseBody<TripInviteAcceptResponse>> acceptInvitation(
             @RequestBody TripInviteAcceptRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
 
