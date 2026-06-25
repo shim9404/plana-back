@@ -2,6 +2,7 @@ package com.example.plana.service;
 
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.common.utils.DateUtils;
 import com.example.plana.component.TripAccessValidator;
 import com.example.plana.dto.trip.invite.TripInviteAcceptRequest;
 import com.example.plana.dto.trip.invite.TripInviteAcceptResponse;
@@ -10,11 +11,13 @@ import com.example.plana.dto.trip.invite.TripInviteResponse;
 import com.example.plana.mapper.MemberMapper;
 import com.example.plana.mapper.TripMapper;
 import com.example.plana.mapper.TripMemberMapper;
+import com.example.plana.model.TripMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -84,7 +87,6 @@ public class TripInviteService {
         try {
             tripMemberMapper.createInvitation(inviteParams);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BusinessException(ErrorCode.INVITE_SEND_FAILED);
         }
 
@@ -130,7 +132,7 @@ public class TripInviteService {
     @Transactional
     public TripInviteAcceptResponse acceptInvitation(String memberId, TripInviteAcceptRequest request) {
         // 1. 토큰으로 초대 정보 조회
-        Map<String, Object> invitation;
+        TripMember invitation;
         try {
             invitation = tripMemberMapper.readInvitationByToken(request.getInviteToken());
         } catch (Exception e) {
@@ -142,17 +144,24 @@ public class TripInviteService {
         }
 
         // 2. 이미 수락된 초대인지 확인
-        if (invitation.get("joinedAt") != null) {
+        if (invitation.getJoinedAt() != null) {
             throw new BusinessException(ErrorCode.INVITE_ALREADY_ACCEPTED);
         }
 
-        // 3. 이메일 일치 여부 확인
-        String invitedEmail = (String) invitation.get("invitedEmail");
+        // 3. 만료 여부 확인 (3일)
+        LocalDateTime invitedAt = DateUtils.parseDateTime(invitation.getInvitedAt());
+        if (invitedAt.plusDays(3).isBefore(LocalDateTime.now())) {
+            tripMemberMapper.deleteExpiredInvitation();
+            throw new BusinessException(ErrorCode.INVITE_TOKEN_EXPIRED);
+        }
+
+        // 4. 이메일 일치 여부 확인
+        String invitedEmail = invitation.getInvitedEmail();
         if (!invitedEmail.equals(request.getEmail())) {
             throw new BusinessException(ErrorCode.INVITE_EMAIL_MISMATCH);
         }
 
-        // 4. 수락 처리
+        // 5. 수락 처리
         Map<String, Object> acceptParams = new HashMap<>();
         acceptParams.put("inviteToken", request.getInviteToken());
         acceptParams.put("memberId",    memberId);
@@ -164,9 +173,17 @@ public class TripInviteService {
         }
 
         return TripInviteAcceptResponse.builder()
-                .tripId((String) invitation.get("tripId"))
+                .tripId(invitation.getTripId())
                 .memberId(memberId)
-                .role((String) invitation.get("role"))
+                .role(invitation.getRole())
                 .build();
+    }
+
+    /**
+     * 만료 토큰 자동 삭제
+     * 스케줄러 호출용 함수
+     */
+    public void deleteExpiredInvitations() {
+        tripMemberMapper.deleteExpiredInvitations();
     }
 }
