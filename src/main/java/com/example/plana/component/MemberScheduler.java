@@ -1,4 +1,4 @@
-package com.example.plana.Scheduler;
+package com.example.plana.component;
 
 import com.example.plana.service.MemberService;
 import lombok.RequiredArgsConstructor;
