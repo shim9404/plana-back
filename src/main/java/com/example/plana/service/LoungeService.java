@@ -5,6 +5,8 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.dto.lounge.*;
 import com.example.plana.dto.region.read.RegionCodeResponse;
+import com.example.plana.dto.trip.read.HubPlanDetailResponse;
+import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.mapper.HubPlanMapper;
 import com.example.plana.mapper.RegionMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -202,5 +204,43 @@ public class LoungeService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.HUB_PLAN_READ_FAILED);
         }
+    }
+
+    /**
+     * 허브플랜 세부 조회
+     * @param hubPlanId 허브플랜 ID
+     * @param memberId  현재 로그인 유저 ID
+     * @return HubPlanDetailResponse 여행 상세 + 허브 전용 정보
+     */
+    @Transactional(readOnly = true)
+    public HubPlanDetailResponse readHubPlanDetail(String hubPlanId, String memberId) {
+
+        // 1. hubPlanId로 tripId 조회
+        String tripId = hubPlanMapper.getTripIdByHubPlanId(hubPlanId);
+        log.info("hubPlanId:: "+hubPlanId);
+        log.info("tripId:: "+tripId);
+        if (tripId == null) throw new BusinessException(ErrorCode.HUB_PLAN_NOT_FOUND);
+
+        // 2. 기존 여행 상세 재사용
+        TripResponse tripDetail = tripService.readTrip(tripId, memberId);
+
+        // 3. 허브 전용 추가 정보 조회 (좋아요/복사 수, 유저 좋아요/복사 여부, 작성자 정보)
+        HubPlanInfoResponse hubInfo = hubPlanMapper.readHubPlanInfo(hubPlanId, memberId);
+
+        // 4. 키워드 태그 조회
+        List<String> keywordTags = hubPlanMapper.readHubPlanKeywords(hubPlanId);
+        hubInfo.setKeywordTags(keywordTags);
+
+        // 5. 조립 후 반환
+        return HubPlanDetailResponse.builder()
+                .tripDetail(tripDetail)
+                .likeCount(hubInfo.getLikeCount())
+                .copyCount(hubInfo.getCopyCount())
+                .isLiked(hubInfo.getIsLiked())
+                .isCopied(hubInfo.getIsCopied())
+                .nickname(hubInfo.getNickname())
+                .profileImage(hubInfo.getProfileImage())
+                .keywordTags(keywordTags)
+                .build();
     }
 }
