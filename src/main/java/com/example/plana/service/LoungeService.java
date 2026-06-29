@@ -207,7 +207,7 @@ public class LoungeService {
     }
 
     /**
-     * 허브플랜 세부 조회
+     * 허브 세부 조회
      * @param hubPlanId 허브플랜 ID
      * @param memberId  현재 로그인 유저 ID
      * @return HubPlanDetailResponse 여행 상세 + 허브 전용 정보
@@ -221,8 +221,8 @@ public class LoungeService {
         log.info("tripId:: "+tripId);
         if (tripId == null) throw new BusinessException(ErrorCode.HUB_PLAN_NOT_FOUND);
 
-        // 2. 기존 여행 상세 재사용
-        TripResponse tripDetail = tripService.readTrip(tripId, memberId);
+        // 2. 여행 상세
+        TripResponse tripDetail = tripService.readTripDetailForHub(tripId);
 
         // 3. 허브 전용 추가 정보 조회 (좋아요/복사 수, 유저 좋아요/복사 여부, 작성자 정보)
         HubPlanInfoResponse hubInfo = hubPlanMapper.readHubPlanInfo(hubPlanId, memberId);

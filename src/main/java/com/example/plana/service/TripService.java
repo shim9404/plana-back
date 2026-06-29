@@ -1,5 +1,6 @@
 package com.example.plana.service;
 
+import com.example.plana.common.constants.TripConstatnts;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
@@ -816,6 +817,19 @@ public class TripService {
         params.put("isPublic",    value);
         
         tripMapper.updateIsPublic(params);
-    } 
-    
+    }
+
+    /**
+     * 허브를 통한 여행 상세 조회 (소유자 검증 없음)
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    public TripResponse readTripDetailForHub(String tripId) {
+
+        if (!tripAccessValidator.getIsPublic(tripId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
+
+        return tripMapper.readTrip(tripId);
+    }
 }
