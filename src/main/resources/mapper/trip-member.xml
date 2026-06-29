@@ -33,7 +33,7 @@
     </insert>
 
     <!-- 토큰으로 초대 정보 조회 -->
-    <select id="readInvitationByToken" resultType="map">
+    <select id="readInvitationByToken" resultType="com.example.plana.model.TripMember">
         SELECT TRIP_ID          as "tripId",
                MEMBER_ID        as "memberId",
                INVITED_EMAIL    as "invitedEmail",
@@ -52,4 +52,17 @@
             INVITE_TOKEN = NULL
         WHERE INVITE_TOKEN = #{inviteToken, jdbcType=VARCHAR}
     </update>
+
+    <!--  만료 초대 토큰 삭제  -->
+    <delete id="deleteExpiredInvitation">
+        DELETE FROM TRIP_MEMBER
+        WHERE INVITE_TOKEN = #{inviteToken, jdbcType=VARCHAR}
+    </delete>
+
+    <!--  만료된 초대 토큰 일괄 삭제  -->
+    <delete id="deleteExpiredInvitations">
+        DELETE FROM TRIP_MEMBER
+        WHERE JOINED_AT IS NULL
+          AND TO_TIMESTAMP(INVITED_AT, 'YYYY-MM-DD HH24:MI:SS') &lt; CURRENT_TIMESTAMP - INTERVAL '3 days'
+    </delete>
 </mapper>
