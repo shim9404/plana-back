@@ -84,15 +84,24 @@ public class TripService {
     }
 
     /**
-     * 여행 단건 상세 조회
+     * 여행 단건 상세 조회 (소유자, 공유한 경우에만)
      * @param tripId 여행 ID
      * @param memberId 사용자 ID
      * @return TripResponse
      */
     @Transactional
     public TripResponse readTrip(String tripId, String memberId) {
-        tripAccessValidator.validateOwner(tripId, memberId);
+        tripAccessValidator.validateAccess(tripId, memberId);
+        return readTripDetail(tripId);
+    }
 
+    /**
+     * 여행 단건 상세 조회
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    @Transactional
+    private TripResponse readTripDetail(String tripId) {
         // 1. SELECT TRIP
         TripResponse trip = null;
         try {
@@ -131,6 +140,7 @@ public class TripService {
 
         return trip;
     }
+
 
     /**
      * 여행 복제하여 내 여행으로 저장
@@ -830,6 +840,6 @@ public class TripService {
             throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
         }
 
-        return tripMapper.readTrip(tripId);
+        return readTripDetail(tripId);
     }
 }
