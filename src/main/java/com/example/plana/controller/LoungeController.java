@@ -73,7 +73,8 @@ public class LoungeController {
             @PathVariable String hubPlanId,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
-        HubPlanDetailResponse data = loungeService.readHubPlanDetail(hubPlanId, principal.getMemberId());
+        String memberId = (principal != null) ? principal.getMemberId() : null;
+        HubPlanDetailResponse data = loungeService.readHubPlanDetail(hubPlanId, memberId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));

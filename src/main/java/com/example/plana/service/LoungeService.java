@@ -217,8 +217,6 @@ public class LoungeService {
 
         // 1. hubPlanId로 tripId 조회
         String tripId = hubPlanMapper.getTripIdByHubPlanId(hubPlanId);
-        log.info("hubPlanId:: "+hubPlanId);
-        log.info("tripId:: "+tripId);
         if (tripId == null) throw new BusinessException(ErrorCode.HUB_PLAN_NOT_FOUND);
 
         // 2. 여행 상세
