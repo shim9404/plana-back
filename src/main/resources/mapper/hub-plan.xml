@@ -268,4 +268,40 @@
             )
         </if>
     </select>
+    <!-- 허브 상세 추가 정보 조회
+     좋아요 수, 복사 수, 현재 유저 좋아요/복사 여부, 작성자 정보 -->
+    <select id="readHubPlanInfo" resultType="com.example.plana.dto.lounge.HubPlanInfoResponse">
+        SELECT
+            HP.HUB_PLAN_ID                                        as "hubPlanId",
+            HP.LIKE_COUNT                                         as "likeCount",
+            HP.COPY_COUNT                                         as "copyCount",
+            M.NICKNAME                                            as "nickname",
+            M.PROFILE_IMAGE                                       as "profileImage",
+            <!-- 현재 유저가 좋아요 했는지 여부
+                 LIKE_PLAN에 해당 유저의 ACTIVE 레코드가 있으면 true -->
+            CASE WHEN LP.MEMBER_ID IS NOT NULL THEN TRUE
+                 ELSE FALSE
+            END                                                   as "isLiked",
+            <!-- 현재 유저가 복사 했는지 여부
+                 COPY_PLAN에 해당 유저의 ACTIVE 레코드가 있으면 true -->
+            CASE WHEN CP.MEMBER_ID IS NOT NULL THEN TRUE
+                 ELSE FALSE
+            END                                                   as "isCopied"
+        FROM HUB_PLAN HP
+            JOIN MEMBER M ON HP.MEMBER_ID = M.MEMBER_ID
+            LEFT JOIN LIKE_PLAN LP ON HP.HUB_PLAN_ID = LP.HUB_PLAN_ID
+                                  AND LP.MEMBER_ID    = #{memberId, jdbcType=VARCHAR}
+                                  AND LP.STATUS       = 'ACTIVE'
+            LEFT JOIN COPY_PLAN CP ON HP.HUB_PLAN_ID = CP.HUB_PLAN_ID
+                                  AND CP.MEMBER_ID    = #{memberId, jdbcType=VARCHAR}
+                                  AND CP.STATUS       = 'ACTIVE'
+        WHERE HP.HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+    </select>
+
+    <!-- 허브 키워드 태그 목록 조회 -->
+    <select id="readHubPlanKeywords" resultType="String">
+        SELECT HPK.KEYWORD_ID
+        FROM   HUB_PLAN_KEYWORD HPK
+        WHERE  HPK.HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+    </select>
 </mapper>

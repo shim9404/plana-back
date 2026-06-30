@@ -1,5 +1,6 @@
 package com.example.plana.service;
 
+import com.example.plana.common.constants.TripConstatnts;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
@@ -83,15 +84,24 @@ public class TripService {
     }
 
     /**
-     * 여행 단건 상세 조회
+     * 여행 단건 상세 조회 (소유자, 공유한 경우에만)
      * @param tripId 여행 ID
      * @param memberId 사용자 ID
      * @return TripResponse
      */
     @Transactional
     public TripResponse readTrip(String tripId, String memberId) {
-        tripAccessValidator.validateOwner(tripId, memberId);
+        tripAccessValidator.validateAccess(tripId, memberId);
+        return readTripDetail(tripId);
+    }
 
+    /**
+     * 여행 단건 상세 조회
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    @Transactional
+    private TripResponse readTripDetail(String tripId) {
         // 1. SELECT TRIP
         TripResponse trip = null;
         try {
@@ -130,6 +140,7 @@ public class TripService {
 
         return trip;
     }
+
 
     /**
      * 여행 복제하여 내 여행으로 저장
@@ -816,6 +827,19 @@ public class TripService {
         params.put("isPublic",    value);
         
         tripMapper.updateIsPublic(params);
-    } 
-    
+    }
+
+    /**
+     * 허브를 통한 여행 상세 조회 (소유자 검증 없음)
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    public TripResponse readTripDetailForHub(String tripId) {
+
+        if (!tripAccessValidator.getIsPublic(tripId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
+
+        return readTripDetail(tripId);
+    }
 }

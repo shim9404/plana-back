@@ -54,6 +54,7 @@ public interface TripMapper {
 
     // Lounge ──────────────────────
     void updateIsPublic(Map<String, Object> params); // Lounge 공개 여부 갱신
+    String readTripIsPublic(String tripId); // Lounge 공개 여부 확인
 
     // ── ShareToken ──────────────────────
     void updateShareToken(Map<String, Object> params);
