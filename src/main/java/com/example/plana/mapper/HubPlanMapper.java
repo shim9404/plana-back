@@ -1,9 +1,6 @@
 package com.example.plana.mapper;
 
-import com.example.plana.dto.lounge.HubPlanInfoResponse;
-import com.example.plana.dto.lounge.HubPlanReadResponse;
-import com.example.plana.dto.lounge.HubPlanSearchRequest;
-import com.example.plana.dto.lounge.HubPlanStatResponse;
+import com.example.plana.dto.lounge.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -26,4 +23,18 @@ public interface HubPlanMapper {
                                         @Param("memberId") String memberId);
 
     List<String> readHubPlanKeywords(String hubPlanId);
+
+
+    int checkLikePlanExists(@Param("hubPlanId") String hubPlanId, @Param("memberId") String memberId);
+
+    void createLikePlan(@Param("hubPlanId") String hubPlanId, @Param("memberId") String memberId);
+
+    void updateLikePlanStatus(@Param("hubPlanId") String hubPlanId,
+                              @Param("memberId") String memberId,
+                              @Param("status") String status);
+
+    void updateHubPlanLikeCount(@Param("hubPlanId") String hubPlanId, @Param("delta") int delta);
+
+    LikePlanToggleResponse readLikePlanStatus(@Param("hubPlanId") String hubPlanId,
+                                              @Param("memberId") String memberId);
 }

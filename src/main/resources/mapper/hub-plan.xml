@@ -304,4 +304,45 @@
         FROM   HUB_PLAN_KEYWORD HPK
         WHERE  HPK.HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
     </select>
+
+    <!-- 좋아요 존재 여부 확인 -->
+    <select id="checkLikePlanExists" resultType="int">
+        SELECT COUNT(*)
+        FROM   LIKE_PLAN
+        WHERE  HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+            AND  MEMBER_ID   = #{memberId,  jdbcType=VARCHAR}
+    </select>
+
+    <!-- 좋아요 신규 등록 -->
+    <insert id="createLikePlan">
+        INSERT INTO LIKE_PLAN (HUB_PLAN_ID, MEMBER_ID, STATUS)
+        VALUES (#{hubPlanId, jdbcType=VARCHAR}, #{memberId, jdbcType=VARCHAR}, 'ACTIVE')
+    </insert>
+
+    <!-- 좋아요 상태 토글 (ACTIVE ↔ INACTIVE) -->
+    <update id="updateLikePlanStatus">
+        UPDATE LIKE_PLAN
+        SET    STATUS = #{status, jdbcType=VARCHAR}
+        WHERE  HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+            AND  MEMBER_ID   = #{memberId,  jdbcType=VARCHAR}
+    </update>
+
+    <!-- 허브플랜 LIKE_COUNT 증감 -->
+    <update id="updateHubPlanLikeCount">
+        UPDATE HUB_PLAN
+        SET    LIKE_COUNT = GREATEST(LIKE_COUNT + #{delta, jdbcType=INTEGER}, 0)
+        WHERE  HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+    </update>
+
+    <!-- 현재 좋아요 상태 + 카운트 조회 -->
+    <select id="readLikePlanStatus" resultType="com.example.plana.dto.lounge.LikePlanToggleResponse">
+        SELECT
+            HP.HUB_PLAN_ID  as "hubPlanId",
+            HP.LIKE_COUNT   as "likeCount",
+            CASE WHEN LP.STATUS = 'ACTIVE' THEN TRUE ELSE FALSE END as "isLiked"
+        FROM   HUB_PLAN HP
+            LEFT JOIN LIKE_PLAN LP ON HP.HUB_PLAN_ID = LP.HUB_PLAN_ID
+            AND LP.MEMBER_ID    = #{memberId, jdbcType=VARCHAR}
+        WHERE  HP.HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+    </select>
 </mapper>

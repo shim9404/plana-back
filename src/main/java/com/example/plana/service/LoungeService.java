@@ -3,6 +3,7 @@ package com.example.plana.service;
 
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
+import com.example.plana.component.TripAccessValidator;
 import com.example.plana.dto.lounge.*;
 import com.example.plana.dto.region.read.RegionCodeResponse;
 import com.example.plana.dto.trip.read.HubPlanDetailResponse;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @Log4j2
 public class LoungeService {
+    private final TripAccessValidator tripAccessValidator;
     private final HubPlanMapper hubPlanMapper;
     private final RegionMapper regionMapper;
     private final TripService tripService;
@@ -240,5 +242,45 @@ public class LoungeService {
                 .profileImage(hubInfo.getProfileImage())
                 .keywordTags(keywordTags)
                 .build();
+    }
+
+
+    /**
+     * 허브 게시물 좋아요 토글
+     * @param hubPlanId 허브플랜 ID
+     * @param memberId  사용자 ID
+     * @return LikePlanToggleResponse 토글 후 좋아요 상태/카운트
+     */
+    @Transactional
+    public LikePlanToggleResponse toggleLikePlan(String hubPlanId, String memberId) {
+
+        String tripId = hubPlanMapper.getTripIdByHubPlanId(hubPlanId);
+        if (tripId == null) throw new BusinessException(ErrorCode.HUB_PLAN_NOT_FOUND);
+
+        // 본인 소유라면 좋아요 불가
+        if (tripAccessValidator.getIsOwner(tripId, memberId)) {
+            throw new BusinessException(ErrorCode.SELF_LIKE_NOT_ALLOWED);
+        }
+
+
+        int exists = hubPlanMapper.checkLikePlanExists(hubPlanId, memberId);
+
+        if (exists == 0) {
+            // 처음 좋아요 누르는 경우 - INSERT
+            hubPlanMapper.createLikePlan(hubPlanId, memberId);
+            hubPlanMapper.updateHubPlanLikeCount(hubPlanId, 1);
+        } else {
+            // 이미 레코드가 있는 경우 - 현재 상태 확인 후 토글
+            LikePlanToggleResponse current = hubPlanMapper.readLikePlanStatus(hubPlanId, memberId);
+            boolean isCurrentlyLiked = current.getIsLiked();
+
+            String newStatus = isCurrentlyLiked ? "INACTIVE" : "ACTIVE";
+            int delta = isCurrentlyLiked ? -1 : 1;
+
+            hubPlanMapper.updateLikePlanStatus(hubPlanId, memberId, newStatus);
+            hubPlanMapper.updateHubPlanLikeCount(hubPlanId, delta);
+        }
+
+        return hubPlanMapper.readLikePlanStatus(hubPlanId, memberId);
     }
 }
