@@ -25,84 +25,115 @@ import java.util.Map;
 public class CacheThemeService {
     private final VisitKoreaConfig visitKoreaConfig; // visitKorea apiKey
 
-    // 맞춤 테마의 여행지 전체 조회 및 저장(캐싱)
+    // ===== 수량 조회 =====
+    // 반려동물 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
     @Cacheable(
-            value = "themeTravels",
-            key = "#theme.toString() + '-' + #keyword + '-' + #mapX + '-' + #mapY + '-' + #regionId"
-    ) // 위치 좌표, 키워드, 행정구역 ID 변경 시, 새 API 호출
-    public List<ThemeReadResponse> readThemeTravels(List<String> theme, String keyword, double mapX, double mapY, String regionId, int dataSize) {
-        List<ThemeReadResponse> themeTravels = new ArrayList<>();
-
-        boolean keywordSearch = keyword != null && !keyword.isBlank();
-        // API 분기 처리
-        if (!keywordSearch) { // 위치 기반 api
-            // 반려동물
-            if (theme.contains("PET")) { themeTravels.addAll(readPetTravelsbyLocation(mapX, mapY, 1, dataSize));}
-            // 무장애
-            if (theme.contains("BF")) { themeTravels.addAll(readBFTravelsbyLocation(mapX, mapY, 1, dataSize));}
-        }
-        else{ // 키워드 기반 api
-            // 반려동물
-            if (theme.contains("PET")) { themeTravels.addAll(readPetTravelsbyKeyword(keyword, regionId, 1, dataSize));}
-            // 무장애
-            if (theme.contains("BF")) { themeTravels.addAll(readBFTravelsbyKeyword(keyword, regionId, 1, dataSize));}
-        }
-
-        return themeTravels;
-    }
-
-    // 여행지 필터 검색 전체 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "aroundTravels",
-            key = "#filter + '-' + #mapX + '-' + #mapY"
-    ) // 필터, 위치 좌표 변경 시, 새 API 호출
-    public List<ThemeReadResponse> readAroundTravels(String filter, double mapX, double mapY, int dataSize) {
-        List<ThemeReadResponse> aroundTravels = new ArrayList<>();
-
-        // 캠프
-        if (filter.equals("CAMP")) { aroundTravels = readCampTravelsbyLocation(mapX, mapY, 1, dataSize); }
-        // 웰니스
-        else if (filter.equals("WELLNESS")) { aroundTravels = readWellnessTravelsbyLocation(mapX, mapY, 1, dataSize); }
-
-        return aroundTravels;
-    }
-
-    // 여행지 연관 검색(관광포털 API)
-    @Cacheable(
-            value = "relatedTravels",
-            key = "#keyword + '-' + #regionId"
-    ) // 키워드, 행정구역 ID 변경 시, 새 API 호출
-    public List<RelatePlaceReadResponse> readRelatedTravels(String keyword, String regionId, int dataSize) {
-        List<RelatePlaceReadResponse> relatedTravels = new ArrayList<>();
-
-        // 연관 여행지
-        relatedTravels = readRelatedTravelsbyKeyword(keyword, regionId, 1, dataSize);
-
-        return relatedTravels;
-    }
-
-    // 반려동물 관련 여행지 - 지역 기반
-    private List<ThemeReadResponse> readPetTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+            value = "petTotalCount",
+            key = "#mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
+    ) // 위치 좌표 변경 시, 새 API 호출
+    public int readPetTotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://apis.data.go.kr/B551011/KorPetTourService2/locationBasedList2"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
                 + "&mapX=" + mapX
                 + "&mapY=" + mapY
-                + "&radius=20000"
+                + "&radius=10000"
+                + "&pageNo=" + page
+                + "&numOfRows=" + dataSize;
+
+        // api 결과 수량 조회
+        int petTotalCount = readCount(urlLocation);
+
+        return petTotalCount;
+    }
+
+    // 반려동물 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
+    @Cacheable(
+            value = "petTotalCount",
+            key = "#keyword + '-' + #regionId"
+    ) // 키워드와 행정구역 변경 시, 새 API 호출
+    public int readPetTotalsbyKeyword(String keyword, String regionId, int page, int dataSize) {
+        String urlKeyword = "https://apis.data.go.kr/B551011/KorPetTourService2/searchKeyword2"
+                + "?serviceKey=" + visitKoreaConfig.getServiceKey()
+                + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
+                + "&lDongRegnCd=" + regionId.substring(0, 2)
+                + "&lDongSignguCd=" + regionId.substring(2)
+                + "&keyword=" + keyword
+                + "&pageNo=" + page
+                + "&numOfRows=" + dataSize;
+
+        // api 결과 수량 조회
+        int petTotalCount = readCount(urlKeyword);
+
+        return petTotalCount;
+    }
+
+    // 무장애 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
+    @Cacheable(
+            value = "bfTotalCount",
+            key = "#mapX + '-' + #mapY"
+    ) // 위치 좌표 변경 시, 새 API 호출
+    public int readBFTotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
+        String urlLocation = "https://apis.data.go.kr/B551011/KorWithService2/locationBasedList2"
+                + "?serviceKey=" + visitKoreaConfig.getServiceKey()
+                + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
+                + "&mapX=" + mapX
+                + "&mapY=" + mapY
+                + "&radius=10000"
+                + "&pageNo=" + page
+                + "&numOfRows=" + dataSize;
+
+        // api 결과 수량 조회
+        int bfTotalCount = readCount(urlLocation);
+
+        return bfTotalCount;
+    }
+
+    // 무장애 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
+    @Cacheable(
+            value = "bfTotalCount",
+            key = "#keyword + '-' + #regionId"
+    ) // 키워드와 행정구역 변경 시, 새 API 호출
+    public int readBFTotalsbyKeyword(String keyword, String regionId, int page, int dataSize) {
+        String urlKeyword = "https://apis.data.go.kr/B551011/KorWithService2/searchKeyword2"
+                + "?serviceKey=" + visitKoreaConfig.getServiceKey()
+                + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
+                + "&lDongRegnCd=" + regionId.substring(0, 2)
+                + "&lDongSignguCd=" + regionId.substring(2)
+                + "&keyword=" + keyword
+                + "&pageNo=" + page
+                + "&numOfRows=" + dataSize;
+
+        // api 결과 수량 조회
+        int bfTotalCount = readCount(urlKeyword);
+
+        return bfTotalCount;
+    }
+
+    // ===== 데이터 조회 =====
+
+    // 반려동물 관련 여행지 - 지역 기반 조회 및 저장
+    public List<ThemeReadResponse> readPetTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+        String urlLocation = "https://apis.data.go.kr/B551011/KorPetTourService2/locationBasedList2"
+                + "?serviceKey=" + visitKoreaConfig.getServiceKey()
+                + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
+                + "&mapX=" + mapX
+                + "&mapY=" + mapY
+                + "&radius=10000"
                 + "&pageNo=" + page
                 + "&numOfRows=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readAllItems(urlLocation, page, dataSize);
+        List<Map<String,Object>> itemList = readItems(urlLocation);
 
         // 반려동물(PET) api 응답 결과 저장
-        List<ThemeReadResponse> list = readPetLists(itemList);
+        List<ThemeReadResponse> petList = readPetLists(itemList);
 
-        return list;
+        return petList;
     }
 
-    // 반려동물 관련 여행지 - 키워드 기반
-    private List<ThemeReadResponse> readPetTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
+    // 반려동물 관련 여행지 - 키워드 기반 조회 및 저장
+    public List<ThemeReadResponse> readPetTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
         String urlKeyword = "https://apis.data.go.kr/B551011/KorPetTourService2/searchKeyword2"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
@@ -113,36 +144,36 @@ public class CacheThemeService {
                 + "&numOfRows=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readAllItems(urlKeyword, page, dataSize);
+        List<Map<String,Object>> itemList = readItems(urlKeyword);
 
         // 반려동물(PET) api 응답 결과 저장
-        List<ThemeReadResponse> list = readPetLists(itemList);
+        List<ThemeReadResponse> petList = readPetLists(itemList);
 
-        return list;
+        return petList;
     }
 
-    // 무장애 관련 여행지 - 지역 기반
-    private List<ThemeReadResponse> readBFTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    // 무장애 관련 여행지 - 지역 기반 조회 및 저장
+    public List<ThemeReadResponse> readBFTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://apis.data.go.kr/B551011/KorWithService2/locationBasedList2"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
                 + "&mapX=" + mapX
                 + "&mapY=" + mapY
-                + "&radius=20000"
+                + "&radius=10000"
                 + "&pageNo=" + page
                 + "&numOfRows=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readAllItems(urlLocation, page, dataSize);
+        List<Map<String,Object>> itemList = readItems(urlLocation);
 
         // 무장애(BF) api 응답 결과 저장
-        List<ThemeReadResponse> list = readBFLists(itemList);
+        List<ThemeReadResponse> bfList = readBFLists(itemList);
 
-        return list;
+        return bfList;
     }
 
-    // 무장애 관련 여행지 - 키워드 기반
-    private List<ThemeReadResponse> readBFTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
+    // 무장애 관련 여행지 - 키워드 기반 조회 및 저장
+    public List<ThemeReadResponse> readBFTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
         String urlKeyword = "https://apis.data.go.kr/B551011/KorWithService2/searchKeyword2"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
@@ -153,57 +184,59 @@ public class CacheThemeService {
                 + "&numOfRows=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readAllItems(urlKeyword, page, dataSize);
+        List<Map<String,Object>> itemList = readItems(urlKeyword);
 
         // 무장애(BF) api 응답 결과 저장
-        List<ThemeReadResponse> list = readBFLists(itemList);
+        List<ThemeReadResponse> bfList = readBFLists(itemList);
 
-        return list;
+        return bfList;
     }
 
-    // 고캠핑 관련 여행지 - 지역 기반
-    private List<ThemeReadResponse> readCampTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    // ----
+
+    // 고캠핑 관련 여행지 - 지역 기반 조회 및 저장
+    public List<ThemeReadResponse> readCampTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://apis.data.go.kr/B551011/GoCamping/locationBasedList"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
                 + "&mapX=" + mapX
                 + "&mapY=" + mapY
-                + "&radius=20000"
+                + "&radius=10000"
                 + "&pageNo=" + page
                 + "&numOfRows=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readAllItems(urlLocation, page, dataSize);
+        List<Map<String,Object>> itemList = readItems(urlLocation);
 
         // 고캠핑(CAMP) api 응답 결과 저장
-        List<ThemeReadResponse> list = readCampLists(itemList);
+        List<ThemeReadResponse> campList = readCampLists(itemList);
 
-        return list;
+        return campList;
     }
 
-    // 웰니스 관련 여행지 - 지역 기반
-    private List<ThemeReadResponse> readWellnessTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    // 웰니스 관련 여행지 - 지역 기반 조회 및 저장
+    public List<ThemeReadResponse> readWellnessTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://apis.data.go.kr/B551011/WellnessTursmService/locationBasedList"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
                 + "&mapX=" + mapX
                 + "&mapY=" + mapY
-                + "&radius=20000"
+                + "&radius=10000"
                 + "&langDivCd=" + "KOR"
                 + "&pageNo=" + page
                 + "&numOfRows=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readAllItems(urlLocation, page, dataSize);
+        List<Map<String,Object>> itemList = readItems(urlLocation);
 
         // 웰니스(WELLNESS) api 응답 결과 저장
-        List<ThemeReadResponse> list = readWellnessLists(itemList);
+        List<ThemeReadResponse> wellnessList = readWellnessLists(itemList);
 
-        return list;
+        return wellnessList;
     }
 
     // 연관 여행지 - 키워드 기반
-    private List<RelatePlaceReadResponse> readRelatedTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
+    public List<RelatePlaceReadResponse> readRelatedTravelsbyKeyword(String keyword, String regionId, int page, int dataSize) {
         String urlKeyword = "https://apis.data.go.kr/B551011/TarRlteTarService1/searchKeyword1"
                 + "?serviceKey=" + visitKoreaConfig.getServiceKey()
                 + "&MobileOS=WEB" + "&MobileApp=PLANA" + "&_type=json"
@@ -214,42 +247,22 @@ public class CacheThemeService {
                 + "&pageNo=" + page
                 + "&numOfRows=" + dataSize;
 
-        // api 결과 데이터 조회(최대 10개)
-        RestTemplate restTemplate = new RestTemplate();
-        ObjectMapper objectMapper = new ObjectMapper();
 
-        ResponseEntity<String> response = restTemplate.getForEntity(urlKeyword, String.class);
-        Map<String, Object> result;
-        try {
-            result = objectMapper.readValue(response.getBody(), Map.class);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
+        // api 결과 데이터 모두 조회
+        List<Map<String,Object>> itemList = readItems(urlKeyword);
 
-        List<RelatePlaceReadResponse> list = new ArrayList<>();
+        // 웰니스(WELLNESS) api 응답 결과 저장
+        List<RelatePlaceReadResponse> relatedList = readRelatedLists(itemList);
 
-        Map<String, Object> pageResponseMap = (Map<String, Object>) result.get("response");
-        Map<String, Object> pageBody = (Map<String, Object>) pageResponseMap.get("body");
-        // 데이터 총 개수 조회
-        int totalCount = Integer.parseInt(pageBody.get("totalCount").toString());
-        if (totalCount == 0) { return list; }
-        Map<String, Object> items = (Map<String, Object>) pageBody.get("items");
-
-        List<Map<String,Object>> itemList = (List<Map<String,Object>>) items.get("item");
-
-        // 연관 여행지 api 응답 결과 저장
-        list = readRelatedLists(itemList);
-
-        return list;
+        return relatedList;
     }
 
-    // api 결과 데이터 모두 조회
-    private List<Map<String, Object>> readAllItems(String url, int page, int dataSize) {
+    //  ===== 함수 =====
 
+    // api 결과 수량 조회
+    private int readCount(String url) {
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
-
-        List<Map<String, Object>> allItems = new ArrayList<>();
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         Map<String, Object> result;
@@ -264,32 +277,36 @@ public class CacheThemeService {
 
         // 데이터 총 개수 조회
         int totalCount = Integer.parseInt(body.get("totalCount").toString());
-        if (totalCount == 0) { return allItems; } // 결과 데이터가 0개 일 경우, 빠져나오기
-        // 총 결과 데이터 수 통해 총 페이지 수량 조회
-        int totalPages = (int)Math.ceil((double) totalCount / dataSize);
 
-        // 모든 페이지 조회
-        for (int currentPage = 1; currentPage <= totalPages; currentPage++) {
-            String currentUrl = url.replace("pageNo=" + page, "pageNo=" + currentPage);
+        return totalCount;
+    }
 
-            ResponseEntity<String> pageResponse = restTemplate.getForEntity(currentUrl, String.class);
-            Map<String, Object> pageResult;
-            try {
-                pageResult = objectMapper.readValue(response.getBody(), Map.class);
-            } catch (Exception e) {
-                throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-            }
+    // api 결과 데이터 조회
+    private List<Map<String, Object>> readItems(String url) {
+        List<Map<String,Object>> itemList = new ArrayList<>();
 
-            Map<String, Object> pageResponseMap = (Map<String, Object>) pageResult.get("response");
-            Map<String, Object> pageBody = (Map<String, Object>) pageResponseMap.get("body");
-            Map<String, Object> items = (Map<String, Object>) pageBody.get("items");
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper objectMapper = new ObjectMapper();
 
-            List<Map<String,Object>> itemList = (List<Map<String,Object>>) items.get("item");
-
-            allItems.addAll(itemList);
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        Map<String, Object> result;
+        try {
+            result = objectMapper.readValue(response.getBody(), Map.class);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        return allItems;
+        Map<String, Object> responseMap = (Map<String, Object>) result.get("response");
+        Map<String, Object> body = (Map<String, Object>) responseMap.get("body");
+
+        // 데이터 총 개수 조회
+        int totalCount = Integer.parseInt(body.get("totalCount").toString());
+        if (totalCount == 0) { return itemList; } // 결과 데이터가 0개 일 경우, 빠져나오기
+
+        Map<String, Object> items = (Map<String, Object>) body.get("items");
+        itemList = (List<Map<String,Object>>) items.get("item");
+
+        return itemList;
     }
 
     // 반려동물(PET) api 응답 결과 저장
