@@ -380,4 +380,11 @@
         SET IS_PUBLIC = #{isPublic, jdbcType=VARCHAR}
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </update>
+    <!--  허브 공개 여부 확인  -->
+    <select id="readTripIsPublic" resultType="String">
+        SELECT IS_PUBLIC
+        FROM   TRIP
+        WHERE  TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </select>
+
 </mapper>

@@ -15,6 +15,6 @@
         FROM TRIP_MEMBER
         WHERE TRIP_ID   = #{tripId,   jdbcType=VARCHAR}
           AND MEMBER_ID = #{memberId, jdbcType=VARCHAR}
-          AND ACCEPTED_AT IS NOT NULL
+          AND JOINED_AT IS NOT NULL
     </select>
 </mapper>

@@ -1,15 +1,17 @@
 package com.example.plana.component;
 
+import com.example.plana.common.constants.TripConstatnts;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.mapper.TripAccessMapper;
+import com.example.plana.mapper.TripMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class TripAccessValidator {
-
+    private final TripMapper tripMapper;
     private final TripAccessMapper tripAccessMapper;
 
     /**
@@ -92,4 +94,14 @@ public class TripAccessValidator {
         return tripAccessMapper.getMemberRole(tripId, memberId);
     }
 
+
+    /**
+     * 여행 공개 여부 반환
+     * @param tripId 여행 ID
+     * @return 공개 여부 (true: 공개, false: 비공개)
+     */
+    public boolean getIsPublic(String tripId) {
+        String isPublic = tripMapper.readTripIsPublic(tripId);
+        return TripConstatnts.IS_PUBLIC_YES.equals(isPublic);
+    }
 }

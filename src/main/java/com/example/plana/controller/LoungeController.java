@@ -8,6 +8,7 @@ import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.lounge.HubPlanReadListResponse;
 import com.example.plana.dto.lounge.HubPlanSearchRequest;
 import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
+import com.example.plana.dto.trip.read.HubPlanDetailResponse;
 import com.example.plana.dto.trip.update.TripPublicUpdateRequest;
 import com.example.plana.service.LoungeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +59,22 @@ public class LoungeController {
     public ResponseEntity<ResponseBody<HubPlanReadListResponse>> readHubPlanList(@ParameterObject HubPlanSearchRequest request) {
 
         HubPlanReadListResponse data = loungeService.readHubPlanList(request);
+
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
+
+    @GetMapping("hubs/{hubPlanId}")
+    @Operation(summary = "허브 게시물 세부 조회", description = "허브 게시물의 세부 정보를 조회합니다.")
+    @Parameter(name = "hubPlanId", description = "조회할 허브플랜 ID", required = true)
+    @ApiResponse(responseCode = "200", description = "[S001] 조회가 정상적으로 처리되었습니다.")
+    public ResponseEntity<ResponseBody<HubPlanDetailResponse>> readHubPlanDetail(
+            @PathVariable String hubPlanId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        String memberId = (principal != null) ? principal.getMemberId() : null;
+        HubPlanDetailResponse data = loungeService.readHubPlanDetail(hubPlanId, memberId);
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));

@@ -1,5 +1,6 @@
 package com.example.plana.mapper;
 
+import com.example.plana.dto.lounge.HubPlanInfoResponse;
 import com.example.plana.dto.lounge.HubPlanReadResponse;
 import com.example.plana.dto.lounge.HubPlanSearchRequest;
 import com.example.plana.dto.lounge.HubPlanStatResponse;
@@ -20,4 +21,9 @@ public interface HubPlanMapper {
     List<HubPlanReadResponse> readHubPlanList(HubPlanSearchRequest request);
     List<HubPlanStatResponse> readHubPlanStatsList(List<String> tripIds);
     int countHubPlanList(HubPlanSearchRequest request);
+
+    HubPlanInfoResponse readHubPlanInfo(@Param("hubPlanId") String hubPlanId,
+                                        @Param("memberId") String memberId);
+
+    List<String> readHubPlanKeywords(String hubPlanId);
 }
