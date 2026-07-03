@@ -75,6 +75,7 @@ public class AreaController {
     /**
      *  getPlace(): 근처 장소 검색(카카오 API)
      *   -> readPlace(): 키워드로 장소 검색(장소 데이터)
+     * @param category // 카테고리(문화시설, 음식점, 관광명소, 카페, 숙박)
      * @param keyword // 검색 키워드
      * @param mapX   // 좌표(X)
      * @param mapY,  // 좌표(Y)
@@ -83,21 +84,23 @@ public class AreaController {
     @GetMapping("/place")
     @Operation(summary = "근처 장소 검색(카카오 API)", description = "검색 API로 키워드(기본값 = 음식점(FD6))와 위도,경도를 받아서 정보를 반환한다.")
     @Parameters({
+            @Parameter(name = "category", description = "카테고리(CT1, FD6, AT4, CE7, AD5 - 문화시설, 음식점, 관광명소, 카페, 숙박)", required = true),
             @Parameter(name = "keyword", description = "키워드", required = true),
             @Parameter(name = "mapX", description = "경도", required = true),
             @Parameter(name = "mapY", description = "위도", required = true),
             @Parameter(name = "page", description = "불러올 페이지 번호 (기본값 = 1)", required = true),
-            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 15)", required = true)
+            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 10)", required = true)
     })
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
     public ResponseEntity<ResponseBody<PlaceReadPageResponse>> getPlace(
+            @RequestParam List<String> category,
             @RequestParam String keyword,
             @RequestParam double mapX,
             @RequestParam double mapY,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "15") int size) {
+            @RequestParam(defaultValue = "10") int size) {
 
-        PlaceReadPageResponse data = areaService.readPlace(keyword, mapX, mapY, page, size);
+        PlaceReadPageResponse data = areaService.readPlace(category, keyword, mapX, mapY, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 
@@ -120,7 +123,7 @@ public class AreaController {
             @Parameter(name = "mapY", description = "위도", required = true),
             @Parameter(name = "regionId", description = "행정구역 ID", required = true),
             @Parameter(name = "page", description = "불러올 페이지 번호 (기본값 = 1)", required = true),
-            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 15)", required = true)
+            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 10)", required = true)
     })
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
     public ResponseEntity<ResponseBody<ThemeReadPageResponse>> getTheme(
@@ -130,7 +133,7 @@ public class AreaController {
             @RequestParam double mapY,
             @RequestParam String regionId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "15") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         ThemeReadPageResponse data = areaService.readTheme(theme, keyword, mapX, mapY, regionId, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
@@ -150,7 +153,7 @@ public class AreaController {
             @Parameter(name = "mapX", description = "경도", required = true),
             @Parameter(name = "mapY", description = "위도", required = true),
             @Parameter(name = "page", description = "불러올 페이지 번호 (기본값 = 1)", required = true),
-            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 15)", required = true)
+            @Parameter(name = "size", description = "한 페이지에 들어갈 장소 수 (기본값 = 10)", required = true)
     })
     @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
     public ResponseEntity<ResponseBody<ThemeReadPageResponse>> getAround(
@@ -158,7 +161,7 @@ public class AreaController {
             @RequestParam double mapX,
             @RequestParam double mapY,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "15") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         ThemeReadPageResponse data = areaService.readAround(filter, mapX, mapY, page, size);
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }

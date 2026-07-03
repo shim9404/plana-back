@@ -21,9 +21,9 @@ public class PlaceReadPageResponse {
     private int currentPage;
     @Schema(description = "한 페이지에 들어갈 장소 수", example = "15")
     private int pageSize;
-    @JsonProperty("isEnd")
-    @Schema(description = "현재 페이지가 마지막 페이지인지 여부", example = "false")
-    private boolean isEnd;
+//    @JsonProperty("isEnd")
+//    @Schema(description = "현재 페이지가 마지막 페이지인지 여부", example = "false")
+//    private boolean isEnd;
     @Schema(description = "근처 장소 정보(카카오 API) 리스트")
     private List<PlaceReadResponse> places;
 }
