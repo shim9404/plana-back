@@ -7,6 +7,7 @@ import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.lounge.HubPlanReadListResponse;
 import com.example.plana.dto.lounge.HubPlanSearchRequest;
+import com.example.plana.dto.lounge.LikePlanToggleResponse;
 import com.example.plana.dto.lounge.UpdateHubPlanPublicResponse;
 import com.example.plana.dto.trip.read.HubPlanDetailResponse;
 import com.example.plana.dto.trip.update.TripPublicUpdateRequest;
@@ -78,5 +79,19 @@ public class LoungeController {
 
         return ResponseEntity.ok(
                 ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
+    @PatchMapping("/hubs/{hubPlanId}/like")
+    @Operation(summary = "허브 게시물 좋아요 토글", description = "허브 게시물의 좋아요 상태를 토글합니다.")
+    @Parameter(name = "hubPlanId", description = "좋아요 토글할 허브플랜 ID", required = true)
+    @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
+    public ResponseEntity<ResponseBody<LikePlanToggleResponse>> toggleLikePlan(
+            @PathVariable String hubPlanId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        LikePlanToggleResponse data = loungeService.toggleLikePlan(hubPlanId, principal.getMemberId());
+        
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
     }
 }

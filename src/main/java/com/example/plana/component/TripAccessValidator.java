@@ -45,6 +45,18 @@ public class TripAccessValidator {
         }
     }
 
+
+    /**
+     * 소유자 여부 반환
+     * @param tripId 여행 ID
+     * @param memberId 사용자 ID
+     */
+    public Boolean getIsOwner(String tripId, String memberId) {
+        String tripOwner = getOwner(tripId);
+
+        return tripOwner.equals(memberId);
+    }
+
     /**
      * 편집 권한 검증
      * OWNER 또는 EDITOR만 허용 (스케줄 추가/수정/삭제 등)

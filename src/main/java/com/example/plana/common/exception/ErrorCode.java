@@ -33,7 +33,7 @@ public enum ErrorCode {
     MALFORMED_TOKEN(401, "A008", "토큰 형식이 잘못되었습니다."),
     REFRESH_TOKEN_EXPIRED(401, "A009", "리프레시 토큰이 만료되었습니다. 다시 로그인하세요."),
     FAIL_REFRESH_TOKEN(401, "A010", "토큰 재발급에 실패하였습니다."),
-
+    UNAUTHORIZED(401, "A011", "인증이 필요합니다."),
 
     // User
     USER_NOT_FOUND(404, "U001", "존재하지 않는 사용자입니다."),
@@ -94,6 +94,7 @@ public enum ErrorCode {
     HUB_PLAN_NOT_FOUND(404, "H002", "허브 게시물을 찾을 수 없습니다."),
     HUB_PLAN_CREATE_FAILED(500, "H003", "허브 게시물 생성에 실패했습니다."),
     HUB_PLAN_READ_FAILED(500, "H004", "허브 목록 조회에 실패했습니다."),
+    SELF_LIKE_NOT_ALLOWED(400, "H005", "본인의 게시물에는 좋아요를 누를 수 없습니다."),
     ;
 
     @Getter
