@@ -21,6 +21,7 @@
             0
         )
     </insert>
+
     <select id="checkHubPlanExists" resultType="int">
         SELECT COUNT(*)
         FROM HUB_PLAN
@@ -327,7 +328,7 @@
             AND  MEMBER_ID   = #{memberId,  jdbcType=VARCHAR}
     </update>
 
-    <!-- 허브플랜 LIKE_COUNT 증감 -->
+    <!-- 허브 LIKE_COUNT 증감 -->
     <update id="updateHubPlanLikeCount">
         UPDATE HUB_PLAN
         SET    LIKE_COUNT = GREATEST(LIKE_COUNT + #{delta, jdbcType=INTEGER}, 0)
@@ -345,4 +346,41 @@
             AND LP.MEMBER_ID    = #{memberId, jdbcType=VARCHAR}
         WHERE  HP.HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
     </select>
+
+    <!-- 허브 ID를 tripId로 조회 -->
+    <select id="getHubPlanIdByTripId" resultType="String">
+        SELECT HUB_PLAN_ID
+        FROM   HUB_PLAN
+        WHERE  TRIP_ID = #{tripId, jdbcType=VARCHAR}
+        AND    STATUS  = 'ACTIVE'
+    </select>
+
+    <!-- 복제 기록 존재 여부 확인 -->
+    <select id="checkCopyPlanExists" resultType="int">
+        SELECT COUNT(*)
+        FROM   COPY_PLAN
+        WHERE  HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+        AND  MEMBER_ID   = #{memberId,  jdbcType=VARCHAR}
+    </select>
+
+    <!-- 복제 기록 INSERT -->
+    <insert id="createCopyPlan">
+        INSERT INTO COPY_PLAN (HUB_PLAN_ID, MEMBER_ID, STATUS)
+        VALUES (#{hubPlanId, jdbcType=VARCHAR}, #{memberId, jdbcType=VARCHAR}, 'ACTIVE')
+    </insert>
+
+    <!-- 복제 기록 상태 변경 -->
+    <update id="updateCopyPlanStatus">
+        UPDATE COPY_PLAN
+        SET    STATUS = #{status, jdbcType=VARCHAR}
+        WHERE  HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+        AND  MEMBER_ID   = #{memberId,  jdbcType=VARCHAR}
+    </update>
+
+    <!-- COPY_COUNT 증감 (0 미만 방지) -->
+    <update id="updateHubPlanCopyCount">
+        UPDATE HUB_PLAN
+        SET    COPY_COUNT = GREATEST(COPY_COUNT + #{delta, jdbcType=INTEGER}, 0)
+        WHERE  HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
+    </update>
 </mapper>

@@ -37,4 +37,16 @@ public interface HubPlanMapper {
 
     LikePlanToggleResponse readLikePlanStatus(@Param("hubPlanId") String hubPlanId,
                                               @Param("memberId") String memberId);
+
+    String getHubPlanIdByTripId(String tripId);
+
+    int checkCopyPlanExists(@Param("hubPlanId") String hubPlanId, @Param("memberId") String memberId);
+
+    void createCopyPlan(@Param("hubPlanId") String hubPlanId, @Param("memberId") String memberId);
+
+    void updateCopyPlanStatus(@Param("hubPlanId") String hubPlanId,
+                              @Param("memberId") String memberId,
+                              @Param("status") String status);
+
+    void updateHubPlanCopyCount(@Param("hubPlanId") String hubPlanId, @Param("delta") int delta);
 }

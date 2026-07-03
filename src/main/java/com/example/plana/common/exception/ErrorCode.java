@@ -95,6 +95,7 @@ public enum ErrorCode {
     HUB_PLAN_CREATE_FAILED(500, "H003", "허브 게시물 생성에 실패했습니다."),
     HUB_PLAN_READ_FAILED(500, "H004", "허브 목록 조회에 실패했습니다."),
     SELF_LIKE_NOT_ALLOWED(400, "H005", "본인의 게시물에는 좋아요를 누를 수 없습니다."),
+    SELF_COPY_NOT_ALLOWED(400, "H006", "본인의 게시물은 복제할 수 없습니다."),
     ;
 
     @Getter
