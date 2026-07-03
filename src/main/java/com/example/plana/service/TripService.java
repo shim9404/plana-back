@@ -154,10 +154,6 @@ public class TripService {
     @Transactional
     public TripCopyResponse copyTrip(String tripId, String memberId, TripCopyRequest request) {
 
-        if (tripAccessValidator.getIsOwner(tripId, memberId)) {
-            throw new BusinessException(ErrorCode.SELF_COPY_NOT_ALLOWED);
-        }
-
         //tripId에 해당하는 여행이 복제 가능하도록 Public Open 상태인지 체크하는 로직
         tripAccessValidator.getIsPublic(tripId);
 
