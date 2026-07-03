@@ -30,6 +30,7 @@ public class TripService {
     private final TripMapper tripMapper;
     private final BookmarkService bookmarkService;
     private final BookmarkMapper bookmarkMapper;
+    private final CopyPlanService copyPlanService;
 
     private final TripAccessValidator tripAccessValidator;
 
@@ -152,8 +153,9 @@ public class TripService {
      */
     @Transactional
     public TripCopyResponse copyTrip(String tripId, String memberId, TripCopyRequest request) {
-        // TODO: tripId에 해당하는 여행이 복제 가능하도록 Public Open 상태인지 체크하는 로직 필요
-//        validateOwner(tripId, memberId);
+
+        //tripId에 해당하는 여행이 복제 가능하도록 Public Open 상태인지 체크하는 로직
+        tripAccessValidator.getIsPublic(tripId);
 
         // 1. TRIP INSERT - 복제할 여행 정보로 신규 여행 생성
         Map<String, Object> tripParams = new HashMap<>();
@@ -264,6 +266,8 @@ public class TripService {
                     .schedules(scheduleList)
                     .build());
         }
+
+        copyPlanService.recordCopyPlan(tripId, memberId);
 
         // 복제 성공 시 확인용 이름과 즉시 편집 요청을 위한 ID 반환
         return TripCopyResponse.builder()
