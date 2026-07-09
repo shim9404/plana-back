@@ -16,6 +16,7 @@ import com.example.plana.dto.trip.read.TripScheduleResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.BookmarkMapper;
 import com.example.plana.mapper.TripMapper;
+import com.example.plana.mapper.TripStatMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class TripService {
     private final BookmarkService bookmarkService;
     private final BookmarkMapper bookmarkMapper;
     private final CopyPlanService copyPlanService;
+    private final TripStatService tripStatService;
 
     private final TripAccessValidator tripAccessValidator;
 
@@ -578,6 +580,9 @@ public class TripService {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
         }
 
+        // 통계 갱신
+        tripStatService.refreshTripStat(tripId);
+
         String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
         int indexSort = (int) scheduleParams.get("indexSort");
         return TripScheduleCreateResponse.builder()
@@ -615,6 +620,9 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_UPDATE_FAILED);
         }
+
+        // 통계 갱신
+        tripStatService.refreshTripStat(tripId);
     }
 
     /**
@@ -680,6 +688,9 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_REORDER_FAILED);
         }
+
+        // 통계 갱신
+        tripStatService.refreshTripStat(tripId);
     }
 
     /**

@@ -16,7 +16,7 @@ public interface HubPlanMapper {
 
     String getTripIdByHubPlanId(String hubPlanId);              // 게시물에 연결된 여행 id 반환
     List<HubPlanReadResponse> readHubPlanList(HubPlanSearchRequest request);
-    List<HubPlanStatResponse> readHubPlanStatsList(List<String> tripIds);
+
     int countHubPlanList(HubPlanSearchRequest request);
 
     HubPlanInfoResponse readHubPlanInfo(@Param("hubPlanId") String hubPlanId,

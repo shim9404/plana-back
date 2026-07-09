@@ -10,6 +10,7 @@ import com.example.plana.dto.trip.read.HubPlanDetailResponse;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.mapper.HubPlanMapper;
 import com.example.plana.mapper.RegionMapper;
+import com.example.plana.mapper.TripStatMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,9 @@ public class LoungeService {
     private final HubPlanMapper hubPlanMapper;
     private final RegionMapper regionMapper;
     private final TripService tripService;
+    private final TripStatMapper tripStatMapper;
+    private final TripStatService tripStatService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -151,8 +155,10 @@ public class LoungeService {
         request.setZdoCodes(zdoCodes);
     }
 
+
     /**
-     * tripId 목록으로 통계 일괄 조회 후 plans에 매핑
+     * tripId 목록으로 통계 일괄 조회
+     * TRIP_STAT이 없는 경우 그 자리에서 생성 후 반환 (Lazy 생성)
      * @param plans 기본 정보 목록
      */
     private void mapStats(List<HubPlanReadResponse> plans) {
@@ -160,8 +166,17 @@ public class LoungeService {
                 .map(HubPlanReadResponse::getTripId)
                 .collect(Collectors.toList());
 
-        List<HubPlanStatResponse> statsList = hubPlanMapper.readHubPlanStatsList(tripIds);
+        // TRIP_STAT이 없는 tripId만 추려서 생성
+        tripIds.forEach(tripId -> {
+            if (tripStatMapper.checkTripStatExists(tripId) == 0) {
+                tripStatService.refreshTripStat(tripId);
+            }
+        });
 
+        List<HubPlanStatResponse> statsList = tripStatMapper.readTripStatList(tripIds);
+
+        // 파싱 후 매핑
+        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, HubPlanStatResponse> statsMap = statsList.stream()
                 .collect(Collectors.toMap(HubPlanStatResponse::getTripId, s -> s));
 
