@@ -183,4 +183,29 @@
             #{tripId}
         </foreach>
     </select>
+
+    <!-- 내 여행 목록 + 통계 조회 (라운지 공개용) -->
+    <select id="readMyTripsForLounge" resultType="com.example.plana.dto.lounge.MyTripForLoungeResponse">
+        SELECT
+            T.TRIP_ID                                               as "tripId",
+            T.NAME                                                  as "name",
+            T.START_DATE                                            as "startDate",
+            T.END_DATE                                              as "endDate",
+            (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) as "nights",
+            CASE WHEN T.IS_PUBLIC = 'Y' THEN TRUE ELSE FALSE END    as "isPublic",
+            TS.CATEGORY_STATS                                       as "categoryStats",
+            TS.REGION_STATS                                         as "regionStats"
+        FROM TRIP T
+            LEFT JOIN TRIP_STAT TS ON T.TRIP_ID = TS.TRIP_ID
+        WHERE T.MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+          AND T.STATUS   != 'DELETED'
+             <!-- 이미 허브에 공개된 여행 제외 -->
+          AND NOT EXISTS (
+              SELECT 1
+              FROM   HUB_PLAN HP
+              WHERE  HP.TRIP_ID = T.TRIP_ID
+                AND  HP.STATUS  = 'ACTIVE'
+          )
+        ORDER BY T.CREATE_DATE DESC
+    </select>
 </mapper>

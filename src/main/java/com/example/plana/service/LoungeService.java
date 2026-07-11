@@ -38,40 +38,48 @@ public class LoungeService {
      * 허브 공개 여부 갱신 (신규 생성 포함)
      * @param tripId 갱신할 여행 ID
      * @param isPublic 공개 여부
+     * @param keywords 선택한 여행 키워드
      * @param memberId 사용자 ID
      * return String tripPlanId
      */
     @Transactional
-    public UpdateHubPlanPublicResponse updateHubPlanPublic(String tripId, Boolean isPublic, String memberId) {
+    public UpdateHubPlanPublicResponse updateHubPlanPublic(String tripId, Boolean isPublic, List<String> keywords, String memberId) {
         String hubPlanId = "";
-        // public으로 변환
+        int point = 0;
+
         tripService.updateIsPublic(tripId, isPublic, memberId);
 
-        // 없을 때
-        if (hubPlanMapper.checkHubPlanExists(tripId) == 0){
+        if (hubPlanMapper.checkHubPlanExists(tripId) == 0) {
             if (!isPublic) throw new BusinessException(ErrorCode.INVALID_HUB_PLAN_STATUS);
 
-            // 테이블에 업로드
             Map<String, Object> params = new HashMap<>();
-            params.put("tripId", tripId);
+            params.put("tripId",   tripId);
             params.put("memberId", memberId);
 
             try {
                 hubPlanMapper.createHubPlan(params);
                 hubPlanId = (String) params.get("hubPlanId");
+                point = 100;  // 최초 공개 시 100포인트
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new BusinessException(ErrorCode.HUB_PLAN_CREATE_FAILED);
             }
-        }
-        else {
-            // isPublic에 따라 status처리
+        } else {
             String status = isPublic ? "ACTIVE" : "INACTIVE";
             hubPlanId = hubPlanMapper.updateHubPlanStatus(tripId, status);
+            point = 0;  // 재공개 시 0포인트
+        }
+
+        if (isPublic && keywords != null && !keywords.isEmpty()) {
+            hubPlanMapper.deleteHubPlanKeywords(hubPlanId);
+            hubPlanMapper.createHubPlanKeywords(hubPlanId, keywords);
+        } else if (!isPublic) {
+            hubPlanMapper.deleteHubPlanKeywords(hubPlanId);
         }
 
         return UpdateHubPlanPublicResponse.builder()
                 .hubPlanId(hubPlanId)
+                .point(point)
                 .build();
     }
 
@@ -161,12 +169,13 @@ public class LoungeService {
      * TRIP_STAT이 없는 경우 그 자리에서 생성 후 반환 (Lazy 생성)
      * @param plans 기본 정보 목록
      */
-    private void mapStats(List<HubPlanReadResponse> plans) {
+   private void mapStats(List<HubPlanReadResponse> plans) {
+
         List<String> tripIds = plans.stream()
                 .map(HubPlanReadResponse::getTripId)
                 .collect(Collectors.toList());
 
-        // TRIP_STAT이 없는 tripId만 추려서 생성
+        // TRIP_STAT이 없는 경우 Lazy 생성
         tripIds.forEach(tripId -> {
             if (tripStatMapper.checkTripStatExists(tripId) == 0) {
                 tripStatService.refreshTripStat(tripId);
@@ -175,16 +184,29 @@ public class LoungeService {
 
         List<HubPlanStatResponse> statsList = tripStatMapper.readTripStatList(tripIds);
 
-        // 파싱 후 매핑
-        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, HubPlanStatResponse> statsMap = statsList.stream()
                 .collect(Collectors.toMap(HubPlanStatResponse::getTripId, s -> s));
 
         plans.forEach(plan -> {
+            // 통계 매핑
             HubPlanStatResponse stat = statsMap.get(plan.getTripId());
             if (stat != null) {
                 plan.setCategoryStatList(parseStats(stat));
                 plan.setRegionStatList(parseRegionStats(stat));
+            }
+
+            // 키워드 파싱 : JSON string → List<String>
+            try {
+                if (plan.getRawKeywordIds() != null) {
+                    plan.setKeywordIds(objectMapper.readValue(
+                        plan.getRawKeywordIds(),
+                        new TypeReference<List<String>>() {}
+                    ));
+                } else {
+                    plan.setKeywordIds(Collections.emptyList());
+                }
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.HUB_PLAN_READ_FAILED);
             }
         });
     }
@@ -298,4 +320,49 @@ public class LoungeService {
 
         return hubPlanMapper.readLikePlanStatus(hubPlanId, memberId);
     }
+
+    /**
+     * 라운지 공개용 내 여행 목록 조회
+     * TRIP_STAT이 없는 경우 Lazy 생성 후 반환
+     * @param memberId 사용자 ID
+     * @return List<MyTripForLoungeResponse>
+     */
+    public List<MyTripForLoungeResponse> readMyTripsForLounge(String memberId) {
+
+        List<MyTripForLoungeResponse> trips = tripStatMapper.readMyTripsForLounge(memberId);
+
+        // TRIP_STAT이 없는 여행은 Lazy 생성
+        trips.forEach(trip -> {
+            if (trip.getCategoryStats() == null && trip.getRegionStats() == null) {
+                tripStatService.refreshTripStat(trip.getTripId());
+                // 생성 후 다시 조회해서 통계 세팅
+                HubPlanStatResponse stat = tripStatMapper.readTripStat(trip.getTripId());
+                trip.setCategoryStats(stat.getCategoryStats());
+                trip.setRegionStats(stat.getRegionStats());
+            }
+        });
+
+        // JSON string → List 파싱
+        trips.forEach(trip -> {
+            try {
+                if (trip.getCategoryStats() != null) {
+                    trip.setCategoryStatList(objectMapper.readValue(
+                            trip.getCategoryStats(),
+                            new TypeReference<List<CategoryStatResponse>>() {}
+                    ));
+                }
+                if (trip.getRegionStats() != null) {
+                    trip.setRegionStatList(objectMapper.readValue(
+                            trip.getRegionStats(),
+                            new TypeReference<List<RegionStatResponse>>() {}
+                    ));
+                }
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.HUB_PLAN_READ_FAILED);
+            }
+        });
+
+        return trips;
+    }
+
 }

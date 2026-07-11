@@ -30,7 +30,7 @@ public class HubPlanSearchRequest {
     @Schema(description = "최대 박 수(1박 2일 → 1)", example = "5")
     private Integer maxNights;
 
-    @Schema(description = "태그 키워드 ID 목록(현재 사용 불가)")
+    @Schema(description = "태그 키워드 ID 목록", example = "[\"KW1\", \"KW2\"]")
     private List<String> keywordIds;
 
     @Schema(description = "정렬 기준 (LATEST, LIKE, COPY)", example = "LATEST")
@@ -52,5 +52,17 @@ public class HubPlanSearchRequest {
 
     public int getOffset() {
         return (page - 1) * size;
+    }
+
+    public int getKeywordCount() {
+        return keywordIds != null ? keywordIds.size() : 0;
+    }
+
+    public int getExactRegionCount() {
+        return exactRegionIds != null ? exactRegionIds.size() : 0;
+    }
+
+    public int getZdoCodeCount() {
+        return zdoCodes != null ? zdoCodes.size() : 0;
     }
 }

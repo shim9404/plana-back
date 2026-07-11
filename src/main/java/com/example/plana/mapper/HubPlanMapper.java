@@ -49,4 +49,10 @@ public interface HubPlanMapper {
                               @Param("status") String status);
 
     void updateHubPlanCopyCount(@Param("hubPlanId") String hubPlanId, @Param("delta") int delta);
+
+    void createHubPlanKeywords(@Param("hubPlanId") String hubPlanId,
+                               @Param("keywords") List<String> keywords);
+
+    void deleteHubPlanKeywords(String hubPlanId);
+
 }

@@ -1,6 +1,7 @@
 package com.example.plana.mapper;
 
 import com.example.plana.dto.lounge.HubPlanStatResponse;
+import com.example.plana.dto.lounge.MyTripForLoungeResponse;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -12,4 +13,5 @@ public interface TripStatMapper {
     void createTripStat(String tripId);
     void updateTripStat(String tripId);
     List<HubPlanStatResponse> readTripStatList(List<String> tripIds);
+    List<MyTripForLoungeResponse> readMyTripsForLounge(String memberId);
 }
