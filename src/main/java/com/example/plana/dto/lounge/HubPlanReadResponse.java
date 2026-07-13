@@ -1,5 +1,6 @@
 package com.example.plana.dto.lounge;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,9 +42,17 @@ public class HubPlanReadResponse {
     @Schema(description = "여행 박 수", example = "3")
     private Integer nights;
 
+    @Schema(description = "키워드 ID 목록", example = "[\"KW1\", \"KW2\"]")
+    private List<String> keywordIds;
+
     @Schema(description = "카테고리 비율 목록")
     private List<CategoryStatResponse> categoryStatList;
 
     @Schema(description = "지역 비율 목록")
     private List<RegionStatResponse> regionStatList;
+
+    // 내부용 raw 필드 (API 응답 제외)
+    @JsonIgnore
+    @Schema(hidden = true)
+    private String rawKeywordIds;
 }

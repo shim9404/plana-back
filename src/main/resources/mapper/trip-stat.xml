@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.TripStatMapper">
+
+    <!-- TRIP_STAT 존재 여부 확인 -->
+    <select id="checkTripStatExists" resultType="int">
+        SELECT COUNT(*)
+        FROM   TRIP_STAT
+        WHERE  TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </select>
+
+    <!-- TRIP_STAT 단건 조회 -->
+    <select id="readTripStat" resultType="com.example.plana.dto.lounge.HubPlanStatResponse">
+        SELECT
+            TRIP_ID         as "tripId",
+            CATEGORY_STATS  as "categoryStats",
+            REGION_STATS    as "regionStats"
+        FROM TRIP_STAT
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </select>
+
+    <!-- TRIP_STAT INSERT
+         TRIP_SCHEDULE → BOOKMARK → AREA 기준으로 카테고리/지역 비율 계산 후 저장 -->
+    <insert id="createTripStat">
+        INSERT INTO TRIP_STAT (TRIP_ID, CATEGORY_STATS, REGION_STATS)
+        VALUES (
+            #{tripId, jdbcType=VARCHAR},
+            <!-- 카테고리 비율 :
+                 BOOKMARK_ID가 null이거나 CATEGORY가 null인 경우 'ETC'로 처리
+                 반환 예시 : [{"category": "FD6", "ratio": 45}, {"category": "ETC", "ratio": 55}] -->
+            (
+                SELECT TO_JSONB(JSON_AGG(JSON_BUILD_OBJECT(
+                    'category', category,
+                    'ratio',    ratio
+                )))
+                FROM (
+                    SELECT
+                        category,
+                        ROUND(cnt * 100.0 / SUM(cnt) OVER(), 0) as ratio
+                    FROM (
+                        SELECT
+                            COALESCE(A.CATEGORY, 'ETC') as category,
+                            COUNT(*)                     as cnt
+                        FROM   TRIP_SCHEDULE TS
+                        LEFT JOIN BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                        LEFT JOIN AREA A     ON B.AREA_ID      = A.AREA_ID
+                        WHERE  TS.TRIP_DAY_ID IN (
+                            SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = #{tripId}
+                        )
+                        GROUP BY COALESCE(A.CATEGORY, 'ETC')
+                    ) CATEGORY_CNT
+                ) CATEGORY_RATIO
+            ),
+            <!-- 지역 비율 :
+                 북마크가 있으면 BOOKMARK → AREA → REGION 기준으로 집계
+                 북마크가 없으면 TRIP.REGION_ID로 폴백 (100% 처리)
+                 반환 예시 : [{"region": "경기도", "ratio": 60}, {"region": "서울특별시", "ratio": 40}] -->
+            (
+                SELECT TO_JSONB(JSON_AGG(JSON_BUILD_OBJECT(
+                    'region', ZDO_NAME,
+                    'ratio',  ratio
+                )))
+                FROM (
+                    SELECT
+                        ZDO_NAME,
+                        ROUND(cnt * 100.0 / SUM(cnt) OVER(), 0) as ratio
+                    FROM (
+                        <!-- 북마크가 있는 경우 : BOOKMARK → AREA → REGION에서 지역별 집계 -->
+                        SELECT
+                            R2.ZDO_NAME as ZDO_NAME,
+                            COUNT(*)    as cnt
+                        FROM   TRIP_SCHEDULE TS
+                        JOIN   BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                        JOIN   AREA A     ON B.AREA_ID      = A.AREA_ID
+                        JOIN   REGION R2  ON A.REGION_ID    = R2.REGION_ID
+                        WHERE  TS.TRIP_DAY_ID IN (
+                            SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = #{tripId}
+                        )
+                        GROUP BY R2.ZDO_NAME
+
+                        UNION ALL
+
+                        <!-- 북마크가 없는 경우 : TRIP.REGION_ID로 폴백 (100% 처리) -->
+                        SELECT
+                            R3.ZDO_NAME as ZDO_NAME,
+                            1           as cnt
+                        FROM   REGION R3
+                        WHERE  R3.REGION_ID = (SELECT REGION_ID FROM TRIP WHERE TRIP_ID = #{tripId})
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM   TRIP_SCHEDULE TS
+                            JOIN   BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                            WHERE  TS.TRIP_DAY_ID IN (
+                                SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = #{tripId}
+                            )
+                        )
+                    ) REGION_CNT
+                ) REGION_RATIO
+            )
+        )
+    </insert>
+
+    <!-- TRIP_STAT UPDATE
+         TRIP_SCHEDULE 또는 BOOKMARK 변경 시 호출 -->
+    <update id="updateTripStat">
+        UPDATE TRIP_STAT
+        SET
+            CATEGORY_STATS = (
+                SELECT TO_JSONB(JSON_AGG(JSON_BUILD_OBJECT(
+                    'category', category,
+                    'ratio',    ratio
+                )))
+                FROM (
+                    SELECT
+                        category,
+                        ROUND(cnt * 100.0 / SUM(cnt) OVER(), 0) as ratio
+                    FROM (
+                        SELECT
+                            COALESCE(A.CATEGORY, 'ETC') as category,
+                            COUNT(*)                     as cnt
+                        FROM   TRIP_SCHEDULE TS
+                        LEFT JOIN BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                        LEFT JOIN AREA A     ON B.AREA_ID      = A.AREA_ID
+                        WHERE  TS.TRIP_DAY_ID IN (
+                            SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = #{tripId}
+                        )
+                        GROUP BY COALESCE(A.CATEGORY, 'ETC')
+                    ) CATEGORY_CNT
+                ) CATEGORY_RATIO
+            ),
+            REGION_STATS = (
+                SELECT TO_JSONB(JSON_AGG(JSON_BUILD_OBJECT(
+                    'region', ZDO_NAME,
+                    'ratio',  ratio
+                )))
+                FROM (
+                    SELECT
+                        ZDO_NAME,
+                        ROUND(cnt * 100.0 / SUM(cnt) OVER(), 0) as ratio
+                    FROM (
+                        SELECT
+                            R2.ZDO_NAME as ZDO_NAME,
+                            COUNT(*)    as cnt
+                        FROM   TRIP_SCHEDULE TS
+                        JOIN   BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                        JOIN   AREA A     ON B.AREA_ID      = A.AREA_ID
+                        JOIN   REGION R2  ON A.REGION_ID    = R2.REGION_ID
+                        WHERE  TS.TRIP_DAY_ID IN (
+                            SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = #{tripId}
+                        )
+                        GROUP BY R2.ZDO_NAME
+
+                        UNION ALL
+
+                        SELECT
+                            R3.ZDO_NAME as ZDO_NAME,
+                            1           as cnt
+                        FROM   REGION R3
+                        WHERE  R3.REGION_ID = (SELECT REGION_ID FROM TRIP WHERE TRIP_ID = #{tripId})
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM   TRIP_SCHEDULE TS
+                            JOIN   BOOKMARK B ON TS.BOOKMARK_ID = B.BOOKMARK_ID
+                            WHERE  TS.TRIP_DAY_ID IN (
+                                SELECT TRIP_DAY_ID FROM TRIP_DAY WHERE TRIP_ID = #{tripId}
+                            )
+                        )
+                    ) REGION_CNT
+                ) REGION_RATIO
+            ),
+            UPDATED_AT = NOW()
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+    <select id="readTripStatList" resultType="com.example.plana.dto.lounge.HubPlanStatResponse">
+        SELECT
+        TRIP_ID         as "tripId",
+        CATEGORY_STATS  as "categoryStats",
+        REGION_STATS    as "regionStats"
+        FROM TRIP_STAT
+        WHERE TRIP_ID IN
+        <foreach item="tripId" collection="list" open="(" separator="," close=")">
+            #{tripId}
+        </foreach>
+    </select>
+
+    <!-- 내 여행 목록 + 통계 조회 (라운지 공개용) -->
+    <select id="readMyTripsForLounge" resultType="com.example.plana.dto.lounge.MyTripForLoungeResponse">
+        SELECT
+            T.TRIP_ID                                               as "tripId",
+            T.NAME                                                  as "name",
+            T.START_DATE                                            as "startDate",
+            T.END_DATE                                              as "endDate",
+            (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) as "nights",
+            CASE WHEN T.IS_PUBLIC = 'Y' THEN TRUE ELSE FALSE END    as "isPublic",
+            TS.CATEGORY_STATS                                       as "categoryStats",
+            TS.REGION_STATS                                         as "regionStats"
+        FROM TRIP T
+            LEFT JOIN TRIP_STAT TS ON T.TRIP_ID = TS.TRIP_ID
+        WHERE T.MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+          AND T.STATUS   != 'DELETED'
+             <!-- 이미 허브에 공개된 여행 제외 -->
+          AND NOT EXISTS (
+              SELECT 1
+              FROM   HUB_PLAN HP
+              WHERE  HP.TRIP_ID = T.TRIP_ID
+                AND  HP.STATUS  = 'ACTIVE'
+          )
+        ORDER BY T.CREATE_DATE DESC
+    </select>
+</mapper>

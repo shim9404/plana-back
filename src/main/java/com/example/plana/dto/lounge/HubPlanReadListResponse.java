@@ -28,5 +28,4 @@ public class HubPlanReadListResponse {
 
     @Schema(description = "페이지당 항목 수", example = "10")
     private int size;
-
 }
