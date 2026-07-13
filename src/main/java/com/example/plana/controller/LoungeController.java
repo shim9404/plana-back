@@ -40,8 +40,6 @@ public class LoungeController {
     @Parameter(name = "tripId", description = "공개 여부를 변경할 여행 ID", required = true)
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
     public ResponseEntity<ResponseBody<UpdateHubPlanPublicResponse>> updateHubPlanVisibility(@PathVariable String tripId, @RequestBody TripPublicUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
-        log.info("public:: "+ request.getIsPublic());
-        log.info("getKeywords:: "+ request.getKeywords());
         UpdateHubPlanPublicResponse data = loungeService.updateHubPlanPublic(tripId, request.getIsPublic(), request.getKeywords(), principal.getMemberId());
 
         return ResponseEntity.ok(
@@ -49,7 +47,7 @@ public class LoungeController {
     }
 
     @PatchMapping("/{hubPlanId}/status")
-    @Operation(summary = "허브 게시물 상태 변경", description = "허브 게시물의 상태를 변경합니다. (INACTIVE / DELETED)")
+    @Operation(summary = "허브 게시물 상태 변경(관리자용)", description = "허브 게시물의 상태를 변경합니다. (INACTIVE / DELETED)")
     @Parameters({ @Parameter(name = "hubPlanId", description = "상태를 변경할 허브 게시물 ID", required = true) })
     @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
     public ResponseEntity<ResponseBody<EmptyData>> updateHubPlanStatus(@PathVariable String hubPlanId, @RequestBody StatusUpdateRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
@@ -103,13 +101,14 @@ public class LoungeController {
 
 
     @GetMapping("/my-trips")
-    @Operation(summary = "라운지 공개용 내 여행 목록 조회", description = "허브에 공개할 내 여행 목록을 조회합니다.")
+    @Operation(summary = "라운지 공개용 내 여행 목록 조회", description = "허브에 공개할 내 여행 목록을 조회합니다. 공개 중인 계획은 포함하지 않습니다.")
     @ApiResponse(responseCode = "200", description = "[S001] 조회가 정상적으로 처리되었습니다.")
     public ResponseEntity<ResponseBody<List<MyTripForLoungeResponse>>> readMyTripsForLounge(
             @AuthenticationPrincipal CustomUserDetails principal) {
 
+       List<MyTripForLoungeResponse> data = loungeService.readMyTripsForLounge(principal.getMemberId());
+
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.SELECT_SUCCESS,
-                        loungeService.readMyTripsForLounge(principal.getMemberId())));
+                ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 }
