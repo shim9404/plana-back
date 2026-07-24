@@ -7,6 +7,7 @@ import com.example.plana.dto.area.read.MapPos;
 import com.example.plana.dto.area.read.RelatePlaceReadResponse;
 import com.example.plana.dto.area.read.ThemeReadPageResponse;
 import com.example.plana.dto.area.read.ThemeReadResponse;
+import com.example.plana.mapper.AreaMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,6 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Log4j2
 public class CacheThemeService {
+    private final AreaMapper areaMapper;
     private final VisitKoreaConfig visitKoreaConfig; // visitKorea apiKey
 
     // ===== 수량 조회 =====
@@ -315,10 +317,10 @@ public class CacheThemeService {
         for (Map<String, Object> item : itemList) {
             ThemeReadResponse themeReadResponse = new ThemeReadResponse();
             // 여행지 콘텐츠 id
-            themeReadResponse.setThemeId((String) item.get("contentid"));
+            themeReadResponse.setPlaceId((String) item.get("contentid"));
             // Area id
-            // String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getThemeId());
-            // themeReadResponse.setAreaId(areaId);
+            String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getPlaceId());
+            themeReadResponse.setAreaId(areaId);
             // 분류
             themeReadResponse.setSearchType("THEME");
             // 맞춤 테마 종류
@@ -353,10 +355,10 @@ public class CacheThemeService {
         for (Map<String, Object> item : itemList) {
             ThemeReadResponse themeReadResponse = new ThemeReadResponse();
             // 여행지 콘텐츠 id
-            themeReadResponse.setThemeId((String) item.get("contentid"));
+            themeReadResponse.setPlaceId((String) item.get("contentid"));
             // Area id
-            // String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getThemeId());
-            // themeReadResponse.setAreaId(areaId);
+            String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getPlaceId());
+            themeReadResponse.setAreaId(areaId);
             // 분류
             themeReadResponse.setSearchType("THEME");
             // 맞춤 테마 종류
@@ -423,10 +425,10 @@ public class CacheThemeService {
         for (Map<String, Object> item : itemList) {
             ThemeReadResponse themeReadResponse = new ThemeReadResponse();
             // 여행지 콘텐츠 id
-            themeReadResponse.setThemeId((String) item.get("contentId"));
+            themeReadResponse.setPlaceId((String) item.get("contentId"));
             // Area id
-            // String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getThemeId());
-            // themeReadResponse.setAreaId(areaId);
+            String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getPlaceId());
+            themeReadResponse.setAreaId(areaId);
             // 분류
             themeReadResponse.setSearchType("THEME");
             // 맞춤 테마 종류
@@ -461,10 +463,10 @@ public class CacheThemeService {
         for (Map<String, Object> item : itemList) {
             ThemeReadResponse themeReadResponse = new ThemeReadResponse();
             // 여행지 콘텐츠 id
-            themeReadResponse.setThemeId((String) item.get("contentId"));
+            themeReadResponse.setPlaceId((String) item.get("contentId"));
             // Area id
-            // String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getThemeId());
-            // themeReadResponse.setAreaId(areaId);
+            String areaId = areaMapper.readAreaIdByPlaceId(themeReadResponse.getPlaceId());
+            themeReadResponse.setAreaId(areaId);
             // 분류
             themeReadResponse.setSearchType("THEME");
             // 맞춤 테마 종류

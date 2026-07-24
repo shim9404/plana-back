@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "맞춤 테마의 여행지(관광포털 API) 리스트")
 public class ThemeReadResponse {
     @Schema(description = "여행지 콘텐츠 id", example = "2755034")
-    private String themeId;
+    private String placeId;
     @Schema(description = "Area Table에 등록된 id (없으면 null)", example = "null")
     private String areaId;
     @Schema(description = "분류", example = "THEME")

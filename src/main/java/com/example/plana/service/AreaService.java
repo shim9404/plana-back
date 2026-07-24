@@ -536,7 +536,7 @@ public class AreaService {
         Map<String,ThemeReadResponse> uniqueMap = new LinkedHashMap<>(); // MAP { KEY : VALUE}
         for(ThemeReadResponse travel : themeTravels){
             uniqueMap.putIfAbsent(
-                    travel.getThemeId(), // themeId가 처음 나오면 저장 + 이미 있으면 무시
+                    travel.getPlaceId(), // Id가 처음 나오면 저장 + 이미 있으면 무시
                     travel
             );
         }
