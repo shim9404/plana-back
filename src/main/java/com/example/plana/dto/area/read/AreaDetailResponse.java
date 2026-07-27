@@ -30,7 +30,7 @@ public class AreaDetailResponse {
     @Schema(description = "링크", example = "null")
     private String link;
     @Schema(description = "전화번호", example = "063-453-0608")
-    private String telePhone;
+    private String telephone;
     @Schema(description = "설명", example = "공공데이터포털 전북특별자치도_ 음식문화정보 발췌색")
     private String description;
     @Schema(description = "북마크 수", example = "0")

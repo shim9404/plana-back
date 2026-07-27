@@ -34,7 +34,7 @@ public class PlaceReadResponse {
     @Schema(description = "링크", example = "http://place.map.kakao.com/191240179")
     private String link;
     @Schema(description = "전화번호", example = "042-477-3412")
-    private String telePhone;
+    private String telephone;
     @Schema(description = "설명", example = "카카오개발자센터 장소 검색")
     private String description;
 }

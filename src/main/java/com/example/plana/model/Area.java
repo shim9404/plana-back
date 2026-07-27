@@ -20,7 +20,7 @@ public class Area {
     private String address;
     private String roadAddress;
     private String link;
-    private String telePhone;
+    private String telephone;
     private String description;
     private int bookmarkCount;
     private String createDate;

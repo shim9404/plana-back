@@ -51,11 +51,9 @@ public class BookmarkService {
 
         String areaId = "";
         String placeId = "";
-        String themeId = "";
         if (request.getArea() != null) {    // AREA DB에 존재하지 않는 근처 장소(PLACE)를 북마크한 경우
             areaId = areaService.getOrCreatePlaceArea(request.getArea());
             placeId = request.getArea().getPlaceId();
-            themeId = request.getArea().getThemeId();
         } else {
             areaId = request.getAreaId();
         }
@@ -78,7 +76,6 @@ public class BookmarkService {
                 .bookmarkId(bookmarkId)
                 .areaId(areaId)
                 .placeId(placeId)
-                .themeId(themeId)
                 .areaInfo(areaService.toBookmarkResponse(areaId))
                 .bookmarkType(request.getBookmarkType())
                 .build();

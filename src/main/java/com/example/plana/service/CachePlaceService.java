@@ -554,9 +554,9 @@ public class CachePlaceService {
             // 도로명 주소
             placeReadResponse.setRoadAddress((String) item.get("road_address_name"));
             // 링크
-            placeReadResponse.setAddress((String) item.get("place_url"));
+            placeReadResponse.setLink((String) item.get("place_url"));
             // 전화번호
-            placeReadResponse.setAddress((String) item.get("phone"));
+            placeReadResponse.setTelephone((String) item.get("phone"));
             // 설명
             placeReadResponse.setDescription("카카오개발자센터 장소 검색");
 

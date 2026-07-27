@@ -132,7 +132,7 @@ public class AreaService {
         areaDetail.setAddress(area.getAddress());
         areaDetail.setRoadAddress(area.getRoadAddress());
         areaDetail.setLink(area.getLink());
-        areaDetail.setTelePhone(area.getTelePhone());
+        areaDetail.setTelephone(area.getTelephone());
         areaDetail.setDescription(area.getDescription());
         areaDetail.setBookmarkCount(area.getBookmarkCount());
         areaDetail.setCreateDate(area.getCreateDate());
@@ -411,7 +411,7 @@ public class AreaService {
                     .address(area.getAddress())
                     .roadAddress(area.getRoadAddress())
                     .link(area.getLink())
-                    .telephone(area.getTelePhone())
+                    .telephone(area.getTelephone())
                     .build();
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.AREA_READ_FAILED);
@@ -536,7 +536,7 @@ public class AreaService {
         Map<String,ThemeReadResponse> uniqueMap = new LinkedHashMap<>(); // MAP { KEY : VALUE}
         for(ThemeReadResponse travel : themeTravels){
             uniqueMap.putIfAbsent(
-                    travel.getThemeId(), // themeId가 처음 나오면 저장 + 이미 있으면 무시
+                    travel.getPlaceId(), // Id가 처음 나오면 저장 + 이미 있으면 무시
                     travel
             );
         }

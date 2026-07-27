@@ -19,10 +19,8 @@ public class BookmarkResponse {
     private String bookmarkType;
     @Schema(description = "등록된 장소 ID", example = "A123")
     private String areaId;
-    @Schema(description = "등록된 카카오 ID", nullable = true, example = "null")
+    @Schema(description = "등록된 API ID", nullable = true, example = "null")
     private String placeId;
-    @Schema(description = "등록된 관광포털 ID", nullable = true, example = "null")
-    private String themeId;
     // AREA ID로 가져와야하는 정보를 가공하여 담을 변수 모음
     private AreaForBookmarkResponse areaInfo;
 }
