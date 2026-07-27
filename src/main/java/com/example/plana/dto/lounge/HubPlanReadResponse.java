@@ -39,6 +39,12 @@ public class HubPlanReadResponse {
     @Schema(description = "생성일", example = "2024-01-01 00:00:00")
     private String createdDate;
 
+    @Schema(description = "시작일", example = "2024-01-01 00:00:00")
+    private String startDate;
+
+    @Schema(description = "종료일", example = "2024-01-01 00:00:00")
+    private String endDate;
+
     @Schema(description = "여행 박 수", example = "3")
     private Integer nights;
 
