@@ -132,7 +132,7 @@ public class AreaService {
         areaDetail.setAddress(area.getAddress());
         areaDetail.setRoadAddress(area.getRoadAddress());
         areaDetail.setLink(area.getLink());
-        areaDetail.setTelePhone(area.getTelePhone());
+        areaDetail.setTelephone(area.getTelephone());
         areaDetail.setDescription(area.getDescription());
         areaDetail.setBookmarkCount(area.getBookmarkCount());
         areaDetail.setCreateDate(area.getCreateDate());
@@ -411,7 +411,7 @@ public class AreaService {
                     .address(area.getAddress())
                     .roadAddress(area.getRoadAddress())
                     .link(area.getLink())
-                    .telephone(area.getTelePhone())
+                    .telephone(area.getTelephone())
                     .build();
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.AREA_READ_FAILED);

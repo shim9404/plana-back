@@ -36,7 +36,7 @@ public class ThemeReadResponse {
     @Schema(description = "링크", example = "null")
     private String link;
     @Schema(description = "전화번호", example = "null")
-    private String telePhone;
+    private String telephone;
     @Schema(description = "설명", example = "관광포털 여행지 검색(PET)")
     private String description;
 }

@@ -447,7 +447,7 @@ public class CacheThemeService {
             // 링크
             themeReadResponse.setLink((String) item.get("homepage"));
             // 전화번호
-            themeReadResponse.setTelePhone((String) item.get("tel"));
+            themeReadResponse.setTelephone((String) item.get("tel"));
             // 설명
             themeReadResponse.setDescription("관광포털 여행지 검색(CAMP)");
 
@@ -484,7 +484,7 @@ public class CacheThemeService {
             themeReadResponse.setRoadAddress((String) item.get("baseAddr"));
             // 링크 (X)
             // 전화번호
-            themeReadResponse.setTelePhone((String) item.get("tel"));
+            themeReadResponse.setTelephone((String) item.get("tel"));
             // 설명
             themeReadResponse.setDescription("관광포털 여행지 검색(WELLNESS)");
 
