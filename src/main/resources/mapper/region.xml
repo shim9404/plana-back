@@ -45,4 +45,13 @@
         WHERE REGION_ID = #{regionId}
     </select>
 
+
+    <select id="readRegionCodes" resultType="com.example.plana.dto.region.read.RegionCodeResponse">
+        SELECT
+            REGION_ID as "regionId",
+            ZDO_CODE  as "zdoCode",
+            SIGU_CODE as "siguCode"
+        FROM REGION
+        WHERE REGION_ID = #{regionId}
+    </select>
 </mapper>

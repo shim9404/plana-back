@@ -8,9 +8,14 @@ import com.example.plana.dto.common.EmptyData;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.dto.common.StatusUpdateRequest;
 import com.example.plana.dto.trip.create.*;
+import com.example.plana.dto.trip.invite.TripInviteAcceptRequest;
+import com.example.plana.dto.trip.invite.TripInviteAcceptResponse;
+import com.example.plana.dto.trip.invite.TripInviteRequest;
+import com.example.plana.dto.trip.invite.TripInviteResponse;
 import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.service.BookmarkService;
+import com.example.plana.service.TripInviteService;
 import com.example.plana.service.TripService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 public class TripController {
 
     private final TripService tripService;
+    private final TripInviteService tripInviteService;
     private final BookmarkService bookmarkService;
 
     /**
@@ -267,7 +273,7 @@ public class TripController {
      * @return ResponseBody.data : null
      */
     @DeleteMapping("/{tripId}/days/{tripDayId}/schedules/{tripScheduleId}")
-    @Operation(summary = "여행 영구 삭제", description = "휴지통에 보관 중인 여행을 영구 삭제한다.")
+    @Operation(summary = "여행 스케줄 삭제", description = "단일 여행 스케줄을 삭제하고 동일 여행 일차 하위의 여행 스케줄들의 순번을 재정렬한다.")
     @Parameters({
             @Parameter(name = "tripId", description = "여행 ID", required = true),
             @Parameter(name = "tripDayId", description = "스케줄이 속한 일자 ID", required = true),
@@ -280,4 +286,69 @@ public class TripController {
         return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
     }
 
+    /**
+     * createShareToken 여행 공유를 위한 토큰 갱신
+     * @param tripId 여행 ID
+     * @return ResponseBody.data : TripShareTokenResponse
+     */
+    @PostMapping("/{tripId}/share-token")
+    @Operation(summary = "여행 공유 토큰 발급", description = "여행 공유를 위한 토큰을 발급하거나 재발급한다.")
+    @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
+    @ApiResponse(responseCode = "201", description = "[S002] 등록이 완료되었습니다.")
+    public ResponseEntity<ResponseBody<TripShareTokenResponse>> createShareToken(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        TripShareTokenResponse data = tripService.createShareToken(tripId, principal.getMemberId());
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    /**
+     * deleteShareToken 여행 공유 중단(공유 토큰 삭제)
+     * @param tripId 여행 ID
+     * @return ResponseBody.data : null
+     */
+    @DeleteMapping("/{tripId}/share-token")
+    @Operation(summary = "여행 공유 중단", description = "발급된 공유 토큰을 무효화한다.")
+    @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
+    @ApiResponse(responseCode = "200", description = "[S003] 삭제가 완료되었습니다.")
+    public ResponseEntity<ResponseBody<EmptyData>> deleteShareToken(@PathVariable String tripId, @AuthenticationPrincipal CustomUserDetails principal) {
+        tripService.deleteShareToken(tripId, principal.getMemberId());
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.DELETE_SUCCESS));
+    }
+
+    /**
+     * getSharedTrip 공유된 여행 정보 조회(단건/상세)
+     * @param shareToken 공유 토큰
+     * @return ResponseBody.data : TripResponse
+     */
+    @GetMapping("/share/{shareToken}")
+    @Operation(summary = "공유 링크로 여행 정보 호출", description = "공유 여행의 상세 정보를 요청한다.")
+    @Parameters({ @Parameter(name = "shareToken", description = "공유 토큰", required = true) })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<TripResponse>> getSharedTrip(@PathVariable String shareToken) {
+        TripResponse data = tripService.readSharedTrip(shareToken);
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
+
+    @PostMapping("/{tripId}/invite")
+    @Operation(summary = "여행 멤버 초대", description = "이메일로 여행 계획에 멤버를 초대한다.")
+    @Parameters({ @Parameter(name = "tripId", description = "여행 ID", required = true) })
+    @ApiResponse(responseCode = "201", description = "[S002] 등록이 완료되었습니다.")
+    public ResponseEntity<ResponseBody<TripInviteResponse>> inviteMember(
+            @PathVariable String tripId, @RequestBody TripInviteRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+
+        TripInviteResponse data = tripInviteService.inviteMember(tripId, principal.getMemberId(), request);
+
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.INSERT_SUCCESS, data));
+    }
+
+    @PostMapping("/invite/accept")
+    @Operation(summary = "여행 초대 수락", description = "초대 토큰을 검증하고 여행 멤버로 등록한다.")
+    @ApiResponse(responseCode = "200", description = "[S003] 수정이 정상적으로 처리되었습니다.")
+    public ResponseEntity<ResponseBody<TripInviteAcceptResponse>> acceptInvitation(
+            @RequestBody TripInviteAcceptRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+
+        TripInviteAcceptResponse data = tripInviteService.acceptInvitation(principal.getMemberId(), request);
+
+        return ResponseEntity.ok(ResponseBody.success(SuccessCode.UPDATE_SUCCESS, data));
+    }
 }

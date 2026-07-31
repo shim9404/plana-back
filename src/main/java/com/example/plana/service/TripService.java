@@ -1,8 +1,10 @@
 package com.example.plana.service;
 
+import com.example.plana.common.constants.TripConstatnts;
 import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.common.utils.DateUtils;
+import com.example.plana.component.TripAccessValidator;
 import com.example.plana.dto.bookmark.create.BookmarkCopyRequest;
 import com.example.plana.dto.bookmark.create.BookmarkCreateRequest;
 import com.example.plana.dto.bookmark.read.BookmarkResponse;
@@ -14,6 +16,7 @@ import com.example.plana.dto.trip.read.TripScheduleResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.BookmarkMapper;
 import com.example.plana.mapper.TripMapper;
+import com.example.plana.mapper.TripStatMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -28,23 +31,10 @@ public class TripService {
     private final TripMapper tripMapper;
     private final BookmarkService bookmarkService;
     private final BookmarkMapper bookmarkMapper;
+    private final CopyPlanService copyPlanService;
+    private final TripStatService tripStatService;
 
-
-    /**
-     * 권한 체크
-     * CRUD를 요청한 TripId에서 memberId를 추출하고 현재 로그인한 id를 비교하는 함수
-     * @param tripId 여행 ID
-     * @param memberId 사용자 ID
-     */
-    public void validateTripOwner(String tripId, String memberId) {
-        String tripOwner = tripMapper.readTripOwner(tripId);
-        if (tripOwner == null) {
-            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
-        }
-        if (!tripOwner.equals(memberId)) {
-            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
-        }
-    }
+    private final TripAccessValidator tripAccessValidator;
 
     /**
      * 신규 여행 생성 - 날짜 수만큼 신규 여행 일자 생성 - 각 여행 일자당 1개의 신규 스케줄 생성
@@ -97,15 +87,24 @@ public class TripService {
     }
 
     /**
-     * 여행 단건 상세 조회
+     * 여행 단건 상세 조회 (소유자, 공유한 경우에만)
      * @param tripId 여행 ID
      * @param memberId 사용자 ID
      * @return TripResponse
      */
     @Transactional
     public TripResponse readTrip(String tripId, String memberId) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateAccess(tripId, memberId);
+        return readTripDetail(tripId);
+    }
 
+    /**
+     * 여행 단건 상세 조회
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    @Transactional
+    private TripResponse readTripDetail(String tripId) {
         // 1. SELECT TRIP
         TripResponse trip = null;
         try {
@@ -145,6 +144,7 @@ public class TripService {
         return trip;
     }
 
+
     /**
      * 여행 복제하여 내 여행으로 저장
      * // @Transactional : 여행 신규 복사(insert) - 여행 북마크 복사(insert) - 여행 일자 및 스케줄 복사(insert)을 하나의 트랜잭션으로
@@ -155,8 +155,9 @@ public class TripService {
      */
     @Transactional
     public TripCopyResponse copyTrip(String tripId, String memberId, TripCopyRequest request) {
-        // TODO: tripId에 해당하는 여행이 복제 가능하도록 Public Open 상태인지 체크하는 로직 필요
-//        validateTripOwner(tripId, memberId);
+
+        //tripId에 해당하는 여행이 복제 가능하도록 Public Open 상태인지 체크하는 로직
+        tripAccessValidator.getIsPublic(tripId);
 
         // 1. TRIP INSERT - 복제할 여행 정보로 신규 여행 생성
         Map<String, Object> tripParams = new HashMap<>();
@@ -268,6 +269,8 @@ public class TripService {
                     .build());
         }
 
+        copyPlanService.recordCopyPlan(tripId, memberId);
+
         // 복제 성공 시 확인용 이름과 즉시 편집 요청을 위한 ID 반환
         return TripCopyResponse.builder()
                 .tripId(createdTripId)
@@ -282,7 +285,7 @@ public class TripService {
      * @param request TripInfoUpdateRequest
      */
     public void updateTripInfo(String tripId, String memberId, TripInfoUpdateRequest request) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         Map<String, Object> tripParams = new HashMap<>();
         tripParams.put("tripId"     , tripId);
@@ -307,7 +310,7 @@ public class TripService {
      */
     @Transactional
     public TripDateUpdateResponse updateTripDate(String tripId, String memberId, TripDateUpdateRequest request) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         // 1. 여행 정보 저장
         Map<String, Object> tripParams = new HashMap<>();
@@ -359,7 +362,7 @@ public class TripService {
     @Transactional
     public void updateTripStatus(String tripId, String memberId, StatusUpdateRequest request) {
 
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         Map<String, Object> statusParams = new HashMap<>();
         statusParams.put("tripId"       , tripId);
@@ -397,7 +400,7 @@ public class TripService {
     @Transactional
     public void deleteTrip(String tripId, String memberId) {
 
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         // 1. 여행 하위 데이터 전체 삭제 DELETE
         try {   // 스케줄 우선 삭제
@@ -435,7 +438,7 @@ public class TripService {
     @Transactional
     public TripDayCreateResponse createTripDay(String tripId, String memberId) {
 
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
         
         // 1. TRIP_DAY INSERT (단건)
         Map<String, Object> dayParams = new HashMap<>();
@@ -489,7 +492,7 @@ public class TripService {
      */
     @Transactional
     public void deleteTripDay(String tripId, String tripDayId, String memberId) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
         
         // 여행 일자가 존재하지 않음
         if (!tripMapper.existTripDay(tripDayId)) {  throw new BusinessException(ErrorCode.TRIP_DAY_NOT_FOUND);  }
@@ -536,7 +539,7 @@ public class TripService {
     @Transactional
     public void updateTripDaysIndexSort(String tripId, String memberId, TripDayOrderUpdateRequest request) {
 
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         for (TripDayOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {
             Map<String, Object> dayParams = new HashMap<>();
@@ -562,7 +565,7 @@ public class TripService {
      * @return TripScheduleCreateResponse
      */
     public TripScheduleCreateResponse createTripSchedule(String tripId, String tripDayId, String memberId/*, TripScheduleCreateRequest request*/) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripDayId",      tripDayId);
@@ -576,6 +579,9 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_CREATE_FAILED);
         }
+
+        // 통계 갱신
+        tripStatService.refreshTripStat(tripId);
 
         String tripScheduleId = (String) scheduleParams.get("tripScheduleId");
         int indexSort = (int) scheduleParams.get("indexSort");
@@ -593,7 +599,7 @@ public class TripService {
      * @param request TripScheduleUpdateRequest
      */
     public void updateTripSchedule(String tripId, String tripScheduleId, String memberId, TripScheduleUpdateRequest request) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         Map<String, Object> scheduleParams = new HashMap<>();
         scheduleParams.put("tripScheduleId", tripScheduleId);
@@ -614,6 +620,9 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_UPDATE_FAILED);
         }
+
+        // 통계 갱신
+        tripStatService.refreshTripStat(tripId);
     }
 
     /**
@@ -625,7 +634,7 @@ public class TripService {
      */
     @Transactional
     public void updateTripScheduleOrder(String tripId, String memberId, TripScheduleOrderUpdateRequest request) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         // Day 리스트 순회 (같은 일자의 경우 1, 다른 일자의 경우 2의 크기를 갖음)
         for (TripScheduleOrderUpdateRequest.DayOrder dayOrder : request.getDayOrders()) {
@@ -654,7 +663,7 @@ public class TripService {
      */
     @Transactional
     public void deleteTripSchedule(String tripId, String tripDayId, String tripScheduleId, String memberId) {
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
 
         // 1. SELECT TRIP SCHEDULE - getIndexSort
         int indexSort = -1;
@@ -679,7 +688,119 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_SCHEDULE_REORDER_FAILED);
         }
+
+        // 통계 갱신
+        tripStatService.refreshTripStat(tripId);
     }
+
+    /**
+     * 여행 공유를 위한 토큰 갱신(신규 발급 포함)
+     * @param tripId 여행 ID
+     * @param memberId 사용자 ID
+     * @return TripShareTokenResponse
+     */
+    @Transactional
+    public TripShareTokenResponse createShareToken(String tripId, String memberId) {
+
+        // 소유자 검증
+        tripAccessValidator.validateOwner(tripId, memberId);
+
+        // 토큰 생성
+        String shareToken = UUID.randomUUID().toString().replace("-", "");
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("tripId",     tripId);
+        params.put("memberId",   memberId);
+        params.put("shareToken", shareToken);
+
+        try {
+            tripMapper.updateShareToken(params);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SHARE_TOKEN_CREATE_FAILED);
+        }
+
+        return TripShareTokenResponse.builder()
+                .tripId(tripId)
+                .shareToken(shareToken)
+                .build();
+    }
+
+    /**
+     * 여행 공유 중단(공유 토큰 삭제)
+     * @param tripId 여행 ID
+     * @param memberId 사용자 ID
+     */
+    @Transactional
+    public void deleteShareToken(String tripId, String memberId) {
+
+        // 소유자 검증
+        tripAccessValidator.validateOwner(tripId, memberId);
+
+        // 토큰 무효화
+        Map<String, Object> params = new HashMap<>();
+        params.put("tripId",   tripId);
+        params.put("memberId", memberId);
+
+        try {
+            tripMapper.deleteShareToken(params);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_SHARE_TOKEN_DELETE_FAILED);
+        }
+    }
+
+    /**
+     * 공유된 여행 단건 상세 조회
+     * @param shareToken 공유 토큰
+     * @return TripResponse
+     */
+    @Transactional
+    public TripResponse readSharedTrip(String shareToken) {
+        // shareToken으로 trip 찾기
+
+        // 1. SELECT TRIP
+        TripResponse trip = null;
+        try {
+            trip = tripMapper.readSharedTrip(shareToken);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_READ_FAILED);
+        }
+        if (trip == null) {
+            throw new BusinessException(ErrorCode.TRIP_NOT_FOUND);
+        }
+
+        String tripId = trip.getTripId();
+
+        // 2. SELECT TRIP DAYS
+        try {
+            // TRIP_ID에 해당하는 모든 TRIP_DAY 리스트에 담기
+            List<TripDayResponse> days = tripMapper.readTripDaysByTripId(tripId);
+
+            for (TripDayResponse day : days) {
+                log.info(day.getTripDayId());
+                // 3. SELECT TRIP SCHEDULES
+                try {
+                    // 각 TRIP_DAY_ID에 해당하는 모든 TRIP_SCHEDULE 리스트에 담기
+                    List<TripScheduleResponse> schedules = tripMapper.readTripSchedulesByTripDayId(day.getTripDayId());
+                    day.setSchedules(schedules);
+                } catch (Exception e) {
+                    throw new BusinessException(ErrorCode.TRIP_SCHEDULE_READ_FAILED);
+                }
+            }
+            trip.setDays(days);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_DAY_READ_FAILED);
+        }
+
+        // 4. SELECT BOOKMARKS
+        trip.setBookmarks(bookmarkService.readBookmarksByTripId(tripId));
+
+        // 5. activeDayCount (활성화 시킬 일자 수)
+        int diffDay = DateUtils.getDiffDay(trip.getStartDate(),trip.getEndDate());
+        trip.setActiveDayCount(diffDay);
+
+        return trip;
+    }
+
 
     /**
      * 북마크 생성
@@ -689,7 +810,7 @@ public class TripService {
      * @param request BookmarkCreateRequest ID
      */
     public BookmarkResponse createBookmark(String tripId, String memberId, BookmarkCreateRequest request){
-        validateTripOwner(tripId, memberId);
+        tripAccessValidator.validateOwner(tripId, memberId);
         return bookmarkService.createBookmark(tripId, memberId, request);
     }
 
@@ -701,5 +822,39 @@ public class TripService {
      */
     private String checkName(String name, String defaultName) {
         return (name != null && !name.isBlank()) ? name : defaultName;
+    }
+
+    /**
+     *  허브 공개 여부 갱신
+     * - 허브에 공개 시 true 비공개 전환 시 false
+     * - 현재는 false여도 공개한적 있는지 여부는 hub_plan에서 구분할 수 있음
+     * @param tripId 여행ID
+     * @param isPublic 허브에 공개여부
+     * @param memberId 사용자 ID
+     */
+    public void updateIsPublic(String tripId, Boolean isPublic, String memberId) {
+        tripAccessValidator.validateOwner(tripId, memberId);
+
+        String value = isPublic ? "Y" : "N";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("tripId",      tripId);
+        params.put("isPublic",    value);
+        
+        tripMapper.updateIsPublic(params);
+    }
+
+    /**
+     * 허브를 통한 여행 상세 조회 (소유자 검증 없음)
+     * @param tripId 여행 ID
+     * @return TripResponse
+     */
+    public TripResponse readTripDetailForHub(String tripId) {
+
+        if (!tripAccessValidator.getIsPublic(tripId)) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
+
+        return readTripDetail(tripId);
     }
 }

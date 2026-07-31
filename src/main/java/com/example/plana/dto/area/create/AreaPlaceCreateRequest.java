@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class AreaPlaceCreateRequest {
     @Schema(description = "장소 ID", example = "null", nullable = true)
     private String areaId;  // 생성 후 반환값을 담을 변수
-    @Schema(description = "맵 데이터 장소 고유 ID", example = "null", nullable = true)
+    @Schema(description = "맵 데이터 장소 API 고유 ID", example = "null", nullable = true)
     private String placeId;
     @Schema(description = "장소 지역 코드", example = "29000")
     private String regionId;

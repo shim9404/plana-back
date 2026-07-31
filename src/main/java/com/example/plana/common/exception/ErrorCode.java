@@ -33,7 +33,7 @@ public enum ErrorCode {
     MALFORMED_TOKEN(401, "A008", "토큰 형식이 잘못되었습니다."),
     REFRESH_TOKEN_EXPIRED(401, "A009", "리프레시 토큰이 만료되었습니다. 다시 로그인하세요."),
     FAIL_REFRESH_TOKEN(401, "A010", "토큰 재발급에 실패하였습니다."),
-
+    UNAUTHORIZED(401, "A011", "인증이 필요합니다."),
 
     // User
     USER_NOT_FOUND(404, "U001", "존재하지 않는 사용자입니다."),
@@ -68,7 +68,18 @@ public enum ErrorCode {
     TRIP_BOOKMARK_READ_FAILED(404, "T020", "여행 북마크 조회 중 오류가 발생했습니다."),
     TRIP_BOOKMARK_UPDATE_FAILED(404, "T021", "여행 북마크 저장 중 오류가 발생했습니다."),
     TRIP_DAY_UPDATE_FAILED(500, "T022", "여행 일자 저장 중 오류가 발생했습니다."),
+    TRIP_SHARE_TOKEN_CREATE_FAILED(500, "T023", "여행 공유 토큰 발급 중 오류가 발생했습니다."),
+    TRIP_SHARE_TOKEN_DELETE_FAILED(500, "T024", "여행 공유 중단 중 오류가 발생했습니다."),
 
+    // Invite
+    INVITE_ALREADY_SENT(409, "I001", "이미 초대가 발송된 이메일입니다."),
+    INVITE_TOKEN_NOT_FOUND(404, "I002", "유효하지 않은 초대 링크입니다."),
+    INVITE_TOKEN_EXPIRED(410, "I003", "만료된 초대 링크입니다."),
+    INVITE_EMAIL_MISMATCH(403, "I004", "초대받은 이메일과 로그인 계정이 일치하지 않습니다."),
+    INVITE_ALREADY_ACCEPTED(409, "I005", "이미 수락된 초대입니다."),
+    INVITE_SEND_FAILED(500, "I006", "초대 메일 발송 중 오류가 발생했습니다."),
+    INVITE_NOT_MEMBER(403, "I007", "초대받은 이메일로 가입된 계정이 없습니다."),
+    
     // Region & Area
     AREA_CREATE_FAILED(500, "R001", "신규 장소 등록 중 오류가 발생했습니다."),
     AREA_READ_FAILED(500, "R002", "장소 정보 조회 중 오류가 발생했습니다."),
@@ -78,6 +89,13 @@ public enum ErrorCode {
     EXPIRED_AUTH_CODE(400, "E003", "인증번호가 만료되었습니다."),
     EMAIL_SEND_FAILED(500, "E004", "이메일 발송에 실패했습니다."),
 
+
+    INVALID_HUB_PLAN_STATUS(400, "H001", "유효하지 않은 상태 값입니다."),
+    HUB_PLAN_NOT_FOUND(404, "H002", "허브 게시물을 찾을 수 없습니다."),
+    HUB_PLAN_CREATE_FAILED(500, "H003", "허브 게시물 생성에 실패했습니다."),
+    HUB_PLAN_READ_FAILED(500, "H004", "허브 목록 조회에 실패했습니다."),
+    SELF_LIKE_NOT_ALLOWED(400, "H005", "본인의 게시물에는 좋아요를 누를 수 없습니다."),
+    SELF_COPY_NOT_ALLOWED(400, "H006", "본인의 게시물은 복제할 수 없습니다."),
     ;
 
     @Getter

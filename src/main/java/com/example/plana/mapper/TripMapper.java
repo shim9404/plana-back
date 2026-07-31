@@ -8,8 +8,6 @@ import java.util.Map;
 
 @Mapper
 public interface TripMapper {
-    // ── 소유자 확인 ─────────────────────────
-    String readTripOwner(String tripId);
 
     // ── 존재 여부 파악 ─────────────────────────
     boolean existTripDay(String tripDayId);
@@ -18,6 +16,9 @@ public interface TripMapper {
     TripResponse readTrip(String tripId);
     List<TripDayResponse> readTripDaysByTripId(String tripId);
     List<TripScheduleResponse> readTripSchedulesByTripDayId(String tripDayId);
+
+    // ── 조회 ───────────────────────────────
+    String readNameByTripId(String tripId);
 
     // ── 상태(STATUS) 갱신 ───────────────────
     int updateTripStatus(Map<String, Object> params);
@@ -50,4 +51,13 @@ public interface TripMapper {
     int readTripScheduleIndexSort(String tripScheduleId);                       // 1. 삭제할 스케줄 INDEX_SORT 조회 SELECT
     int deleteTripSchedule(String tripScheduleId);                              // 2. 스케줄 단건 삭제 DELETE
     void updateTripSchedulesIndexSortAfterDelete(Map<String, Object> params);   // 3. tripDayId 기준 전체 INDEX_SORT 갱신 UPDATE
+
+    // Lounge ──────────────────────
+    void updateIsPublic(Map<String, Object> params); // Lounge 공개 여부 갱신
+    String readTripIsPublic(String tripId); // Lounge 공개 여부 확인
+
+    // ── ShareToken ──────────────────────
+    void updateShareToken(Map<String, Object> params);
+    void deleteShareToken(Map<String, Object> params);
+    TripResponse readSharedTrip(String shareToken);
 }

@@ -1,9 +1,12 @@
 package com.example.plana.config;
 
 import com.example.plana.auth.JwtTokenFilter;
+import com.example.plana.common.exception.CustomAccessDeniedHandler;
+import com.example.plana.common.exception.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,6 +25,9 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtTokenFilter jwtTokenFilter;
+
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -57,11 +63,18 @@ public class SecurityConfig {
                                "/api/redis/**",
                                "/pds/**",
                                "/api/members", // 회원가입
+                               "/api/trips/share/**", // 공유 링크 접근
                                "/error",
                                // swagger
                                "/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/lounge/hubs/*/like").authenticated()
+                        .requestMatchers("/api/lounge/hubs/**").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

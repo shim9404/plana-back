@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.TripAccessMapper">
+
+    <!--  여행 소유자 확인  -->
+    <select id="readTripOwner" resultType="String">
+        SELECT MEMBER_ID as "memberId"
+        FROM TRIP
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </select>
+
+    <!-- 여행 접근 권한 확인 -->
+    <select id="getMemberRole" resultType="string">
+        SELECT ROLE
+        FROM TRIP_MEMBER
+        WHERE TRIP_ID   = #{tripId,   jdbcType=VARCHAR}
+          AND MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+          AND JOINED_AT IS NOT NULL
+    </select>
+</mapper>

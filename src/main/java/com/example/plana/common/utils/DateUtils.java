@@ -1,6 +1,7 @@
 package com.example.plana.common.utils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
@@ -18,12 +19,21 @@ public class DateUtils {
     }
 
     /**
-     * 날짜 텍스트 DateTime Format으로 파싱하여 반환
+     * 날짜 텍스트 LocalDate Format으로 파싱하여 반환
      * @param date 날짜 문자열
      * @return LocalDate 날짜
      */
     public static LocalDate parseDate(String date) {
         return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    /**
+     * 날짜 시간 복합 텍스트 LocalDateTime Format으로 파싱하여 반환
+     * @param date 날짜 및 시간 문자열
+     * @return LocalDateTime 시간
+     */
+    public static LocalDateTime parseDateTime(String date) {
+        return LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     public static int getDiffDay(String start, String end) {
