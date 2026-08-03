@@ -33,6 +33,7 @@ public class TripService {
     private final BookmarkMapper bookmarkMapper;
     private final CopyPlanService copyPlanService;
     private final TripStatService tripStatService;
+    private final PointService pointService;
 
     private final TripAccessValidator tripAccessValidator;
 
@@ -56,6 +57,8 @@ public class TripService {
 
         try {
             tripMapper.createTrip(tripParams);
+            // +) 포인트 적립 [여행 계획 공유]
+            pointService.createPointEarnTrip(request.getMemberId(), (String) tripParams.get("tripId"), (String)tripParams.get("name"));
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
         }
@@ -296,6 +299,8 @@ public class TripService {
 
         try {
             tripMapper.updateTrip(tripParams);
+            // +) 포인트 적립 수정(여행명 변경) [여행 계획 생성]
+            pointService.updatePointEarnTrip(memberId, tripId, request.getName());
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
         }
@@ -420,6 +425,8 @@ public class TripService {
         int result = -1;
         try {
             result = tripMapper.deleteTrip(tripId);
+            // +) 포인트 만료 [24시간 내 여행 계획 삭제]
+            pointService.createPointExpireTrip(memberId, tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DELETE_FAILED);
         }

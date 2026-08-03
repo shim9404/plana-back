@@ -1,0 +1,54 @@
+package com.example.plana.controller;
+
+import com.example.plana.auth.CustomUserDetails;
+import com.example.plana.common.response.SuccessCode;
+import com.example.plana.dto.common.EmptyData;
+import com.example.plana.dto.common.ResponseBody;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import com.example.plana.service.PointService;
+import com.example.plana.dto.point.read.PointReadResponse;
+
+@Slf4j
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/points")
+@Tag(name = "Point API", description = "포인트 API 목록")
+public class PointController {
+    private final PointService pointService;
+
+    /**
+     * getPoint(): 회원의 포인트 정보 호출 함수(포인트 페이지 진입)
+     *  -> readPoint(): 포인트 정보 호출(포인트 내용, 금액, 잔액, .. 등)
+     * @param memberId // 회원 고유 ID
+     * @return ResponseBody.data : PointReadResponse
+     */
+    @GetMapping("/{memberId}")
+    @Operation(summary = "포인트 정보 호출", description = "포인트 페이지 진입 시, 회원의 포인트 정보를 호출한다.")
+    @Parameters({ @Parameter(name = "memberId", description = "회원 ID", required = true) })
+    @ApiResponse(responseCode = "200", description = "[S001] 조회에 성공하였습니다.")
+    public ResponseEntity<ResponseBody<PointReadResponse>> getPoint(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal){
+        PointReadResponse data = pointService.readPoint(principal.getMemberId(), memberId, principal.getRole());
+
+        return ResponseEntity.ok(
+                com.example.plana.dto.common.ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
+    }
+
+    @PostMapping("/{memberId}")
+    public ResponseEntity<ResponseBody<EmptyData>> usePoint(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
+        pointService.updatetripSlotCount(principal.getMemberId(), memberId, principal.getRole());
+
+        return ResponseEntity.ok(
+                ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
+
+    }
+}

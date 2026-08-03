@@ -31,6 +31,7 @@ public class LoungeService {
     private final TripService tripService;
     private final TripStatMapper tripStatMapper;
     private final TripStatService tripStatService;
+    private final PointService pointService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -59,7 +60,9 @@ public class LoungeService {
             try {
                 hubPlanMapper.createHubPlan(params);
                 hubPlanId = (String) params.get("hubPlanId");
-                point = 100;  // 최초 공개 시 100포인트
+                point = 500;  // 최초 공개 시 500포인트
+                // +) 포인트 적립 [여행 계획 생성]
+                pointService.createPointEarnShare(memberId, tripId);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new BusinessException(ErrorCode.HUB_PLAN_CREATE_FAILED);
@@ -67,6 +70,10 @@ public class LoungeService {
         } else {
             String status = isPublic ? "ACTIVE" : "INACTIVE";
             hubPlanId = hubPlanMapper.updateHubPlanStatus(tripId, status);
+            if (!isPublic) {
+                // +) 포인트 만료 [24시간 내 여행 공유 비활성화]
+                pointService.createPointExpireShare(memberId, tripId);
+            }
             point = 0;  // 재공개 시 0포인트
         }
 
