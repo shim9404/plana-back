@@ -70,6 +70,7 @@ public enum ErrorCode {
     TRIP_DAY_UPDATE_FAILED(500, "T022", "여행 일자 저장 중 오류가 발생했습니다."),
     TRIP_SHARE_TOKEN_CREATE_FAILED(500, "T023", "여행 공유 토큰 발급 중 오류가 발생했습니다."),
     TRIP_SHARE_TOKEN_DELETE_FAILED(500, "T024", "여행 공유 중단 중 오류가 발생했습니다."),
+    TRIP_STAT_DELETE_FAILED(500, "T025", "통계표 내 여행 삭제 중 오류가 발생했습니다."),
 
     // Invite
     INVITE_ALREADY_SENT(409, "I001", "이미 초대가 발송된 이메일입니다."),
@@ -89,13 +90,15 @@ public enum ErrorCode {
     EXPIRED_AUTH_CODE(400, "E003", "인증번호가 만료되었습니다."),
     EMAIL_SEND_FAILED(500, "E004", "이메일 발송에 실패했습니다."),
 
-
+    // hub
     INVALID_HUB_PLAN_STATUS(400, "H001", "유효하지 않은 상태 값입니다."),
     HUB_PLAN_NOT_FOUND(404, "H002", "허브 게시물을 찾을 수 없습니다."),
     HUB_PLAN_CREATE_FAILED(500, "H003", "허브 게시물 생성에 실패했습니다."),
     HUB_PLAN_READ_FAILED(500, "H004", "허브 목록 조회에 실패했습니다."),
     SELF_LIKE_NOT_ALLOWED(400, "H005", "본인의 게시물에는 좋아요를 누를 수 없습니다."),
     SELF_COPY_NOT_ALLOWED(400, "H006", "본인의 게시물은 복제할 수 없습니다."),
+    HUB_PLAN_DELETE_FAILED(500, "H007", "여행에 연결된 공유된 허브 게시물 삭제 중 오류가 발생했습니다."),
+    HUB_PLAN_KEYWORD_DELETE_FAILED(500, "H008", "여행에 연결된 공유된 허브 게시물 키워드 삭제 중 오류가 발생했습니다."),
     ;
 
     @Getter

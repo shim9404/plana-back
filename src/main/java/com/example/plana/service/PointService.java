@@ -94,7 +94,7 @@ public class PointService {
     }
 
     // 포인트 사용 [여행 슬롯 추가]
-    public void updatetripSlotCount(String tokenMemberId, String pathMemberId, Role role) {
+    public void createPointUse(String tokenMemberId, String pathMemberId, Role role, String event) {
         validateOwner(tokenMemberId, pathMemberId, role);
 
         // 회원 정보 존재 하지 않을 시, ErrorCode 호출
@@ -102,33 +102,37 @@ public class PointService {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        // 여행 슬롯 추가
-        // TODO
-        /*
-        int resultUpdate = pointMapper.updatetripSlotCount(tokenMemberId);
+        // event 분기 처리
+        // 여행 계획 생성 슬롯 수 추가
+        if (event.equals("POINT_USE_SLOT")) {
+            /*
+            // 여행 슬롯 추가
 
-        // 여행 슬롯 추가 실패
-        if (resultUpdate != 1){
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
-         */
+            int resultUpdate = pointMapper.updatetripSlotCount(tokenMemberId);
 
-        // 포인트 목록 등록
-        PointSave pointSave = new PointSave();
+            // 여행 슬롯 추가 실패
+            if (resultUpdate != 1){
+                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+            */
 
-        pointSave.setMemberId(tokenMemberId);
-        pointSave.setTripId(null);
-        pointSave.setContent(String.format(PointEvent.POINT_USE_SLOT.getContent()));
-        pointSave.setType("USE");
-        pointSave.setEvent("POINT_USE_SLOT");
-        pointSave.setAmount(1000);
-        pointSave.setOriginPointId(null);
+            // 포인트 목록 등록
+            PointSave pointSave = new PointSave();
 
-        int resultSave = pointMapper.createPoint(pointSave);
+            pointSave.setMemberId(tokenMemberId);
+            pointSave.setTripId(null);
+            pointSave.setContent(String.format(PointEvent.POINT_USE_SLOT.getContent()));
+            pointSave.setType("USE");
+            pointSave.setEvent("POINT_USE_SLOT");
+            pointSave.setAmount(1000);
+            pointSave.setOriginPointId(null);
 
-        // 포인트 등록 실패
-        if (resultSave != 1){
-            throw new BusinessException(ErrorCode.DATABASE_ERROR);
+            int resultSave = pointMapper.createPoint(pointSave);
+
+            // 포인트 등록 실패
+            if (resultSave != 1){
+                throw new BusinessException(ErrorCode.DATABASE_ERROR);
+            }
         }
 
     }

@@ -55,4 +55,7 @@ public interface HubPlanMapper {
 
     void deleteHubPlanKeywords(String hubPlanId);
 
+    void deleteHubPlanByTripId(@Param("tripId") String tripId);
+
+    void deleteHubPlanKeywordByTripId(String tripId);
 }

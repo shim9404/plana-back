@@ -43,12 +43,23 @@ public class PointController {
                 com.example.plana.dto.common.ResponseBody.success(SuccessCode.SELECT_SUCCESS, data));
     }
 
+    /**
+     * usePoint: 포인트 사용 함수
+     *  -> createPointUse: 사용한 포인트 등록(여행 계획 생성 슬롯 수 추가)
+     * @param memberId // 회원 고유 ID
+     * @param event    // 포인트 이벤트
+     * @return ResponseBody.data : null
+     */
     @PostMapping("/{memberId}")
-    public ResponseEntity<ResponseBody<EmptyData>> usePoint(@PathVariable("memberId") String memberId, @AuthenticationPrincipal CustomUserDetails principal) {
-        pointService.updatetripSlotCount(principal.getMemberId(), memberId, principal.getRole());
+    @Operation(summary = "사용한 포인트 등록", description = "사용자가 포인트를 사용하고 사용 내역을 등록한다.")
+    @Parameters({ @Parameter(name = "memberId", description = "회원 ID", required = true) })
+    @ApiResponse(responseCode = "201", description = "[S002] 등록이 완료되었습니다.")
+
+    public ResponseEntity<ResponseBody<EmptyData>> usePoint(@PathVariable("memberId") String memberId, @RequestParam("event") String event, @AuthenticationPrincipal CustomUserDetails principal) {
+        pointService.createPointUse(principal.getMemberId(), memberId, principal.getRole(), event);
 
         return ResponseEntity.ok(
-                ResponseBody.success(SuccessCode.UPDATE_SUCCESS));
+                ResponseBody.success(SuccessCode.INSERT_SUCCESS));
 
     }
 }
