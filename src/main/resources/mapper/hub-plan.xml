@@ -318,4 +318,21 @@
         WHERE HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
     </delete>
 
+    <!--  여행에 연결된 공유된 허브 삭제 -->
+    <delete id="deleteHubPlanByTripId">
+        DELETE FROM HUB_PLAN
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </delete>
+
+    <!--  여행에 연결된 공유된 허브 키워드 삭제 -->
+    <delete id="deleteHubPlanKeywordByTripId">
+        DELETE FROM HUB_PLAN_KEYWORD
+        WHERE HUB_PLAN_ID IN (
+            SELECT HUB_PLAN_ID
+            FROM HUB_PLAN
+            WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+        )
+    </delete>
+
+
 </mapper>
