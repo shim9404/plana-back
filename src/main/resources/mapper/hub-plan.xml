@@ -54,7 +54,9 @@
             HP.LIKE_COUNT                                           as "likeCount",
             HP.COPY_COUNT                                           as "copyCount",
             HP.CREATE_DATE                                          as "createdDate",
-            <!-- 여행 기간 (박 수) : END_DATE - START_DATE (VARCHAR → DATE 캐스팅 후 계산) -->
+            T.START_DATE                                            as "startDate",
+            T.END_DATE                                              as "endDate",
+            <!-- 여행 기간 (박 수) : END_DATE - START_DATE (VARCHAR → DATE 캐스팅 후 계산)-->
             (CAST(T.END_DATE AS DATE) - CAST(T.START_DATE AS DATE)) as "nights",
             <!-- 키워드 목록 : HUB_PLAN_KEYWORD에서 KEYWORD_ID 목록을 JSON 배열로 반환
                  반환 예시 : ["KW1", "KW2"] -->
@@ -68,13 +70,19 @@
             JOIN MEMBER M ON HP.MEMBER_ID = M.MEMBER_ID
             JOIN REGION R ON T.REGION_ID  = R.REGION_ID
         WHERE HP.STATUS = 'ACTIVE'
-        <!-- 작성자 닉네임 검색 (부분 일치) -->
-        <if test="nickname != null and nickname != ''">
-            AND M.NICKNAME LIKE '%' || #{nickname, jdbcType=VARCHAR} || '%'
-        </if>
-        <!-- 여행 제목 검색 (부분 일치) -->
-        <if test="name != null and name != ''">
-            AND T.NAME LIKE '%' || #{name, jdbcType=VARCHAR} || '%'
+        <!--  검색어   -->
+        <if test="(name != null and name != '') or (nickname != null and nickname != '')">
+            AND (
+            <if test="name != null and name != ''">
+                T.NAME LIKE '%' || #{name, jdbcType=VARCHAR} || '%'
+            </if>
+            <if test="name != null and name != '' and nickname != null and nickname != ''">
+                OR
+            </if>
+            <if test="nickname != null and nickname != ''">
+                M.NICKNAME LIKE '%' || #{nickname, jdbcType=VARCHAR} || '%'
+            </if>
+            )
         </if>
         <!-- 지역 필터 :
              exactRegionIds → 특정 시군구 REGION_ID 정확 일치
@@ -139,13 +147,18 @@
             JOIN MEMBER M ON HP.MEMBER_ID = M.MEMBER_ID
             JOIN REGION R ON T.REGION_ID  = R.REGION_ID
         WHERE HP.STATUS = 'ACTIVE'
-        <!-- 작성자 닉네임 검색 (부분 일치) -->
-        <if test="nickname != null and nickname != ''">
-            AND M.NICKNAME LIKE '%' || #{nickname, jdbcType=VARCHAR} || '%'
-        </if>
-        <!-- 여행 제목 검색 (부분 일치) -->
-        <if test="name != null and name != ''">
-            AND T.NAME LIKE '%' || #{name, jdbcType=VARCHAR} || '%'
+        <if test="(name != null and name != '') or (nickname != null and nickname != '')">
+            AND (
+            <if test="name != null and name != ''">
+                T.NAME LIKE '%' || #{name, jdbcType=VARCHAR} || '%'
+            </if>
+            <if test="name != null and name != '' and nickname != null and nickname != ''">
+                OR
+            </if>
+            <if test="nickname != null and nickname != ''">
+                M.NICKNAME LIKE '%' || #{nickname, jdbcType=VARCHAR} || '%'
+            </if>
+            )
         </if>
         <!-- 지역 필터 -->
         <if test="(exactRegionIds != null and exactRegionCount > 0) or (zdoCodes != null and zdoCodeCount > 0)">
