@@ -6,28 +6,22 @@ import com.example.plana.config.KakaoConfig;
 import com.example.plana.config.VisitKoreaConfig;
 import com.example.plana.dto.area.create.AreaPlaceCreateRequest;
 import com.example.plana.dto.area.read.*;
-import com.example.plana.dto.bookmark.read.BookmarkResponse;
+import com.example.plana.dto.area.read.place.PlaceReadPageResponse;
+import com.example.plana.dto.area.read.place.PlaceReadResponse;
+import com.example.plana.dto.area.read.place.api.PlaceApiProcessReadResponse;
+import com.example.plana.dto.area.read.theme.*;
+import com.example.plana.dto.area.read.theme.api.ThemeApiProcessReadResponse;
 import com.example.plana.mapper.AreaMapper;
 import com.example.plana.mapper.RegionMapper;
 import com.example.plana.model.Area;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -148,9 +142,16 @@ public class AreaService {
         // size 최대 10 제한이 있으므로 초과 시 10로 고정
         int dataSize = Math.min(size, 10);
 
-        // Cache에서 가져오기(totalCount)
         // CT1,     FD6,   AT4,    CE7,  AD5
         // 문화시설, 음식점, 관광명소, 카페, 숙박
+        // Cache에서 가져오기( 결과 리스트 )
+        PlaceApiProcessReadResponse ctResult = null;
+        PlaceApiProcessReadResponse fdResult = null;
+        PlaceApiProcessReadResponse atResult = null;
+        PlaceApiProcessReadResponse ceResult = null;
+        PlaceApiProcessReadResponse adResult = null;
+
+        // Cache에서 가져오기 ( 총 개수 )
         int ctCount = 0;
         int fdCount = 0;
         int atCount = 0;
@@ -159,29 +160,59 @@ public class AreaService {
 
         boolean keywordSearch = keyword != null && !keyword.isBlank();
         // API 분기 처리
-        if (!keywordSearch) { // 위치 기반 api
-            // 문화시설(CT1)
-            if (category.contains("CT1")) { ctCount = cachePlaceService.readCTTotalsbyLocation(mapX, mapY, 1, dataSize);}
-            // 음식점(FD6)
-            if (category.contains("FD6")) { fdCount = cachePlaceService.readFDTotalsbyLocation(mapX, mapY, 1, dataSize);}
-            // 관광명소(AT4)
-            if (category.contains("AT4")) { atCount = cachePlaceService.readATTotalsbyLocation(mapX, mapY, 1, dataSize);}
-            // 카페(CE7)
-            if (category.contains("CE7")) { ceCount = cachePlaceService.readCETotalsbyLocation(mapX, mapY, 1, dataSize);}
-            // 숙박(AD5)
-            if (category.contains("AD5")) { adCount = cachePlaceService.readADTotalsbyLocation(mapX, mapY, 1, dataSize);}
+        // CT1 - 문화시설
+        if (category.contains("CT1")) {
+            if (!keywordSearch) { // 키워드 X
+                ctResult = cachePlaceService.readCTTravelsbyLocation(mapX, mapY, 1, dataSize);
+            } else { // 키워드 O
+                ctResult = cachePlaceService.readCTTravelsbyKeyword(keyword, mapX, mapY, 1, dataSize);
+            }
+
+            ctCount = ctResult.getTotalCount();
         }
-        else{ // 키워드 기반 api
-            // 문화시설(CT1)
-            if (category.contains("CT1")) { ctCount = cachePlaceService.readCTTotalsbyKeyword(keyword, mapX, mapY, 1, dataSize);}
-            // 음식점(FD6)
-            if (category.contains("FD6")) { fdCount = cachePlaceService.readFDTotalsbyKeyword(keyword, mapX, mapY, 1, dataSize);}
-            // 관광명소(AT4)
-            if (category.contains("AT4")) { atCount = cachePlaceService.readATTotalsbyKeyword(keyword, mapX, mapY, 1, dataSize);}
-            // 카페(CE7)
-            if (category.contains("CE7")) { ceCount = cachePlaceService.readCETotalsbyKeyword(keyword, mapX, mapY, 1, dataSize);}
-            // 숙박(AD5)
-            if (category.contains("AD5")) { adCount = cachePlaceService.readADTotalsbyKeyword(keyword, mapX, mapY, 1, dataSize);}
+
+        // FD6 - 음식점
+        if (category.contains("FD6")) {
+            if (!keywordSearch) { // 키워드 X
+                fdResult = cachePlaceService.readFDTravelsbyLocation(mapX, mapY, 1, dataSize);
+            } else { // 키워드 O
+                fdResult = cachePlaceService.readFDTravelsbyKeyword(keyword, mapX, mapY, 1, dataSize);
+            }
+
+            fdCount = fdResult.getTotalCount();
+        }
+
+        // AT4 - 관광명소
+        if (category.contains("AT4")) {
+            if (!keywordSearch) { // 키워드 X
+                atResult = cachePlaceService.readATTravelsbyLocation(mapX, mapY, 1, dataSize);
+            } else { // 키워드 O
+                atResult = cachePlaceService.readATTravelsbyKeyword(keyword, mapX, mapY, 1, dataSize);
+            }
+
+            atCount = atResult.getTotalCount();
+        }
+
+        // CE7 - 카페
+        if (category.contains("CE7")) {
+            if (!keywordSearch) { // 키워드 X
+                ceResult = cachePlaceService.readCETravelsbyLocation(mapX, mapY, 1, dataSize);
+            } else { // 키워드 O
+                ceResult = cachePlaceService.readCETravelsbyKeyword(keyword, mapX, mapY, 1, dataSize);
+            }
+
+            ceCount = ceResult.getTotalCount();
+        }
+
+        // AD5 - 숙박
+        if (category.contains("AD5")) {
+            if (!keywordSearch) { // 키워드 X
+                adResult = cachePlaceService.readADTravelsbyLocation(mapX, mapY, 1, dataSize);
+            } else { // 키워드 O
+                adResult = cachePlaceService.readADTravelsbyKeyword(keyword, mapX, mapY, 1, dataSize);
+            }
+
+            adCount = adResult.getTotalCount();
         }
 
         List<PlaceReadResponse> placeTravels = new ArrayList<>();
@@ -208,12 +239,16 @@ public class AreaService {
 
             while(remain>0 && ctIndex<=ctCount){
                 int apiPage=(ctIndex-1)/dataSize+1;
-                // API 분기 처리
-                if(!keywordSearch){ // 위치 기반 api
-                    ctList=cachePlaceService.readCTTravelsbyLocation(mapX, mapY, apiPage, dataSize);
-                }
-                else{ // 키워드 기반 api
-                    ctList=cachePlaceService.readCTTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize);
+
+                // 이미 조회한 1페이지 데이터 재사용
+                if (apiPage == 1) {
+                    ctList = ctResult.getPlaceList();
+                } else {
+                    if (!keywordSearch) {
+                        ctList = cachePlaceService.readCTTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    } else {
+                        ctList = cachePlaceService.readCTTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                    }
                 }
 
                 int localStart=(ctIndex-1)%dataSize;
@@ -240,12 +275,16 @@ public class AreaService {
 
             while(remain>0 && fdIndex<=fdCount){
                 int apiPage=(fdIndex-1)/dataSize+1;
-                // API 분기 처리
-                if(!keywordSearch){ // 위치 기반 api
-                    fdList=cachePlaceService.readFDTravelsbyLocation(mapX, mapY, apiPage, dataSize);
-                }
-                else{ // 키워드 기반 api
-                    fdList=cachePlaceService.readFDTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize);
+
+                // 이미 조회한 1페이지 데이터 재사용
+                if (apiPage == 1) {
+                    fdList = fdResult.getPlaceList();
+                } else {
+                    if (!keywordSearch) {
+                        fdList = cachePlaceService.readFDTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    } else {
+                        fdList = cachePlaceService.readFDTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                    }
                 }
 
                 int localStart=(fdIndex-1)%dataSize;
@@ -272,12 +311,16 @@ public class AreaService {
 
             while(remain>0 && atIndex<=atCount){
                 int apiPage=(atIndex-1)/dataSize+1;
-                // API 분기 처리
-                if(!keywordSearch){ // 위치 기반 api
-                    atList=cachePlaceService.readATTravelsbyLocation(mapX,mapY,apiPage,dataSize);
-                }
-                else{ // 키워드 기반 api
-                    atList=cachePlaceService.readATTravelsbyKeyword(keyword,mapX,mapY,apiPage,dataSize);
+
+                // 이미 조회한 1페이지 데이터 재사용
+                if (apiPage == 1) {
+                    atList = atResult.getPlaceList();
+                } else {
+                    if (!keywordSearch) {
+                        atList = cachePlaceService.readATTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    } else {
+                        atList = cachePlaceService.readATTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                    }
                 }
 
                 int localStart=(atIndex-1)%dataSize;
@@ -304,12 +347,16 @@ public class AreaService {
 
             while(remain>0 && ceIndex<=ceCount){
                 int apiPage=(ceIndex-1)/dataSize+1;
-                // API 분기 처리
-                if(!keywordSearch){ // 위치 기반 api
-                    ceList=cachePlaceService.readCETravelsbyLocation(mapX,mapY,apiPage,dataSize);
-                }
-                else{ // 키워드 기반 api
-                    ceList=cachePlaceService.readCETravelsbyKeyword(keyword,mapX,mapY,apiPage,dataSize);
+
+                // 이미 조회한 1페이지 데이터 재사용
+                if (apiPage == 1) {
+                    ceList = ceResult.getPlaceList();
+                } else {
+                    if (!keywordSearch) {
+                        ceList = cachePlaceService.readCETravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    } else {
+                        ceList = cachePlaceService.readCETravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                    }
                 }
 
                 int localStart=(ceIndex-1)%dataSize;
@@ -336,12 +383,16 @@ public class AreaService {
 
             while(remain>0 && adIndex<=adCount){
                 int apiPage=(adIndex-1)/dataSize+1;
-                // API 분기 처리
-                if(!keywordSearch){ // 위치 기반 api
-                    adList=cachePlaceService.readADTravelsbyLocation(mapX,mapY,apiPage,dataSize);
-                }
-                else{ // 키워드 기반 api
-                    adList=cachePlaceService.readADTravelsbyKeyword(keyword,mapX,mapY,apiPage,dataSize);
+
+                // 이미 조회한 1페이지 데이터 재사용
+                if (apiPage == 1) {
+                    adList = adResult.getPlaceList();
+                } else {
+                    if (!keywordSearch) {
+                        adList = cachePlaceService.readADTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    } else {
+                        adList = cachePlaceService.readADTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                    }
                 }
 
                 int localStart=(adIndex-1)%dataSize;
@@ -436,31 +487,59 @@ public class AreaService {
         // size 최대 10 제한이 있으므로 초과 시 10로 고정
         int dataSize = Math.min(size, 10);
 
-        // Cache에서 가져오기(totalCount)
+        // Cache에서 가져오기( 결과 리스트 )
+        ThemeApiProcessReadResponse petResult = null;
+        ThemeApiProcessReadResponse bfResult = null;
+        // PET, BF는 서로 독립적인 외부 API 호출이므로 병렬 처리 (CompletableFuture)
+        CompletableFuture<ThemeApiProcessReadResponse> petFuture = null;
+        CompletableFuture<ThemeApiProcessReadResponse> bfFuture = null;
+
+        // Cache에서 가져오기 (총 개수 )
         int petCount = 0;
         int bfCount = 0;
 
         boolean keywordSearch = keyword != null && !keyword.isBlank();
         // API 분기 처리
-        if (!keywordSearch) { // 위치 기반 api
-            // 반려동물
-            if (theme.contains("PET")) { petCount = cacheThemeService.readPetTotalsbyLocation(mapX, mapY, 1, dataSize);}
-            // 무장애
-            if (theme.contains("BF")) { bfCount = cacheThemeService.readBFTotalsbyLocation(mapX, mapY, 1, dataSize);}
+        // PET 호출
+        if (theme.contains("PET")) {
+            petFuture = CompletableFuture.supplyAsync(() -> {
+                if (!keywordSearch) {
+                    return cacheThemeService.readPetTravelsbyLocation( mapX, mapY, 1, dataSize );
+                } else {
+                    return cacheThemeService.readPetTravelsbyKeyword( keyword, regionId, 1, dataSize );
+                }
+            });
         }
-        else{ // 키워드 기반 api
-            // 반려동물
-            if (theme.contains("PET")) { petCount = cacheThemeService.readPetTotalsbyKeyword(keyword, regionId, 1, dataSize);}
-            // 무장애
-            if (theme.contains("BF")) { bfCount = cacheThemeService.readBFTotalsbyKeyword(keyword, regionId, 1, dataSize);}
+        // BF 호출
+        if (theme.contains("BF")) {
+            bfFuture = CompletableFuture.supplyAsync(() -> {
+                if (!keywordSearch) {
+                    return cacheThemeService.readBFTravelsbyLocation( mapX, mapY, 1, dataSize );
+                } else {
+                    return cacheThemeService.readBFTravelsbyKeyword( keyword, regionId, 1, dataSize );
+                }
+            });
         }
+
+        // PET, BF 호출이 모두 끝날 때까지 대기
+        if (petFuture != null || bfFuture != null) {
+            CompletableFuture.allOf(
+                    petFuture != null ? petFuture : CompletableFuture.completedFuture(null),
+                    bfFuture != null ? bfFuture : CompletableFuture.completedFuture(null) ).join();
+        }
+
+        // 병렬 호출 결과 가져오기
+        if (petFuture != null) { petResult = petFuture.join(); petCount = petResult.getTotalCount(); }
+        if (bfFuture != null) { bfResult = bfFuture.join(); bfCount = bfResult.getTotalCount(); }
 
         List<ThemeReadResponse> themeTravels = new ArrayList<>();
 
         // totalCount 합치기
         int totalCount = petCount + bfCount;
         int totalPages = (int)Math.ceil((double)totalCount/dataSize); // 총 페이지 수
-        if (totalCount == 0) { return new ThemeReadPageResponse(totalCount, totalPages, page, dataSize, themeTravels); } // 결과 데이터가 0개 일 경우, 빠져나오기
+        if (totalCount == 0) { // 결과 데이터가 0개 일 경우, 빠져나오기
+            return new ThemeReadPageResponse(totalCount, totalPages, page, dataSize, themeTravels);
+        }
 
         // 필요한 범위 계산
         int start = (page-1)*dataSize+1;
@@ -477,12 +556,16 @@ public class AreaService {
 
             while(remain>0 && petIndex<=petCount){
                 int apiPage=(petIndex-1)/dataSize+1;
-                // API 분기 처리
-                if (!keywordSearch) { // 위치 기반 api
-                    petList = cacheThemeService.readPetTravelsbyLocation(mapX, mapY, apiPage, dataSize);
-                }
-                else{ // 키워드 기반 api
-                    petList = cacheThemeService.readPetTravelsbyKeyword(keyword, regionId, apiPage, dataSize);
+
+                // 1페이지는 처음 조회한 결과 재사용
+                if (apiPage == 1) {
+                    petList = petResult.getThemeList();
+                } else {
+                    if (!keywordSearch) {
+                        petList = cacheThemeService.readPetTravelsbyLocation(mapX, mapY, apiPage, dataSize).getThemeList();
+                    } else {
+                        petList = cacheThemeService.readPetTravelsbyKeyword(keyword, regionId, apiPage, dataSize).getThemeList();
+                    }
                 }
 
                 int localStart=(petIndex-1)%dataSize;
@@ -510,12 +593,15 @@ public class AreaService {
             while(remain>0 && bfIndex<=bfCount){
                 int apiPage=(bfIndex-1)/dataSize+1;
 
-                // API 분기 처리
-                if (!keywordSearch) { // 위치 기반 api
-                    bfList = cacheThemeService.readBFTravelsbyLocation(mapX, mapY, apiPage, dataSize);
-                }
-                else{ // 키워드 기반 api
-                    bfList = cacheThemeService.readBFTravelsbyKeyword(keyword, regionId, apiPage, dataSize);
+                // 1페이지는 처음 조회한 결과 재사용
+                if (apiPage == 1) {
+                    bfList = bfResult.getThemeList();
+                } else {
+                    if (!keywordSearch) {
+                        bfList = cacheThemeService.readBFTravelsbyLocation(mapX, mapY, apiPage, dataSize).getThemeList();
+                    } else {
+                        bfList = cacheThemeService.readBFTravelsbyKeyword(keyword, regionId, apiPage, dataSize).getThemeList();
+                    }
                 }
 
                 int localStart=(bfIndex-1)%dataSize;
@@ -554,9 +640,9 @@ public class AreaService {
         List<ThemeReadResponse> aroundTravels = new ArrayList<>();
 
         // 캠프
-        if (filter.equals("CAMP")) { aroundTravels = cacheThemeService.readCampTravelsbyLocation(mapX, mapY, page, dataSize); }
+        if (filter.equals("CAMP")) { aroundTravels = cacheThemeService.readCampTravelsbyLocation(mapX, mapY, page, dataSize).getThemeList(); }
         // 웰니스
-        else if (filter.equals("WELLNESS")) { aroundTravels = cacheThemeService.readWellnessTravelsbyLocation(mapX, mapY, page, dataSize); }
+        else if (filter.equals("WELLNESS")) { aroundTravels = cacheThemeService.readWellnessTravelsbyLocation(mapX, mapY, page, dataSize).getThemeList(); }
 
         // 페이징 메타 정보
         int totalCount = aroundTravels.size();
@@ -573,7 +659,7 @@ public class AreaService {
 
         List<RelatePlaceReadResponse> relatedTravels = new ArrayList<>();
 
-        relatedTravels = cacheThemeService.readRelatedTravelsbyKeyword(keyword, regionId, page, dataSize);
+        relatedTravels = cacheThemeService.readRelatedTravelsbyKeyword(keyword, regionId, page, dataSize).getRelatedList();
 
         // 페이징 메타 정보
         int totalCount = relatedTravels.size();

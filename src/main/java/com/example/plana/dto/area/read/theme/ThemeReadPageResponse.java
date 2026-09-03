@@ -1,6 +1,5 @@
-package com.example.plana.dto.area.read;
+package com.example.plana.dto.area.read.theme;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +10,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "맞춤 테마의 여행지(관광포털 API) 응답")
+@Schema(description = "맞춤 테마의 여행지(관광포털 API) 최종 응답")
 public class ThemeReadPageResponse {
     @Schema(description = "총 검색 결과 개수", example = "45")
     private int totalCount;
