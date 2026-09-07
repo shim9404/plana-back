@@ -3,6 +3,9 @@ package com.example.plana.controller;
 
 import com.example.plana.common.response.SuccessCode;
 import com.example.plana.dto.area.read.*;
+import com.example.plana.dto.area.read.place.PlaceReadPageResponse;
+import com.example.plana.dto.area.read.theme.RelatePlaceReadPageResponse;
+import com.example.plana.dto.area.read.theme.ThemeReadPageResponse;
 import com.example.plana.dto.common.ResponseBody;
 import com.example.plana.service.AreaService;
 import io.swagger.v3.oas.annotations.Operation;
