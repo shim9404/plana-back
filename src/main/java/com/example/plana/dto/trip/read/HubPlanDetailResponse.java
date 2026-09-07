@@ -37,4 +37,7 @@ public class HubPlanDetailResponse {
 
     @Schema(description = "키워드 태그 목록", example = "[\"KW1\", \"KW2\"]")
     private List<String> keywordTags;
+
+    @Schema(description = "게시일", example = "2026-09-05")
+    private String createdAt;
 }

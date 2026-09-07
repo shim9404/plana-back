@@ -201,7 +201,7 @@
         </if>
     </select>
     <!-- 허브 상세 추가 정보 조회
-     좋아요 수, 복사 수, 현재 유저 좋아요/복사 여부, 작성자 정보 -->
+     좋아요 수, 복사 수, 현재 유저 좋아요/복사 여부, 작성자 정보, 생성일 -->
     <select id="readHubPlanInfo" resultType="com.example.plana.dto.lounge.HubPlanInfoResponse">
         SELECT
             HP.HUB_PLAN_ID                                        as "hubPlanId",
@@ -209,6 +209,7 @@
             HP.COPY_COUNT                                         as "copyCount",
             M.NICKNAME                                            as "nickname",
             M.PROFILE_IMAGE                                       as "profileImage",
+            HP.CREATE_DATE                                        as "createdAt",
             <!-- 현재 유저가 좋아요 했는지 여부
                  LIKE_PLAN에 해당 유저의 ACTIVE 레코드가 있으면 true -->
             CASE WHEN LP.MEMBER_ID IS NOT NULL THEN TRUE
@@ -229,7 +230,6 @@
                                   AND CP.STATUS       = 'ACTIVE'
         WHERE HP.HUB_PLAN_ID = #{hubPlanId, jdbcType=VARCHAR}
     </select>
-
     <!-- 허브 키워드 태그 목록 조회 -->
     <select id="readHubPlanKeywords" resultType="String">
         SELECT HPK.KEYWORD_ID
