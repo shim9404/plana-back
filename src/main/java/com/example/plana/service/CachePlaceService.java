@@ -4,8 +4,9 @@ import com.example.plana.common.exception.BusinessException;
 import com.example.plana.common.exception.ErrorCode;
 import com.example.plana.config.KakaoConfig;
 import com.example.plana.dto.area.read.MapPos;
-import com.example.plana.dto.area.read.PlaceReadResponse;
-import com.example.plana.dto.area.read.ThemeReadResponse;
+import com.example.plana.dto.area.read.place.PlaceReadResponse;
+import com.example.plana.dto.area.read.place.api.PlaceApiProcessReadResponse;
+import com.example.plana.dto.area.read.place.api.PlaceApiReadResponse;
 import com.example.plana.mapper.AreaMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,237 +30,13 @@ public class CachePlaceService {
     private final AreaMapper areaMapper;
     private final KakaoConfig kakaoConfig; // kakao apiKey
 
-    // ===== 수량 조회 =====
+
+    // ===== 데이터 조회 =====
     // CT1,     FD6,   AT4,    CE7,  AD5
     // 문화시설, 음식점, 관광명소, 카페, 숙박
 
-    // 문화시설(CT1) 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "ctTotalCount",
-            key = "#mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readCTTotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
-        String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
-                + "category_group_code=" + "CT1"
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int ctTotalCount = readCount(urlLocation);
-
-        return ctTotalCount;
-    }
-
-    // 문화시설(CT1) 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "ctTotalCount",
-            key = "#keyword + '-' + #mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readCTTotalsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
-        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
-                + "category_group_code=" + "CT1"
-                + "&query=" + keyword
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int ctTotalCount = readCount(urlKeyword);
-
-        return ctTotalCount;
-    }
-
-    // ----
-
-    // 음식점(FD6) 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "fdTotalCount",
-            key = "#mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readFDTotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
-        String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
-                + "category_group_code=" + "FD6"
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int fdTotalCount = readCount(urlLocation);
-
-        return fdTotalCount;
-    }
-
-    // 음식점(FD6) 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "fdTotalCount",
-            key = "#keyword + '-' + #mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readFDTotalsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
-        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
-                + "category_group_code=" + "FD6"
-                + "&query=" + keyword
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int fdTotalCount = readCount(urlKeyword);
-
-        return fdTotalCount;
-    }
-
-    // ----
-
-    // 관광명소(AT4) 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "atTotalCount",
-            key = "#mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readATTotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
-        String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
-                + "category_group_code=" + "AT4"
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int atTotalCount = readCount(urlLocation);
-
-        return atTotalCount;
-    }
-
-    // 관광명소(AT4) 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "atTotalCount",
-            key = "#keyword + '-' + #mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readATTotalsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
-        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
-                + "category_group_code=" + "AT4"
-                + "&query=" + keyword
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int atTotalCount = readCount(urlKeyword);
-
-        return atTotalCount;
-    }
-
-    // ----
-
-    // 카페(CE7) 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "ceTotalCount",
-            key = "#mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readCETotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
-        String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
-                + "category_group_code=" + "CE7"
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int ceTotalCount = readCount(urlLocation);
-
-        return ceTotalCount;
-    }
-
-    // 카페(CE7) 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "ceTotalCount",
-            key = "#keyword + '-' + #mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readCETotalsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
-        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
-                + "category_group_code=" + "CE7"
-                + "&query=" + keyword
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int ceTotalCount = readCount(urlKeyword);
-
-        return ceTotalCount;
-    }
-
-    // ----
-
-    // 숙박(AD5) 관련 여행지 - 지역 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "adTotalCount",
-            key = "#mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readADTotalsbyLocation(double mapX, double mapY, int page, int dataSize) {
-        String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
-                + "category_group_code=" + "AD5"
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int adTotalCount = readCount(urlLocation);
-
-        return adTotalCount;
-    }
-
-    // 숙박(AD5) 관련 여행지 - 키워드 기반 조회 및 저장(캐싱)
-    @Cacheable(
-            value = "adTotalCount",
-            key = "#keyword + '-' + #mapX + '-' + #mapY + '-' + #page + '-' + #dataSize"
-    ) // 위치 좌표 변경 시, 새 API 호출
-    public int readADTotalsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
-        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
-                + "category_group_code=" + "AD5"
-                + "&query=" + keyword
-                + "&x=" + mapX
-                + "&y=" + mapY
-                + "&radius=10000"
-                + "&sort=distance"
-                + "&page=" + page
-                + "&size=" + dataSize;
-
-        // api 결과 수량 조회
-        int adTotalCount = readCount(urlKeyword);
-
-        return adTotalCount;
-    }
-
-    // ===== 데이터 조회 =====
-
-    // 문화시설(CT1) 관련 여행지 - 지역 기반 조회 및 저장List<PlaceReadResponse>
-    public List<PlaceReadResponse> readCTTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    // 문화시설(CT1) 관련 여행지 - 지역 기반 조회 및 저장
+    public PlaceApiProcessReadResponse readCTTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
                 + "category_group_code=" + "CT1"
                 + "&x=" + mapX
@@ -270,16 +47,21 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlLocation);
+        PlaceApiReadResponse apiResult = readItems(urlLocation);
 
         // 문화시설(CT1) api 응답 결과 저장
-        List<PlaceReadResponse> ctList = readLists(itemList);
+        List<PlaceReadResponse> ctList = readLists(apiResult.getItems());
 
-        return ctList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(ctList);
+
+        return result;
     }
 
     // 문화시설(CT1) 관련 여행지 - 키워드 기반 조회 및 저장
-    public List<PlaceReadResponse> readCTTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readCTTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
                 + "category_group_code=" + "CT1"
                 + "&query=" + keyword
@@ -291,18 +73,23 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlKeyword);
+        PlaceApiReadResponse apiResult = readItems(urlKeyword);
 
         // 문화시설(CT1) api 응답 결과 저장
-        List<PlaceReadResponse> ctList = readLists(itemList);
+        List<PlaceReadResponse> ctList = readLists(apiResult.getItems());
 
-        return ctList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(ctList);
+
+        return result;
     }
 
     // ----
 
     // 음식점(FD6) 관련 여행지 - 지역 기반 조회 및 저장
-    public List<PlaceReadResponse> readFDTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readFDTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
                 + "category_group_code=" + "FD6"
                 + "&x=" + mapX
@@ -313,16 +100,21 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlLocation);
+        PlaceApiReadResponse apiResult = readItems(urlLocation);
 
         // 음식점(FD6) api 응답 결과 저장
-        List<PlaceReadResponse> fdList = readLists(itemList);
+        List<PlaceReadResponse> fdList = readLists(apiResult.getItems());
 
-        return fdList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(fdList);
+
+        return result;
     }
 
     // 음식점(FD6) 관련 여행지 - 키워드 기반 조회 및 저장
-    public List<PlaceReadResponse> readFDTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readFDTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
                 + "category_group_code=" + "FD6"
                 + "&query=" + keyword
@@ -334,18 +126,23 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlKeyword);
+        PlaceApiReadResponse apiResult = readItems(urlKeyword);
 
         // 음식점(FD6) api 응답 결과 저장
-        List<PlaceReadResponse> fdList = readLists(itemList);
+        List<PlaceReadResponse> fdList = readLists(apiResult.getItems());
 
-        return fdList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(fdList);
+
+        return result;
     }
 
     // ----
 
     // 관광명소(AT4) 관련 여행지 - 지역 기반 조회 및 저장
-    public List<PlaceReadResponse> readATTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readATTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
                 + "category_group_code=" + "AT4"
                 + "&x=" + mapX
@@ -356,16 +153,21 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlLocation);
+        PlaceApiReadResponse apiResult = readItems(urlLocation);
 
         // 관광명소(AT4) api 응답 결과 저장
-        List<PlaceReadResponse> atList = readLists(itemList);
+        List<PlaceReadResponse> atList = readLists(apiResult.getItems());
 
-        return atList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(atList);
+
+        return result;
     }
 
     // 관광명소(AT4) 관련 여행지 - 키워드 기반 조회 및 저장
-    public List<PlaceReadResponse> readATTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readATTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
                 + "category_group_code=" + "AT4"
                 + "&query=" + keyword
@@ -377,18 +179,23 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlKeyword);
+        PlaceApiReadResponse apiResult = readItems(urlKeyword);
 
         // 관광명소(AT4) api 응답 결과 저장
-        List<PlaceReadResponse> atList = readLists(itemList);
+        List<PlaceReadResponse> atList = readLists(apiResult.getItems());
 
-        return atList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(atList);
+
+        return result;
     }
 
     // ----
 
     // 카페(CE7) 관련 여행지 - 지역 기반 조회 및 저장
-    public List<PlaceReadResponse> readCETravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readCETravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
                 + "category_group_code=" + "CE7"
                 + "&x=" + mapX
@@ -399,16 +206,21 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlLocation);
+        PlaceApiReadResponse apiResult = readItems(urlLocation);
 
         // 카페(CE7) api 응답 결과 저장
-        List<PlaceReadResponse> ceList = readLists(itemList);
+        List<PlaceReadResponse> ceList = readLists(apiResult.getItems());
 
-        return ceList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(ceList);
+
+        return result;
     }
 
     // 카페(CE7) 관련 여행지 - 키워드 기반 조회 및 저장
-    public List<PlaceReadResponse> readCETravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readCETravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
                 + "category_group_code=" + "CE7"
                 + "&query=" + keyword
@@ -420,18 +232,23 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlKeyword);
+        PlaceApiReadResponse apiResult = readItems(urlKeyword);
 
         // 카페(CE7) api 응답 결과 저장
-        List<PlaceReadResponse> ceList = readLists(itemList);
+        List<PlaceReadResponse> ceList = readLists(apiResult.getItems());
 
-        return ceList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(ceList);
+
+        return result;
     }
 
     // ----
 
     // 숙박(AD5) 관련 여행지 - 지역 기반 조회 및 저장
-    public List<PlaceReadResponse> readADTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readADTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
         String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
                 + "category_group_code=" + "AD5"
                 + "&x=" + mapX
@@ -442,16 +259,21 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlLocation);
+        PlaceApiReadResponse apiResult = readItems(urlLocation);
 
         // 숙박(AD5) api 응답 결과 저장
-        List<PlaceReadResponse> adList = readLists(itemList);
+        List<PlaceReadResponse> adList = readLists(apiResult.getItems());
 
-        return adList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(adList);
+
+        return result;
     }
 
     // 숙박(AD5) 관련 여행지 - 키워드 기반 조회 및 저장
-    public List<PlaceReadResponse> readADTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
+    public PlaceApiProcessReadResponse readADTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
                 + "category_group_code=" + "AD5"
                 + "&query=" + keyword
@@ -463,44 +285,23 @@ public class CachePlaceService {
                 + "&size=" + dataSize;
 
         // api 결과 데이터 모두 조회
-        List<Map<String,Object>> itemList = readItems(urlKeyword);
+        PlaceApiReadResponse apiResult = readItems(urlKeyword);
 
         // 숙박(AD5) api 응답 결과 저장
-        List<PlaceReadResponse> adList = readLists(itemList);
+        List<PlaceReadResponse> adList = readLists(apiResult.getItems());
 
-        return adList;
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(adList);
+
+        return result;
     }
 
     //  ===== 함수 =====
 
-    // api 결과 수량 조회
-    private int readCount(String url) {
-        RestTemplate restTemplate = new RestTemplate();
-        ObjectMapper objectMapper = new ObjectMapper();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.set("Authorization", kakaoConfig.getClientId());
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-
-        Map<String, Object> result;
-        try {
-            result = objectMapper.readValue(response.getBody(), Map.class);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
-
-        Map<String, Object> meta = (Map<String, Object>) result.get("meta");
-        // 데이터 총 개수 조회
-        int totalCount = (int) meta.get("pageable_count");
-
-        return totalCount;
-    }
-
     // api 결과 데이터 조회
-    private List<Map<String, Object>> readItems(String url) {
-        List<Map<String,Object>> itemList = new ArrayList<>();
+    private PlaceApiReadResponse readItems(String url) {
 
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -521,11 +322,18 @@ public class CachePlaceService {
         Map<String, Object> meta = (Map<String, Object>) result.get("meta");
         // 데이터 총 개수 조회
         int totalCount = (int) meta.get("pageable_count");
-        if (totalCount == 0) { return itemList; } // 결과 데이터가 0개 일 경우, 빠져나오기
 
-        itemList = (List<Map<String, Object>>) result.get("documents");
+        // 결과 데이터 저장
+        List<Map<String, Object>> itemList = new ArrayList<>();
+        if (totalCount > 0) {
+            itemList = (List<Map<String, Object>>) result.get("documents");
+        }
 
-        return itemList;
+        PlaceApiReadResponse apiResult = new PlaceApiReadResponse();
+        apiResult.setTotalCount(totalCount);
+        apiResult.setItems(itemList);
+
+        return apiResult;
     }
 
     // api 응답 결과 저장
