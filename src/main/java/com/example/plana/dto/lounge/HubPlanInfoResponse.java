@@ -36,4 +36,8 @@ public class HubPlanInfoResponse {
     // 키워드 태그는 별도 쿼리로 조회
     @Schema(description = "키워드 태그 목록")
     private List<String> keywordTags;
+
+    @Schema(description = "게시일", example = "2026-09-05")
+    private String createdAt;
+
 }

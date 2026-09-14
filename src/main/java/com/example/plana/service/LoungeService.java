@@ -285,6 +285,7 @@ public class LoungeService {
                 .nickname(hubInfo.getNickname())
                 .profileImage(hubInfo.getProfileImage())
                 .keywordTags(keywordTags)
+                .createdAt(hubInfo.getCreatedAt())
                 .build();
     }
 
