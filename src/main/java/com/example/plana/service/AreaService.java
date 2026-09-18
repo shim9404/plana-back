@@ -142,20 +142,22 @@ public class AreaService {
         // size 최대 10 제한이 있으므로 초과 시 10로 고정
         int dataSize = Math.min(size, 10);
 
-        // CT1,     FD6,   AT4,    CE7,  AD5
-        // 문화시설, 음식점, 관광명소, 카페, 숙박
+        // CT1,     FD6,   AT4,    CE7,  AD5, SW8
+        // 문화시설, 음식점, 관광명소, 카페, 숙박, 교통
         // Cache에서 가져오기( 결과 리스트 )
         PlaceApiProcessReadResponse ctResult = null;
         PlaceApiProcessReadResponse fdResult = null;
         PlaceApiProcessReadResponse atResult = null;
         PlaceApiProcessReadResponse ceResult = null;
         PlaceApiProcessReadResponse adResult = null;
-        // CT1, FD6, AT4, CE7, AD5는 서로 독립적인 외부 API 호출이므로 병렬 처리 (CompletableFuture)
+        PlaceApiProcessReadResponse swResult = null;
+        // CT1, FD6, AT4, CE7, AD5, SW8는 서로 독립적인 외부 API 호출이므로 병렬 처리 (CompletableFuture)
         CompletableFuture<PlaceApiProcessReadResponse> ctFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> fdFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> atFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> ceFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> adFuture = null;
+        CompletableFuture<PlaceApiProcessReadResponse> swFuture = null;
 
         // Cache에서 가져오기 ( 총 개수 )
         int ctCount = 0;
@@ -163,6 +165,7 @@ public class AreaService {
         int atCount = 0;
         int ceCount = 0;
         int adCount = 0;
+        int swCount = 0;
 
         boolean keywordSearch = keyword != null && !keyword.isBlank();
         // API 분기 처리
@@ -215,6 +218,16 @@ public class AreaService {
                 }
             });
         }
+        // SW8 - 교통
+        if (category.contains("SW8")) {
+            swFuture = CompletableFuture.supplyAsync(() -> {
+                if (!keywordSearch) {
+                    return cachePlaceService.readSWTravelsbyLocation( mapX, mapY, 1, dataSize );
+                } else {
+                    return cachePlaceService.readSWTravelsbyKeyword( keyword, mapX, mapY, 1, dataSize);
+                }
+            });
+        }
 
         // 선택된 API 호출이 모두 끝날 때까지 대기
         List<CompletableFuture<PlaceApiProcessReadResponse>> futures = new ArrayList<>();
@@ -223,6 +236,7 @@ public class AreaService {
         if (atFuture != null) futures.add(atFuture);
         if (ceFuture != null) futures.add(ceFuture);
         if (adFuture != null) futures.add(adFuture);
+        if (swFuture != null) futures.add(swFuture);
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         // 병렬 호출 결과 가져오기
@@ -231,11 +245,12 @@ public class AreaService {
         if (atFuture != null) { atResult = atFuture.join(); atCount = atResult.getTotalCount(); }
         if (ceFuture != null) { ceResult = ceFuture.join(); ceCount = ceResult.getTotalCount(); }
         if (adFuture != null) { adResult = adFuture.join(); adCount = adResult.getTotalCount(); }
+        if (swFuture != null) { swResult = swFuture.join(); swCount = swResult.getTotalCount(); }
 
         List<PlaceReadResponse> placeTravels = new ArrayList<>();
 
         // totalCount 합치기
-        int totalCount = ctCount + fdCount + atCount + ceCount + adCount;
+        int totalCount = ctCount + fdCount + atCount + ceCount + adCount + swCount;
         int totalPages = (int)Math.ceil((double)totalCount/dataSize); // 총 페이지 수
         if (totalCount == 0) { return new PlaceReadPageResponse(totalCount, totalPages, page, dataSize, placeTravels); } // 결과 데이터가 0개 일 경우, 빠져나오기
 
@@ -422,6 +437,42 @@ public class AreaService {
                 adIndex+=adSliceList.size();
 
                 if(adSliceList.isEmpty()) break;
+            }
+        }
+
+        // SW8 범위 삽입
+        int swStart=adEnd+1;
+        int swEnd=adEnd+swCount;
+
+        List<PlaceReadResponse> swList = new ArrayList<>();
+
+        if(remain>0 && swCount>0 && start<=swEnd && end>=swStart) {
+            int swIndex=Math.max(start,swStart)-swStart+1;
+
+            while(remain>0 && swIndex<=swCount) {
+                int apiPage=(swIndex-1)/dataSize+1;
+
+                // 이미 조회한 1페이지 데이터 재사용
+                if (apiPage == 1) {
+                    swList = swResult.getPlaceList();
+                } else {
+                    if (!keywordSearch) {
+                        swList = cachePlaceService.readSWTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    } else {
+                        swList = cachePlaceService.readSWTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                    }
+                }
+
+                int localStart=(swIndex-1)%dataSize;
+                int localEnd=Math.min(swList.size(),localStart + remain);
+
+                List<PlaceReadResponse> swSliceList = swList.subList(localStart, localEnd);
+                placeTravels.addAll(swSliceList);
+
+                remain-=swSliceList.size();
+                swIndex+=swSliceList.size();
+
+                if (swSliceList.isEmpty()) break;
             }
         }
 
