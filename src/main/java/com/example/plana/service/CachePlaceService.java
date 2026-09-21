@@ -32,8 +32,8 @@ public class CachePlaceService {
 
 
     // ===== 데이터 조회 =====
-    // CT1,     FD6,   AT4,    CE7,  AD5
-    // 문화시설, 음식점, 관광명소, 카페, 숙박
+    // CT1,     FD6,   AT4,    CE7,  AD5, SW8
+    // 문화시설, 음식점, 관광명소, 카페, 숙박, 교통
 
     // 문화시설(CT1) 관련 여행지 - 지역 기반 조회 및 저장
     public PlaceApiProcessReadResponse readCTTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
@@ -276,6 +276,59 @@ public class CachePlaceService {
     public PlaceApiProcessReadResponse readADTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
         String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
                 + "category_group_code=" + "AD5"
+                + "&query=" + keyword
+                + "&x=" + mapX
+                + "&y=" + mapY
+                + "&radius=10000"
+                + "&sort=distance"
+                + "&page=" + page
+                + "&size=" + dataSize;
+
+        // api 결과 데이터 모두 조회
+        PlaceApiReadResponse apiResult = readItems(urlKeyword);
+
+        // 숙박(AD5) api 응답 결과 저장
+        List<PlaceReadResponse> adList = readLists(apiResult.getItems());
+
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(adList);
+
+        return result;
+    }
+
+    // ----
+
+    // 교통(SW8) 관련 여행지 - 지역 기반 조회 및 저장
+    public PlaceApiProcessReadResponse readSWTravelsbyLocation(double mapX, double mapY, int page, int dataSize) {
+        String urlLocation = "https://dapi.kakao.com/v2/local/search/category.json?"
+                + "category_group_code=" + "SW8"
+                + "&x=" + mapX
+                + "&y=" + mapY
+                + "&radius=10000"
+                + "&sort=distance"
+                + "&page=" + page
+                + "&size=" + dataSize;
+
+        // api 결과 데이터 모두 조회
+        PlaceApiReadResponse apiResult = readItems(urlLocation);
+
+        // 숙박(AD5) api 응답 결과 저장
+        List<PlaceReadResponse> adList = readLists(apiResult.getItems());
+
+        // 최종 결과 데이터 저장
+        PlaceApiProcessReadResponse result = new PlaceApiProcessReadResponse();
+        result.setTotalCount(apiResult.getTotalCount());
+        result.setPlaceList(adList);
+
+        return result;
+    }
+
+    // 교통(SW8) 관련 여행지 - 키워드 기반 조회 및 저장
+    public PlaceApiProcessReadResponse readSWTravelsbyKeyword(String keyword, double mapX, double mapY, int page, int dataSize) {
+        String urlKeyword = "https://dapi.kakao.com/v2/local/search/keyword.json?"
+                + "category_group_code=" + "SW8"
                 + "&query=" + keyword
                 + "&x=" + mapX
                 + "&y=" + mapY

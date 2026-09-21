@@ -142,20 +142,25 @@ public class AreaService {
         // size 최대 10 제한이 있으므로 초과 시 10로 고정
         int dataSize = Math.min(size, 10);
 
-        // CT1,     FD6,   AT4,    CE7,  AD5
-        // 문화시설, 음식점, 관광명소, 카페, 숙박
+        // CT1,     FD6,   AT4,    CE7,  AD5, SW8
+        // 문화시설, 음식점, 관광명소, 카페, 숙박, 교통
+        // 키워드 x : 문화 시설 -> 음식점 -> 관광명소 -> 카페 -> 숙박 -> 교통
+        // 키워드 o : 교통 -> 문화 시설 -> 음식점 -> 관광명소 -> 카페 -> 숙박
+
         // Cache에서 가져오기( 결과 리스트 )
         PlaceApiProcessReadResponse ctResult = null;
         PlaceApiProcessReadResponse fdResult = null;
         PlaceApiProcessReadResponse atResult = null;
         PlaceApiProcessReadResponse ceResult = null;
         PlaceApiProcessReadResponse adResult = null;
-        // CT1, FD6, AT4, CE7, AD5는 서로 독립적인 외부 API 호출이므로 병렬 처리 (CompletableFuture)
+        PlaceApiProcessReadResponse swResult = null;
+        // CT1, FD6, AT4, CE7, AD5, SW8는 서로 독립적인 외부 API 호출이므로 병렬 처리 (CompletableFuture)
         CompletableFuture<PlaceApiProcessReadResponse> ctFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> fdFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> atFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> ceFuture = null;
         CompletableFuture<PlaceApiProcessReadResponse> adFuture = null;
+        CompletableFuture<PlaceApiProcessReadResponse> swFuture = null;
 
         // Cache에서 가져오기 ( 총 개수 )
         int ctCount = 0;
@@ -163,6 +168,7 @@ public class AreaService {
         int atCount = 0;
         int ceCount = 0;
         int adCount = 0;
+        int swCount = 0;
 
         boolean keywordSearch = keyword != null && !keyword.isBlank();
         // API 분기 처리
@@ -215,6 +221,16 @@ public class AreaService {
                 }
             });
         }
+        // SW8 - 교통
+        if (category.contains("SW8")) {
+            swFuture = CompletableFuture.supplyAsync(() -> {
+                if (!keywordSearch) {
+                    return cachePlaceService.readSWTravelsbyLocation( mapX, mapY, 1, dataSize );
+                } else {
+                    return cachePlaceService.readSWTravelsbyKeyword( keyword, mapX, mapY, 1, dataSize);
+                }
+            });
+        }
 
         // 선택된 API 호출이 모두 끝날 때까지 대기
         List<CompletableFuture<PlaceApiProcessReadResponse>> futures = new ArrayList<>();
@@ -223,6 +239,7 @@ public class AreaService {
         if (atFuture != null) futures.add(atFuture);
         if (ceFuture != null) futures.add(ceFuture);
         if (adFuture != null) futures.add(adFuture);
+        if (swFuture != null) futures.add(swFuture);
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         // 병렬 호출 결과 가져오기
@@ -231,198 +248,163 @@ public class AreaService {
         if (atFuture != null) { atResult = atFuture.join(); atCount = atResult.getTotalCount(); }
         if (ceFuture != null) { ceResult = ceFuture.join(); ceCount = ceResult.getTotalCount(); }
         if (adFuture != null) { adResult = adFuture.join(); adCount = adResult.getTotalCount(); }
+        if (swFuture != null) { swResult = swFuture.join(); swCount = swResult.getTotalCount(); }
+
+        // 카테고리별 결과/개수를 Map으로 관리
+        Map<String, PlaceApiProcessReadResponse> resultMap = new HashMap<>();
+        Map<String, Integer> countMap = new HashMap<>();
+
+        resultMap.put("CT1", ctResult);
+        resultMap.put("FD6", fdResult);
+        resultMap.put("AT4", atResult);
+        resultMap.put("CE7", ceResult);
+        resultMap.put("AD5", adResult);
+        resultMap.put("SW8", swResult);
+
+        countMap.put("CT1", ctCount);
+        countMap.put("FD6", fdCount);
+        countMap.put("AT4", atCount);
+        countMap.put("CE7", ceCount);
+        countMap.put("AD5", adCount);
+        countMap.put("SW8", swCount);
+
+        // 키워드 유무에 따라 카테고리 순서 결정
+        List<String> categoryOrder;
+        if (keywordSearch) {
+            // 키워드 검색
+            // 교통 → 문화시설 → 음식점 → 관광명소 → 카페 → 숙박
+            categoryOrder = List.of("SW8", "CT1", "FD6", "AT4", "CE7", "AD5");
+        } else {
+            // 일반 검색
+            // 문화시설 → 음식점 → 관광명소 → 카페 → 숙박 → 교통
+            categoryOrder = List.of("CT1", "FD6", "AT4", "CE7", "AD5", "SW8");
+        }
+
+        // 전체 개수 계산
+        int totalCount = 0;
+        for (String categoryCode : categoryOrder) { // totalCount 합치기
+            totalCount += countMap.get(categoryCode); // 총 개수
+        }
+        int totalPages = (int) Math.ceil((double) totalCount / dataSize); // 총 페이지 수
 
         List<PlaceReadResponse> placeTravels = new ArrayList<>();
 
-        // totalCount 합치기
-        int totalCount = ctCount + fdCount + atCount + ceCount + adCount;
-        int totalPages = (int)Math.ceil((double)totalCount/dataSize); // 총 페이지 수
-        if (totalCount == 0) { return new PlaceReadPageResponse(totalCount, totalPages, page, dataSize, placeTravels); } // 결과 데이터가 0개 일 경우, 빠져나오기
+        if (totalCount == 0) { // 결과 데이터가 0개 일 경우, 빠져나오기
+            return new PlaceReadPageResponse(totalCount, totalPages, page, dataSize, placeTravels); }
 
         // 필요한 범위 계산
-        int start = (page-1)*dataSize+1;
-        int end = start+dataSize-1;
+        int start = (page - 1) * dataSize + 1;
+        int end = start + dataSize - 1;
         int remain = dataSize;
 
+        // 앞에서부터 카테고리별 데이터가 쌓이는 위치
+        int categoryStart = 1;
 
-        // CT1 범위 삽입
-        int ctStart=1;
-        int ctEnd=ctCount;
+        // 카테고리 순서대로 데이터 삽입
+        for (String categoryCode : categoryOrder) {
 
-        List<PlaceReadResponse> ctList = new ArrayList<>();
+            // 해당 카테고리의 전체 데이터 개수
+            int categoryCount = countMap.get(categoryCode);
 
-        if(ctCount>0 && start<=ctEnd && end>=ctStart){
-            int ctIndex=Math.max(start,ctStart)-ctStart+1;
-
-            while(remain>0 && ctIndex<=ctCount){
-                int apiPage=(ctIndex-1)/dataSize+1;
-
-                // 이미 조회한 1페이지 데이터 재사용
-                if (apiPage == 1) {
-                    ctList = ctResult.getPlaceList();
-                } else {
-                    if (!keywordSearch) {
-                        ctList = cachePlaceService.readCTTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
-                    } else {
-                        ctList = cachePlaceService.readCTTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
-                    }
-                }
-
-                int localStart=(ctIndex-1)%dataSize;
-                int localEnd=Math.min(ctList.size(), localStart+remain);
-
-                List<PlaceReadResponse> ctSliceList= ctList.subList(localStart,localEnd);
-                placeTravels.addAll(ctSliceList);
-
-                remain -= ctSliceList.size();
-                ctIndex += ctSliceList.size();
-
-                if(ctSliceList.isEmpty()) break;
+            // 해당 카테고리가 선택되지 않았거나 데이터가 없으면 건너뜀
+            if (categoryCount <= 0 || remain <= 0) {
+                categoryStart += categoryCount;
+                continue;
             }
-        }
 
-        // FD6 범위 삽입
-        int fdStart=ctEnd+1;
-        int fdEnd=ctEnd+fdCount;
+            // 해당 카테고리가 전체 결과에서 차지하는 범위
+            int categoryEnd = categoryStart + categoryCount - 1;
 
-        List<PlaceReadResponse> fdList = new ArrayList<>();
+            // 현재 요청 페이지와 해당 카테고리 범위가 겹치는지 확인
+            if (start <= categoryEnd && end >= categoryStart) {
 
-        if(remain>0 && fdCount>0 && start<=fdEnd && end>=fdStart){
-            int fdIndex=Math.max(start,fdStart)-fdStart+1;
+                // 해당 카테고리에서 가져와야 하는 시작 위치
+                int categoryIndex = Math.max(start, categoryStart) - categoryStart + 1;
 
-            while(remain>0 && fdIndex<=fdCount){
-                int apiPage=(fdIndex-1)/dataSize+1;
+                while (remain > 0 && categoryIndex <= categoryCount) {
+                    // 카카오 API 페이지 계산
+                    int apiPage = (categoryIndex - 1) / dataSize + 1;
+                    List<PlaceReadResponse> categoryList;
 
-                // 이미 조회한 1페이지 데이터 재사용
-                if (apiPage == 1) {
-                    fdList = fdResult.getPlaceList();
-                } else {
-                    if (!keywordSearch) {
-                        fdList = cachePlaceService.readFDTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                    // 1페이지는 이미 병렬 호출한 결과 재사용
+                    if (apiPage == 1) {
+                        PlaceApiProcessReadResponse result = resultMap.get(categoryCode);
+                        if (result == null) {break;}
+                        categoryList = result.getPlaceList();
                     } else {
-                        fdList = cachePlaceService.readFDTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                        // 2페이지 이상은 필요한 경우에만 추가 호출
+                        if (!keywordSearch) {
+                            switch (categoryCode) {
+                                case "CT1":
+                                    categoryList = cachePlaceService.readCTTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "FD6":
+                                    categoryList = cachePlaceService.readFDTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "AT4":
+                                    categoryList = cachePlaceService.readATTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "CE7":
+                                    categoryList = cachePlaceService.readCETravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "AD5":
+                                    categoryList = cachePlaceService.readADTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "SW8":
+                                    categoryList = cachePlaceService.readSWTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                default:
+                                    categoryList = new ArrayList<>();
+                            }
+                        } else {
+                            switch (categoryCode) {
+                                case "SW8":
+                                    categoryList = cachePlaceService.readSWTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "CT1":
+                                    categoryList = cachePlaceService.readCTTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "FD6":
+                                    categoryList = cachePlaceService.readFDTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "AT4":
+                                    categoryList = cachePlaceService.readATTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "CE7":
+                                    categoryList = cachePlaceService.readCETravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                case "AD5":
+                                    categoryList = cachePlaceService.readADTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
+                                    break;
+                                default:
+                                    categoryList = new ArrayList<>();
+                            }
+                        }
                     }
+
+                    // API 응답 데이터가 없으면 종료
+                    if (categoryList == null || categoryList.isEmpty()) { break; }
+
+                    // 현재 API 페이지에서 가져올 시작 위치
+                    int localStart = (categoryIndex - 1) % dataSize;
+
+                    // 혹시 API 응답 데이터보다 시작 위치가 크면 종료
+                    if (localStart >= categoryList.size()) { break; }
+
+                    int localEnd = Math.min(categoryList.size(), localStart + remain);
+                    List<PlaceReadResponse> sliceList = categoryList.subList(localStart, localEnd);
+                    placeTravels.addAll(sliceList);
+
+                    remain -= sliceList.size();
+                    categoryIndex += sliceList.size();
+
+                    // 데이터가 더 이상 들어오지 않으면 종료
+                    if (sliceList.isEmpty()) { break;}
                 }
-
-                int localStart=(fdIndex-1)%dataSize;
-                int localEnd=Math.min(fdList.size(), localStart+remain);
-
-                List<PlaceReadResponse> fdSliceList= fdList.subList(localStart,localEnd);
-                placeTravels.addAll(fdSliceList);
-
-                remain-=fdSliceList.size();
-                fdIndex+=fdSliceList.size();
-
-                if(fdSliceList.isEmpty()) break;
             }
-        }
 
-        // AT4 범위 삽입
-        int atStart=fdEnd+1;
-        int atEnd=fdEnd+atCount;
-
-        List<PlaceReadResponse> atList = new ArrayList<>();
-
-        if(remain>0 && atCount>0 && start<=atEnd && end>=atStart){
-            int atIndex=Math.max(start,atStart)-atStart+1;
-
-            while(remain>0 && atIndex<=atCount){
-                int apiPage=(atIndex-1)/dataSize+1;
-
-                // 이미 조회한 1페이지 데이터 재사용
-                if (apiPage == 1) {
-                    atList = atResult.getPlaceList();
-                } else {
-                    if (!keywordSearch) {
-                        atList = cachePlaceService.readATTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
-                    } else {
-                        atList = cachePlaceService.readATTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
-                    }
-                }
-
-                int localStart=(atIndex-1)%dataSize;
-                int localEnd=Math.min(atList.size(), localStart+remain);
-
-                List<PlaceReadResponse> atSliceList= atList.subList(localStart,localEnd);
-                placeTravels.addAll(atSliceList);
-
-                remain-=atSliceList.size();
-                atIndex+=atSliceList.size();
-
-                if(atSliceList.isEmpty()) break;
-            }
-        }
-
-        // CE7 범위 삽입
-        int ceStart=atEnd+1;
-        int ceEnd=atEnd+ceCount;
-
-        List<PlaceReadResponse> ceList = new ArrayList<>();
-
-        if(remain>0 && ceCount>0 && start<=ceEnd && end>=ceStart){
-            int ceIndex=Math.max(start,ceStart)-ceStart+1;
-
-            while(remain>0 && ceIndex<=ceCount){
-                int apiPage=(ceIndex-1)/dataSize+1;
-
-                // 이미 조회한 1페이지 데이터 재사용
-                if (apiPage == 1) {
-                    ceList = ceResult.getPlaceList();
-                } else {
-                    if (!keywordSearch) {
-                        ceList = cachePlaceService.readCETravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
-                    } else {
-                        ceList = cachePlaceService.readCETravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
-                    }
-                }
-
-                int localStart=(ceIndex-1)%dataSize;
-                int localEnd=Math.min(ceList.size(), localStart+remain);
-
-                List<PlaceReadResponse> ceSliceList= ceList.subList(localStart,localEnd);
-                placeTravels.addAll(ceSliceList);
-
-                remain-=ceSliceList.size();
-                ceIndex+=ceSliceList.size();
-
-                if(ceSliceList.isEmpty()) break;
-            }
-        }
-
-        // AD5 범위 삽입
-        int adStart=ceEnd+1;
-        int adEnd=ceEnd+adCount;
-
-        List<PlaceReadResponse> adList = new ArrayList<>();
-
-        if(remain>0 && adCount>0 && start<=adEnd && end>=adStart){
-            int adIndex=Math.max(start,adStart)-adStart+1;
-
-            while(remain>0 && adIndex<=adCount){
-                int apiPage=(adIndex-1)/dataSize+1;
-
-                // 이미 조회한 1페이지 데이터 재사용
-                if (apiPage == 1) {
-                    adList = adResult.getPlaceList();
-                } else {
-                    if (!keywordSearch) {
-                        adList = cachePlaceService.readADTravelsbyLocation(mapX, mapY, apiPage, dataSize).getPlaceList();
-                    } else {
-                        adList = cachePlaceService.readADTravelsbyKeyword(keyword, mapX, mapY, apiPage, dataSize).getPlaceList();
-                    }
-                }
-
-                int localStart=(adIndex-1)%dataSize;
-                int localEnd=Math.min(adList.size(), localStart+remain);
-
-                List<PlaceReadResponse> adSliceList= adList.subList(localStart,localEnd);
-                placeTravels.addAll(adSliceList);
-
-                remain-=adSliceList.size();
-                adIndex+=adSliceList.size();
-
-                if(adSliceList.isEmpty()) break;
-            }
+            // 다음 카테고리의 시작 위치
+            categoryStart = categoryEnd + 1;
         }
 
         return new PlaceReadPageResponse(totalCount, totalPages, page, dataSize, placeTravels);
