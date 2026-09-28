@@ -1,0 +1,100 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.plana.mapper.PointMapper">
+
+    <select id="readPoint" resultType="com.example.plana.dto.point.read.PointResponse">
+        SELECT
+        POINT_ID         as "pointId",
+        TRIP_ID          as "tripId",
+        CONTENT          as "content",
+        TYPE             as "type",
+        EVENT            as "event",
+        AMOUNT           as "amount",
+        ORIGIN_POINT_ID  as "originPointId",
+        CREATE_DATE      as "createDate"
+        FROM POINT
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <insert id="createPoint" parameterType="com.example.plana.model.PointSave">
+        <selectKey keyProperty="point.pointId" resultType="string" order="BEFORE">
+            SELECT GENERATE_PK('P', 'SEQ_POINT')
+        </selectKey>
+        INSERT INTO POINT (
+            POINT_ID,
+            MEMBER_ID,
+            TRIP_ID,
+            CONTENT,
+            TYPE,
+            EVENT,
+            AMOUNT,
+            ORIGIN_POINT_ID
+        ) VALUES (
+            #{point.pointId,       jdbcType=VARCHAR},
+            #{point.memberId,      jdbcType=VARCHAR},
+            #{point.tripId,        jdbcType=VARCHAR},
+            #{point.content,       jdbcType=VARCHAR},
+            #{point.type,          jdbcType=VARCHAR},
+            #{point.event,          jdbcType=VARCHAR},
+            #{point.amount,        jdbcType=INTEGER},
+            #{point.originPointId, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <update id="updatePoint">
+        UPDATE POINT
+        SET CONTENT = #{content, jdbcType=VARCHAR}
+        WHERE MEMBER_ID = #{memberId, jdbcType=VARCHAR}
+        AND TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </update>
+
+    <select id="readExpirePoint" resultType="com.example.plana.model.PointSave">
+        SELECT
+            POINT_ID        AS "pointId",
+            MEMBER_ID       AS "memberId",
+            CONTENT         AS "content",
+            TRIP_ID         AS "tripId"
+        FROM POINT
+        WHERE TYPE = 'EARN'
+            AND TO_TIMESTAMP(CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; CURRENT_TIMESTAMP - INTERVAL '60 days'
+            AND NOT EXISTS (
+                SELECT 1
+                FROM POINT P2
+                WHERE P2.ORIGIN_POINT_ID = POINT.POINT_ID
+                    AND P2.TYPE = 'EXPIRE'
+            )
+    </select>
+
+
+    <select id="readExpirePointTrip" resultType="com.example.plana.model.PointSave">
+        SELECT
+            POINT_ID        AS "pointId",
+            MEMBER_ID       AS "memberId",
+            TRIP_ID         AS "tripId",
+            CONTENT         AS "content",
+            AMOUNT          AS "amount"
+        FROM POINT
+        WHERE TYPE = 'EARN'
+            AND MEMBER_ID = #{memberId}
+            AND TRIP_ID = #{tripId}
+            AND EVENT = #{event}
+            AND TO_TIMESTAMP(CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') >= CURRENT_TIMESTAMP - INTERVAL '1 days'
+    </select>
+
+
+    <select id="readExpirePointShare" resultType="com.example.plana.model.PointSave">
+        SELECT
+            POINT_ID        AS "pointId",
+            MEMBER_ID       AS "memberId",
+            TRIP_ID         AS "tripId",
+            CONTENT         AS "content",
+            AMOUNT          AS "amount"
+        FROM POINT
+        WHERE TYPE = 'EARN'
+            AND MEMBER_ID = #{memberId}
+            AND TRIP_ID = #{tripId}
+            AND EVENT = #{event}
+            AND TO_TIMESTAMP(CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') >= CURRENT_TIMESTAMP - INTERVAL '1 days'
+    </select>
+
+</mapper>

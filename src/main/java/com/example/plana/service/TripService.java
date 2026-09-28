@@ -15,6 +15,7 @@ import com.example.plana.dto.trip.read.TripResponse;
 import com.example.plana.dto.trip.read.TripScheduleResponse;
 import com.example.plana.dto.trip.update.*;
 import com.example.plana.mapper.BookmarkMapper;
+import com.example.plana.mapper.HubPlanMapper;
 import com.example.plana.mapper.TripMapper;
 import com.example.plana.mapper.TripStatMapper;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,8 @@ public class TripService {
     private final BookmarkMapper bookmarkMapper;
     private final CopyPlanService copyPlanService;
     private final TripStatService tripStatService;
+    private final PointService pointService;
+    private final HubPlanMapper hubPlanMapper;
 
     private final TripAccessValidator tripAccessValidator;
 
@@ -56,6 +59,8 @@ public class TripService {
 
         try {
             tripMapper.createTrip(tripParams);
+            // +) 포인트 적립 [여행 계획 공유]
+            pointService.createPointEarnTrip(request.getMemberId(), (String) tripParams.get("tripId"), (String)tripParams.get("name"));
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_CREATE_FAILED);
         }
@@ -296,6 +301,8 @@ public class TripService {
 
         try {
             tripMapper.updateTrip(tripParams);
+            // +) 포인트 적립 수정(여행명 변경) [여행 계획 생성]
+            pointService.updatePointEarnTrip(memberId, tripId, request.getName());
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_UPDATE_FAILED);
         }
@@ -403,6 +410,19 @@ public class TripService {
         tripAccessValidator.validateOwner(tripId, memberId);
 
         // 1. 여행 하위 데이터 전체 삭제 DELETE
+        // 1-1. 여행에 연결된 공유된 허브 삭제
+        try { // HUB_PLAN의 하위 키워드 삭제
+            hubPlanMapper.deleteHubPlanKeywordByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.HUB_PLAN_KEYWORD_DELETE_FAILED);
+        }
+        try { // HUB_PLAN 삭제
+            hubPlanMapper.deleteHubPlanByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.HUB_PLAN_DELETE_FAILED);
+        }
+
+        // 1-2 여행 계획표 삭제
         try {   // 스케줄 우선 삭제
             tripMapper.deleteTripSchedulesByTripId(tripId);
         } catch (Exception e) {
@@ -413,13 +433,23 @@ public class TripService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DAY_DELETE_FAILED);
         }
-        // 북마크 삭제
+
+        // 1-3. 북마크 삭제
         bookmarkService.deleteBookmarksByTripId(tripId);
+
+        // 1-4. 여행 통계표애 연결된 여행 삭제
+        try {
+            tripMapper.deleteTripStatsByTripId(tripId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TRIP_STAT_DELETE_FAILED);
+        }
 
         // 2. 여행 삭제
         int result = -1;
         try {
             result = tripMapper.deleteTrip(tripId);
+            // +) 포인트 만료 [24시간 내 여행 계획 삭제]
+            pointService.createPointExpireTrip(memberId, tripId);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TRIP_DELETE_FAILED);
         }

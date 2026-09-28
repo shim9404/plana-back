@@ -19,12 +19,15 @@ public interface MemberMapper {
     boolean existNickname(@Param("nickname") String nickname);
 
     // 회원 정보 호출
+    // TODO POINT-3-1: DB 연결 - 여행 슬롯 수 호출 추가(MemberReadResponse도 수정 필요)
     MemberReadResponse readMember(@Param("memberId") String memberId);
 
     // 회원 정보 호출
+    // TODO POINT-3-2: DB 연결 - 여행 슬롯 수 호출 추가(Member도 수정 필요)
     Member readMemberByEmail(@Param("email") String email);
 
     // 회원 정보 호출
+    // TODO POINT-3-3: DB 연결 - 여행 슬롯 수 호출 추가(Member도 수정 필요)
     Member readMemberById(@Param("memberId") String memberId);
 
     // 이메일로 멤버ID 조회

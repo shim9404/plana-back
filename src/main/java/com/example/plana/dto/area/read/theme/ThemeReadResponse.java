@@ -1,5 +1,6 @@
-package com.example.plana.dto.area.read;
+package com.example.plana.dto.area.read.theme;
 
+import com.example.plana.dto.area.read.MapPos;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;

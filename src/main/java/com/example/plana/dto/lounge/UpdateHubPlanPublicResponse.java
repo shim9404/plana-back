@@ -15,6 +15,6 @@ public class UpdateHubPlanPublicResponse {
     @Schema(description = "허브 게시물 id", example ="HP1")
     private String hubPlanId;
 
-    @Schema(description = "획득 포인트 (최초 공개 시 100, 재공개 시 0)", example = "100")
+    @Schema(description = "획득 포인트 (최초 공개 시 500, 재공개 시 0)", example = "500")
     private int point;
 }

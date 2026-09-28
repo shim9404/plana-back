@@ -35,6 +35,7 @@ import java.util.UUID;
 public class MemberService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final MemberMapper memberMapper;
+    private final PointService pointService;
 
     @Value("${app.upload-path}")
     private String uploadPath;
@@ -196,6 +197,7 @@ public class MemberService {
 
         MemberSave memberSave = new MemberSave();
 
+        // TODO POINT-2: 여행 슬롯 수 등록 추가(초기 기본 5개)
         memberSave.setName(member.getName());
         memberSave.setEmail(member.getEmail());
         memberSave.setNickname(member.getNickname());
@@ -204,6 +206,10 @@ public class MemberService {
         memberSave.setPassword(bCryptPasswordEncoder.encode(member.getPassword()));
 
         int result = memberMapper.createMember(memberSave);
+
+        // +) 포인트 적립 [회원가입]
+        Member signMember = readMemberByEmail(member.getEmail());
+        pointService.createPointEarnSign(signMember.getMemberId());
 
         // 회원가입 실패
         if (result != 1){

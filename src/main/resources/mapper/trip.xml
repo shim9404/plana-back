@@ -92,6 +92,11 @@
         WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
     </delete>
 
+    <delete id="deleteTripStatsByTripId">
+        DELETE FROM TRIP_STAT
+        WHERE TRIP_ID = #{tripId, jdbcType=VARCHAR}
+    </delete>
+
     <!-- === [ TRIP DAY ]  ================================================================================= -->
     <!-- 신규 생성용 : 여행 일자 단건 INSERT -->
     <insert id="createTripDay" parameterType="map">
